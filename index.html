@@ -850,7 +850,7 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='rqTeach'){const f=S.rq.form,em=b.dataset.em;f.teachers=f.teachers.includes(em)?f.teachers.filter(x=>x!==em):f.teachers.concat([em]);return render();}
   if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;f.busy=true;f.err='';render();
-    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));S.rq.form=null;await refreshEntries();S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。';}catch(e){f.busy=false;f.err=e.message;}return render();}
+    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));S.rq.form=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。';}catch(e){f.busy=false;f.err=e.message;return render();}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
   if(a==='rqDelNo'){S.rq.delAsk='';return render();}
   if(a==='rqDelYes'){try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.rq.delAsk='';}catch(e){S.err=e.message;}return render();}
@@ -951,7 +951,7 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='scTableSave'){
     const e=S.sc.tableEd;if(!e||e.busy)return;e.busy=true;e.err='';render();
-    try{const res=await run('apiScheduleSaveTable',{id:e.id,classes:e.classes,groups:e.groups});S.sc.data=res;S.sc.tableEd=null;await refreshEntries();S.info=res.notice||'存好了。排給老師的課，日期已經跟著改。';}
+    try{const res=await run('apiScheduleSaveTable',{id:e.id,classes:e.classes,groups:e.groups});S.sc.data=res;S.sc.tableEd=null;refreshEntries().then(render);S.info=res.notice||'存好了。排給老師的課，日期已經跟著改。';}
     catch(er){e.busy=false;e.err=er.message;}
     return render();}
   if(a==='scDelAsk'){S.sc.delAsk=S.sc.tab;return render();}
