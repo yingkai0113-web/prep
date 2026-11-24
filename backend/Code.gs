@@ -626,7 +626,8 @@ function tablePids_(tableId) {                                                  
 }
 /* 進度表只有被指定的授課老師才看得到、改得了；還沒指定授課老師的，只有技士、科主任、管理者能動 */
 function canSeeTable_(me, t) { return isStaff_(me) || (t.teachers.length > 0 && t.teachers.indexOf(me.email) >= 0); }
-function assertCanEditTable_(me, t) { if (!canSeeTable_(me, t)) throw new Error('這門課的進度表，只有授課老師可以編輯。'); }
+function isTeacherOf_(me, t) { return (t.teachers || []).indexOf(me.email) >= 0; }
+function assertCanEditTable_(me, t) { if (!isTeacherOf_(me, t)) throw new Error('這張進度表你不是授課老師，只能看，不能編輯。'); }
 function extOf_(v) { return v && L_parseDate(v.from) && L_parseDate(v.to) && v.to >= v.from ? { from: String(v.from), to: String(v.to) } : null; }
 function semDates_() { var term = setting_('目前學年學期', ''); return { start: setting_('開學日 ' + term, ''), end: setting_('結業式 ' + term, '') }; }
 function tableWeeks_(t) { var d = semDates_(); return L_weeksExt(d.start, d.end, t.ext); }        // 這張進度表的每一週：學期的週 + 寒暑假加課的週
@@ -804,7 +805,7 @@ function apiScheduleGet(asEmail) {
   var tables = schedTables_(term), ids = {}, visible = tables.filter(function (t) { return canSeeTable_(me, t); });      // 老師只看得到自己是授課老師的（或還沒指定授課老師的）進度表
   visible.forEach(function (t) { ids[t.id] = 1; });
   var allCells = schedCells_(), weeks = L_weeks(start, end);
-  return { term: term, half: L_termHalf(term), start: start, end: end, weeks: weeks, tables: visible.map(function (t) { return Object.assign({}, t, { weeks: tableWeeks_(t) }); }), cells: allCells.filter(function (x) { return ids[x.tableId]; }),
+  return { term: term, half: L_termHalf(term), start: start, end: end, weeks: weeks, tables: visible.map(function (t) { return Object.assign({}, t, { weeks: tableWeeks_(t), canEdit: isTeacherOf_(me, t) }); }), cells: allCells.filter(function (x) { return ids[x.tableId]; }),
            required: isStaff_(me) ? requiredStatus_(term, tables, allCells, weeks) : [], requiredAll: isStaff_(me) ? requiredAll_() : [],       // 有沒有建進度表，只有技士、科主任、管理者看得到
            users: readTable_('使用者').map(function (u) { return { email: str_(u['信箱']).toLowerCase().trim(), name: str_(u['姓名']) || str_(u['信箱']).split('@')[0] }; }).filter(function (u) { return u.email; }),
            canConfig: isStaff_(me), me: me.email, cellProducts: cellProducts_(allCells.filter(function (x) { return ids[x.tableId]; })) };
