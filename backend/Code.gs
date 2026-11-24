@@ -68,7 +68,15 @@ function curEmail_() {
 /* ---------------- 讀寫試算表 ---------------- */
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
+var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1 };   // 同一次請求內，這幾個分頁讀過就不再重讀（寫入時會清掉）
+function rtClear_() { RT_ = {}; }
 function readTable_(name) {
+  if (RT_OK_[name] && RT_[name]) return RT_[name].map(function (o) { return Object.assign({}, o); });
+  var out0 = readTableRaw_(name);
+  if (RT_OK_[name]) { RT_[name] = out0; return out0.map(function (o) { return Object.assign({}, o); }); }
+  return out0;
+}
+function readTableRaw_(name) {
   var sh = ss_().getSheetByName(name);
   if (!sh) throw new Error('試算表裡找不到分頁「' + name + '」');
   var v = sh.getDataRange().getValues();
@@ -141,7 +149,8 @@ function setSetting_(key, value) {
       if (str_(values[i][0]) === key) { sh.getRange(i + 1, 2, 1, 1).setValues([[value]]); done = true; break; }
     }
     if (!done) sh.getRange(values.length + 1, 1, 1, 2).setValues([[key, value]]);
-  } finally { lock.releaseLock(); }
+    rtClear_();
+  } finally { rtClear_(); lock.releaseLock(); }
 }
 
 /* 後台切換學年學期（例如 115-1 → 115-2）。舊學期的排課紀錄都留著，只是老師打開來是新學期的空白。 */
@@ -259,7 +268,7 @@ function writeOverride_(me, pid, patch) {
       patch.hidden !== undefined ? (patch.hidden ? '是' : '') : cur[6], me.email, now];
     if (idx < 0) idx = Math.max(values.length, 1);
     sh.getRange(idx + 1, 1, 1, OVR_HEAD.length).setValues([row]);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
 }
 
 var PLAN_HEAD = ['排課ID', '學年學期', '老師信箱', '產品編號', '上課日期', '部別', '班級', '課程', '組數', '份量倍率', '原本每組', '改成每組', '份量單位', '調整', '器具', '增加材料', '刪除材料', '產品名稱', '不加總改數量', '進度表', '組別', '待確認', '建立時間', '最後修改', '草稿內容'];
@@ -331,6 +340,7 @@ function flushPlanRows_(sh, rows) {
     sh.getRange(2, 5, rows.length, 1).setNumberFormat('@');          // 日期當文字存，避免被轉成日期格式
     sh.getRange(2, 1, rows.length, PLAN_HEAD.length).setValues(rows);
   }
+  rtClear_();
 }
 
 
@@ -436,7 +446,7 @@ function apiSavePlan(entries, mode) {
       out.push(Object.assign({}, o, { pending: { del: true } }));                           // 匯出過的：匯出之前，技士還是看得到
     });
     writePlans_(me.email, term, out);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   var dates = committed.map(function (e) { return e.date; }).sort();
   return { saved: committed.length, at: Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), first: dates[0] || '', last: dates[dates.length - 1] || '', unexported: out.filter(function (e) { return e.draft || e.pending; }).length,
            ids: clean.slice(0, entries.length).map(function (e) { return e.id; }),                                      // 新增的課，系統給的編號（跟送來的順序一樣）
@@ -470,7 +480,7 @@ function apiSaveCustom(rec) {
     var x = L_customToCatalog({ pid: clean.pid, owner: owner, ownerName: names[owner] || owner.split('@')[0], shared: shared === '是', title: clean.title,
       serving: clean.serving, dsets: clean.dsets, items: clean.items, tools: clean.tools });
     return { product: x.product, items: x.items, tools: x.tools };
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
 }
 
 /* 刪掉（其實是隱藏，排過的課還是看得到）。自己的，或管理者刪共用的。 */
@@ -486,7 +496,7 @@ function apiDeleteCustom(pid) {
       sh.getRange(i + 1, 9, 1, 1).setValues([['是']]);
       return { deleted: true };
     }
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   throw new Error('找不到這張材料單。');
 }
 
@@ -517,7 +527,7 @@ function apiRevertTemplate(pid) {
     for (var i = 1; i < values.length; i++) if (str_(values[i][0]) !== str_(pid)) keep.push(values[i]);
     sh.getRange(1, 1, values.length, OVR_HEAD.length).clearContent();
     sh.getRange(1, 1, keep.length, OVR_HEAD.length).setValues(keep);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   var fresh = loadCatalog_(), p = fresh.products[str_(pid)];
   return { product: p, items: fresh.items[str_(pid)], tools: fresh.tools[str_(pid)] };
 }
@@ -629,6 +639,7 @@ function writeSched_(name, head, rows) {
   var sh = ensureSheet_(name, head), last = sh.getLastRow();
   if (last > 1) sh.getRange(2, 1, last - 1, head.length).clearContent();
   if (rows.length) sh.getRange(2, 1, rows.length, head.length).setValues(rows);
+  rtClear_();
 }
 function tableRow_(t, created) { return [t.id, t.term, t.dept, t.course, JSON.stringify(t.classes), t.groups.join('、'), t.title || '', t.creator, created || nowStr_(), nowStr_(), t.ext ? JSON.stringify(t.ext) : '', (t.teachers || []).join('、')]; }
 function allTableRows_() {
@@ -734,7 +745,7 @@ function apiRequiredSave(rec) {
     writeRequired_(list, me.email);
     if (oldE) reconcileTables_(oldE, e);
     applyReqTeachers_(e);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return apiScheduleGet();
 }
 function apiRequiredDelete(id) {
@@ -745,7 +756,7 @@ function apiRequiredDelete(id) {
     list = list.filter(function (x) { return x.id !== String(id); });
     if (list.length === n) throw new Error('找不到這一筆。');
     writeRequired_(list, '');
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return apiScheduleGet();
 }
 /* 這個學期不開這門課（只有這個學期，下個學期照舊要有） */
@@ -782,7 +793,7 @@ function ensureTables_() {
       rows.push(tableRow_(t, ''));
     });
     writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
 }
 function apiScheduleGet(asEmail) {
   ensureTables_();
@@ -814,7 +825,7 @@ function apiScheduleSetDates(start, end) {
   var term = setting_('目前學年學期', '');
   setSetting_('開學日 ' + term, s); setSetting_('結業式 ' + term, end);
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
-  try { syncSchedule_(null); } finally { lock.releaseLock(); }
+  try { syncSchedule_(null); } finally { rtClear_(); lock.releaseLock(); }
   return { start: s, end: end, weeks: L_weeks(s, end) };
 }
 function schedGuard_(me) {
@@ -870,7 +881,7 @@ function apiScheduleSaveTable(rec) {
     writeSched_('教學進度內容', SCHED_CELL_HEAD, keep.map(cellRow_));
     syncSchedule_(id, undefined, undefined, undefined, true);                                   // 上課日改了，日期跟著改
     var stray = 0; if (teachers.length) schedCells_().forEach(function (x) { if (x.tableId === id && x.cell.kind === 'lesson' && x.cell.groups.some(function (g) { return g.teacher && teachers.indexOf(g.teacher) < 0; })) stray++; });
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   var res = apiScheduleGet();
   if (stray) res.notice = '有 ' + stray + ' 格還排給不在授課名單裡的老師，請改掉。他們已經有的材料單還在，但這張進度表不會再出現在他們那裡。';
   return res;
@@ -899,7 +910,7 @@ function apiScheduleSetExtra(tableId, from, to) {
     var rows = allTableRows_().filter(function (r) { return r[0] !== t.id; });
     rows.push(tableRow_(Object.assign({}, t, { ext: ext }), old ? str_(old['建立時間']) : ''));
     writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return apiScheduleGet();
 }
 /* 把以前（或這學期別張）進度表的格子複製過來，不一定放在同一週。pairs：[{fw, fc, fd, tw, tc, td}] = 來源第幾週、哪個班、哪一天 → 貼到這張進度表的第幾週、哪個班、哪一天。
@@ -946,7 +957,7 @@ function apiScheduleImport(targetId, sourceId, pairs, overwrite, stageOnly) {
       writeSched_('教學進度內容', SCHED_CELL_HEAD, all.filter(function (x) { return x.tableId !== t.id; }).concat(Object.keys(have).map(function (k) { return have[k]; })).map(cellRow_));
       syncSchedule_(t.id);
     }
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return { copied: copied, skipped: skipped, data: apiScheduleGet() };
 }
 function apiScheduleDeleteTable(id) {
@@ -960,7 +971,7 @@ function apiScheduleDeleteTable(id) {
     writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
     writeSched_('教學進度內容', SCHED_CELL_HEAD, schedCells_().filter(function (x) { return x.tableId !== String(id); }).map(cellRow_));
     syncSchedule_(null);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return apiScheduleGet();
 }
 /* 進度表改完，一次儲存（按「儲存」或「下一步」才生效）：changes = [{week, cls, day, cell（null = 清除）}]。
@@ -1004,7 +1015,7 @@ function apiScheduleSaveCells(tableId, changes, force) {
     norm.forEach(function (n) { if (n.clean) rows.push(cellRow_({ tableId: t.id, week: n.w, cls: n.cls, day: n.day, cell: n.clean, by: me.email, at: nowStr_() })); });
     writeSched_('教學進度內容', SCHED_CELL_HEAD, rows);
     syncSchedule_(t.id);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return { saved: norm.length };
 }
 /* 存一格（cell 給 null = 清掉這格）。存好之後，這格的課會出現在開單老師的「排課備料」裡（待確認） */
@@ -1029,7 +1040,7 @@ function apiScheduleSaveCell(tableId, week, cls, cell, day) {
     if (clean) rows.push(cellRow_({ tableId: t.id, week: w, cls: cls, day: day, cell: clean, by: me.email, at: nowStr_() }));
     writeSched_('教學進度內容', SCHED_CELL_HEAD, rows);
     syncSchedule_(t.id, w, cls, day);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return { saved: true };
 }
 /* 把進度表排的課，同步成每位老師的排課（待確認）。tableId／weekN／cls 給了就只處理那一部分。呼叫的人要先拿到鎖。 */
@@ -1118,7 +1129,7 @@ function apiScheduleStatus(start, end) {
 function apiScheduleRepair() {
   requireAdmin_();
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
-  try { syncSchedule_(null); } finally { lock.releaseLock(); }
+  try { syncSchedule_(null); } finally { rtClear_(); lock.releaseLock(); }
   return apiScheduleStatus('', '');
 }
 
@@ -1248,7 +1259,7 @@ function apiSetCategory(pid, category) {
   if (n && categories_().indexOf(n) < 0 && GRADE_CATS.indexOf(n) < 0) throw new Error('找不到分類「' + n + '」。');
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
-  try { var map = readCatMap_(); if (n) map[p.pid] = n; else delete map[p.pid]; writeCatMap_(map); } finally { lock.releaseLock(); }
+  try { var map = readCatMap_(); if (n) map[p.pid] = n; else delete map[p.pid]; writeCatMap_(map); } finally { rtClear_(); lock.releaseLock(); }
   return { pid: p.pid, category: n };
 }
 
@@ -1311,7 +1322,7 @@ function apiDeletePlanEntry(id) {
     flushPlanRows_(sh, keep.map(function (e) { return planRow_(e, e.created, e.updated); }));
     logDelete_(me.email, gone);
     return { deleted: true, teacher: gone.teacher, date: gone.date };
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
 }
 
 /* ---------------- 做出 xlsx 檔（自己組，A4 直印，跟原本的申請單一樣） ---------------- */
@@ -1371,7 +1382,7 @@ function apiUserSave(u, oldEmail) {
     } else {
       t.sh.appendRow([email, name, role]);
     }
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return apiUsersList();
 }
 function apiUserDelete(email) {
@@ -1386,7 +1397,7 @@ function apiUserDelete(email) {
     if (!canGrant_(me, cur.role)) throw new Error('只有科主任或管理者可以刪除科主任和管理者。');
     if (cur.role === '管理者' && t.rows.filter(function (r) { return r.role === '管理者'; }).length <= 1) throw new Error('至少要留一位管理者。');
     t.sh.deleteRow(cur.row);
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return apiUsersList();
 }
 /* 一次貼上很多位：每行「姓名 信箱 角色」，用逗號、空白或 Tab 隔開，角色不寫就是老師。已經在名單裡的信箱會略過。 */
@@ -1413,7 +1424,7 @@ function apiUsersBulkAdd(text) {
       have[email] = 1; add.push([email, name, role]);
     });
     if (add.length) { var r0 = Math.max(t.sh.getLastRow(), 1) + 1; t.sh.getRange(r0, 1, add.length, 3).setValues(add); added = add.length; }
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
   return { users: apiUsersList(), added: added, skipped: skipped, bad: bad };
 }
 
@@ -1458,5 +1469,5 @@ function apiResetTerm(confirmText) {
     counts.plans = planRows.length; counts.cells = cellRows.length;
     try { CacheService.getScriptCache().removeAll([]); } catch (e) {}
     return { term: term, plans: counts.plans, cells: counts.cells };
-  } finally { lock.releaseLock(); }
+  } finally { rtClear_(); lock.releaseLock(); }
 }
