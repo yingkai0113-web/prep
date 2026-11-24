@@ -69,13 +69,42 @@ function curEmail_() {
 /* ---------------- 讀寫試算表 ---------------- */
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
-var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1 };   // 同一次請求內，這幾個分頁讀過就不再重讀（寫入時會清掉）
-function rtClear_() { RT_ = {}; CAT_ = null; PL_ = null; }
+var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1, '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1 };   // 這幾個分頁：同一次請求讀過就不再重讀，跨請求也用快取（最多 5 分鐘；系統自己寫入時會立刻作廢）
+var RT_VER_ = null, RT_TTL_ = 300;
+function rtVer_() {
+  if (RT_VER_ === null) { try { RT_VER_ = CacheService.getScriptCache().get('rtver') || '0'; } catch (e) { RT_VER_ = 'x' + Date.now(); } }
+  return RT_VER_;
+}
+function rtClear_() {
+  RT_ = {}; CAT_ = null; PL_ = null;
+  try { RT_VER_ = String(Date.now()) + Math.floor(Math.random() * 1000); CacheService.getScriptCache().put('rtver', RT_VER_, 21600); } catch (e) { RT_VER_ = 'x' + Date.now(); }
+}
+function rtJson_(rows) { return JSON.stringify(rows, function (k, v) { return (this[k] instanceof Date) ? { __d: this[k].getTime() } : v; }); }
+function rtParse_(txt) { return JSON.parse(txt, function (k, v) { return (v && typeof v === 'object' && v.__d !== undefined && Object.keys(v).length === 1) ? new Date(v.__d) : v; }); }
+function rtCacheGet_(name) {
+  try {
+    var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + name, n = Number(c.get(base + '|n'));
+    if (!n) return null;
+    var keys = []; for (var i = 0; i < n; i++) keys.push(base + '|' + i);
+    var got = c.getAll(keys), txt = '';
+    for (var j = 0; j < n; j++) { if (got[keys[j]] === undefined || got[keys[j]] === null) return null; txt += got[keys[j]]; }
+    return rtParse_(txt);
+  } catch (e) { return null; }
+}
+function rtCachePut_(name, rows) {
+  try {
+    var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + name, txt = rtJson_(rows), size = 25000, put = {}, n = Math.ceil(txt.length / size) || 1;
+    if (n > 40) return;
+    for (var i = 0; i < n; i++) put[base + '|' + i] = txt.slice(i * size, (i + 1) * size);
+    put[base + '|n'] = String(n);
+    c.putAll(put, RT_TTL_);
+  } catch (e) {}
+}
 function readTable_(name) {
-  if (RT_OK_[name] && RT_[name]) return RT_[name].map(function (o) { return Object.assign({}, o); });
-  var out0 = readTableRaw_(name);
-  if (RT_OK_[name]) { RT_[name] = out0; return out0.map(function (o) { return Object.assign({}, o); }); }
-  return out0;
+  if (!RT_OK_[name]) return readTableRaw_(name);
+  var rows = RT_[name];
+  if (!rows) { rows = rtCacheGet_(name); if (!rows) { rows = readTableRaw_(name); rtCachePut_(name, rows); } RT_[name] = rows; }
+  return rows.map(function (o) { return Object.assign({}, o); });
 }
 function readTableRaw_(name) {
   var sh = ss_().getSheetByName(name);
