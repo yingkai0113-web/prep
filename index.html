@@ -247,7 +247,7 @@ const K=(d,c,p)=>d+'||'+c+'||'+p, kd=k=>k.split('||')[0], kc=k=>k.split('||')[1]
 const UNITS=['g','ml','顆','個','條','包','罐','瓶','支','片','束','公分'];
 const DEPTS=['日間部','夜間部'];
 const S={user:null,term:'',cat:null,classes:{'日間部':[],'夜間部':[]},stdNames:[],ed:null,view:'sched',step:0,extraOpen:false,extraNote:'',estep:1,dept:'日間部',course:'',courses:{'日間部':[],'夜間部':[]},tab:'一',atab:'一',confirmTerm:'',adminUrl:'',
-  expWhat:'all',expOrder:'date',tOrder:'date',tTeacher:'',tFilter:{course:'',cls:'',q:'',id:''},tMode:'stats',tOpen:new Set(),tDel:'',open4:new Set(),xf:null,gOpen:{},confirmSend:'',accepting:true,openNote:'',confirmClose:false,sub:null,um:{list:null,busy:false,err:'',ed:null,bulk:null,del:''},subOpen:true,catAdd:null,catDel:'',ren:null,cv:null,ss:null,ssOpen:true,ssAll:true,remind:'',rq:null,pstep:1,sstep:0,seen:new Set(),sc:{data:null,tab:'',cellEd:null,tableEd:null,datesEd:null,delAsk:'',busy:false},hu:null,hist:{},appUrl:'',sel:new Set(),entries:[],open:new Set(),
+  expWhat:'all',expOrder:'date',tOrder:'date',tTeacher:'',tFilter:{course:'',cls:'',q:'',id:''},tMode:'stats',tOpen:new Set(),tDel:'',open4:new Set(),xf:null,gOpen:{},confirmSend:'',accepting:true,openNote:'',confirmClose:false,sub:null,um:{list:null,busy:false,err:'',ed:null,bulk:null,del:''},rs:{open:false,txt:'',busy:false},subOpen:true,catAdd:null,catDel:'',ren:null,cv:null,ss:null,ssOpen:true,ssAll:true,remind:'',rq:null,pstep:1,sstep:0,seen:new Set(),sc:{data:null,tab:'',cellEd:null,tableEd:null,datesEd:null,delAsk:'',busy:false},hu:null,hist:{},appUrl:'',sel:new Set(),entries:[],open:new Set(),
   err:'',info:'',busy:'',done:null,sent:null,savedSig:'[]',sentAt:'',preview:'',rgFrom:'',rgTo:'',tech:null};
 const P=pid=>S.cat.pmap[pid];
 const titleOf=e=>e.title||P(e.pid).title;              // 這堂課的產品名稱（老師可以改，沒改就用原本的）
@@ -618,6 +618,12 @@ function usersHTML(){
   const bulk=u.bulk!==null?`<div style="margin-top:10px"><p class="mut" style="margin:0 0 4px">一行一位：姓名、信箱、角色（可以不寫，不寫就是老師）。可以直接從 Excel 複製貼上。</p><textarea class="in" style="width:100%;min-height:8em" data-k="umbulk" placeholder="王小明 20690@ylvs.tw&#10;李大華 20688@ylvs.tw 老師&#10;陳技士 yi721@ylvs.tw 技士">${esc(u.bulk)}</textarea><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn sm ghost" data-a="umBulkNo">取消</button><button class="btn sm" data-a="umBulkYes">加入名單</button></div></div>`:'';
   return `<div class="adm">${head}${rows||'<p class="mut">名單是空的。</p>'}${form}${bulk}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-a="umNew">＋ 新增使用者</button><button class="btn ghost" data-a="umBulk">一次貼上很多位</button></div></div>`;
 }
+function resetHTML(){
+  if(!['科主任','管理者'].includes(S.user.role))return '';
+  const r=S.rs;
+  const body=r.open?`<div style="margin-top:10px;border:1px solid var(--err);border-radius:10px;padding:12px"><p style="margin:0 0 6px"><b>確定要刪除 ${esc(S.term)} 的所有資料嗎？</b></p><p class="mut" style="margin:0 0 8px">會刪掉：這學期<b>所有老師</b>排的課、送出的材料單、草稿，還有教學進度表格子裡排的內容。<br>不會刪：使用者名單、材料單、設定、「每學期要有哪些進度表」和授課老師。<br>刪之前會先在試算表的「刪除前備份」分頁存一份，但<b>網頁上沒辦法還原</b>。</p><label class="lbl">請輸入「刪除本學期資料」來確認</label><input class="in" style="width:100%" data-k="rstxt" placeholder="刪除本學期資料" value="${esc(r.txt)}"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn ghost" data-a="rsNo">取消</button><button class="btn danger" data-a="rsYes" ${r.busy?'disabled':''}>${r.busy?'刪除中…':'刪除'}</button></div></div>`:`<button class="btn danger" style="margin-top:10px" data-a="rsAsk">刪除本學期所有資料</button>`;
+  return `<div class="adm"><b>刪除本學期所有資料</b><p class="mut" style="margin:4px 0 0">老師測試完，想清掉重來時用。只有科主任和管理者看得到這個按鈕。</p>${body}</div>`;
+}
 function adminHTML(){
   const cats=S.cat.categories||[];
   if(S.atab.startsWith('c:')&&!cats.includes(S.atab.slice(2)))S.atab='一';
@@ -652,6 +658,7 @@ function adminHTML(){
     <div class="tabs" style="flex-wrap:wrap">${GRADES.map(g=>`<button class="gt ${S.atab===g?'on':''}" data-a="atab" data-g="${g}">${esc(gname(g))}</button>`).join('')}${cats.map(n=>`<button class="gt ${S.atab==='c:'+n?'on':''}" data-a="atab" data-g="${esc('c:'+n)}">${esc(n)}</button>`).join('')}</div>${list}
     <button class="btn" style="margin-top:10px" data-a="edNew" data-sh="1" data-cat="${esc(place)}">＋ 新增產品到「${esc(placeLabel)}」</button></div>
   ${usersHTML()}
+  ${resetHTML()}
   <div class="adm"><b>老師開錯的課</b><p class="mut" style="margin:4px 0 0">到「每週材料總量」的「逐張材料單」裡可以刪掉。日間部、夜間部有哪些班級和課程，在「設定每學期要有哪些進度表」裡調整。</p></div>`;
 }
 
@@ -1018,6 +1025,14 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='umDelAsk'){S.um.del=b.dataset.e;return render();}
   if(a==='umDelNo'){S.um.del='';return render();}
+  if(a==='rsAsk'){S.rs.open=true;S.rs.txt='';return render();}
+  if(a==='rsNo'){S.rs.open=false;S.rs.txt='';return render();}
+  if(a==='rsYes'){
+    if(S.rs.txt!=='刪除本學期資料'){S.err='請先在欄位輸入「刪除本學期資料」。';return render();}
+    S.rs.busy=true;S.err='';render();
+    try{const r=await run('apiResetTerm',S.rs.txt);S.rs={open:false,txt:'',busy:false};S.sc.data=null;S.entries=[];await boot();S.view='admin';S.info=`已刪除 ${r.term} 的資料：排課 ${r.plans} 筆、進度表內容 ${r.cells} 格。`;return render();}
+    catch(e){S.rs.busy=false;S.err=e.message;return render();}
+  }
   if(a==='umDelYes'){const em=S.um.del;try{S.um.list=await run('apiUserDelete',em);S.info='已從名單刪除。這個帳號之後就不能登入了。';}catch(e){S.err=e.message;}S.um.del='';return render();}
   if(a==='umBulk'){S.um.bulk='';S.um.ed=null;return render();}
   if(a==='umBulkNo'){S.um.bulk=null;return render();}
@@ -1216,6 +1231,7 @@ document.addEventListener('input',ev=>{
   const k=t.dataset.k;if(!k)return;const i=+t.dataset.i,e=S.entries[i];
   if(k==='tname'||k==='tqty'){ensureTools(e)[+t.dataset.ti][k==='tname'?'name':'qty']=t.value;return;}
   if(k==='catname'){S.catAdd=t.value;return;}
+  if(k==='rstxt'){S.rs.txt=t.value;return;}
   if(k==='umname'){S.um.ed.name=t.value;return;}
   if(k==='umemail'){S.um.ed.email=t.value;return;}
   if(k==='umbulk'){S.um.bulk=t.value;return;}

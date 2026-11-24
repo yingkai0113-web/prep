@@ -1398,3 +1398,48 @@ function apiUsersBulkAdd(text) {
   } finally { lock.releaseLock(); }
   return { users: apiUsersList(), added: added, skipped: skipped, bad: bad };
 }
+
+
+/* ---------------- 後台：刪除本學期所有資料（測試完要重來用） ---------------- */
+/* 只有科主任、管理者可以用。刪掉：本學期所有老師的排課／送出的材料單／草稿、教學進度表格子裡排的內容。
+ * 保留：使用者名單、材料單與分類、設定、「每學期要有哪些進度表」和授課老師。刪之前先把內容存一份到「刪除前備份」分頁。 */
+function apiResetTerm(confirmText) {
+  var me = requireStaff_();
+  if (me.role !== '科主任' && me.role !== '管理者') throw new Error('只有科主任或管理者可以刪除本學期的資料。');
+  if (String(confirmText || '') !== '刪除本學期資料') throw new Error('請輸入「刪除本學期資料」才能刪除。');
+  var term = setting_('目前學年學期', '');
+  if (!term) throw new Error('找不到目前的學年學期。');
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var book = ss_(), now = nowStr_(), backup = [], counts = { plans: 0, cells: 0 };
+    function pick_(sheetName, test) {
+      var sh = book.getSheetByName(sheetName);
+      if (!sh || sh.getLastRow() < 2) return [];
+      var vals = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues(), rows = [];
+      for (var i = 1; i < vals.length; i++) if (test(vals[i], vals[0])) rows.push(i + 1);
+      rows.forEach(function (r) { backup.push([now, me.email, term, sheetName, JSON.stringify(vals[r - 1].map(function (v) { return v instanceof Date ? Utilities.formatDate(v, TZ, 'yyyy-MM-dd HH:mm:ss') : v; }))]); });
+      return rows;
+    }
+    function del_(sheetName, rows) {
+      var sh = book.getSheetByName(sheetName);
+      for (var k = rows.length - 1; k >= 0; ) {            // 從最後面往前刪，連續的一次刪掉
+        var end = rows[k], start = end; k--;
+        while (k >= 0 && rows[k] === start - 1) { start = rows[k]; k--; }
+        sh.deleteRows(start, end - start + 1);
+      }
+    }
+    var tableIds = {}; schedTables_(term).forEach(function (t) { tableIds[t.id] = 1; });
+    var planRows = pick_('排課', function (r, h) { return str_(r[h.indexOf('學年學期')]) === term; });
+    var cellRows = pick_('教學進度內容', function (r, h) { return !!tableIds[str_(r[h.indexOf('表ID')])]; });
+    if (backup.length) {
+      var bk = book.getSheetByName('刪除前備份');
+      if (!bk) { bk = book.insertSheet('刪除前備份'); bk.getRange(1, 1, 1, 5).setValues([['備份時間', '刪除者', '學年學期', '來源分頁', '那一列的內容（JSON）']]); }
+      bk.getRange(Math.max(bk.getLastRow(), 1) + 1, 1, backup.length, 5).setNumberFormat('@').setValues(backup);
+    }
+    if (planRows.length) del_('排課', planRows);
+    if (cellRows.length) del_('教學進度內容', cellRows);
+    counts.plans = planRows.length; counts.cells = cellRows.length;
+    try { CacheService.getScriptCache().removeAll([]); } catch (e) {}
+    return { term: term, plans: counts.plans, cells: counts.cells };
+  } finally { lock.releaseLock(); }
+}
