@@ -614,7 +614,8 @@ function tablePids_(tableId) {                                                  
   var seen = {}; schedCells_().forEach(function (x) { if (x.tableId === tableId && x.cell.kind === 'lesson') x.cell.groups.forEach(function (g) { g.pids.forEach(function (p) { seen[p] = 1; }); }); });
   return Object.keys(seen);
 }
-function canSeeTable_(me, t) { return isStaff_(me) || !t.teachers.length || t.teachers.indexOf(me.email) >= 0; }
+/* 進度表只有被指定的授課老師才看得到、改得了；還沒指定授課老師的，只有技士、科主任、管理者能動 */
+function canSeeTable_(me, t) { return isStaff_(me) || (t.teachers.length > 0 && t.teachers.indexOf(me.email) >= 0); }
 function assertCanEditTable_(me, t) { if (!canSeeTable_(me, t)) throw new Error('這門課的進度表，只有授課老師可以編輯。'); }
 function extOf_(v) { return v && L_parseDate(v.from) && L_parseDate(v.to) && v.to >= v.from ? { from: String(v.from), to: String(v.to) } : null; }
 function semDates_() { var term = setting_('目前學年學期', ''); return { start: setting_('開學日 ' + term, ''), end: setting_('結業式 ' + term, '') }; }
@@ -765,9 +766,12 @@ function ensureTables_() {
     writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
   } finally { lock.releaseLock(); }
 }
-function apiScheduleGet() {
+function apiScheduleGet(asEmail) {
   ensureTables_();
-  var me = whoami_(), term = setting_('目前學年學期', ''), start = setting_('開學日 ' + term, ''), end = setting_('結業式 ' + term, '');
+  var me = whoami_(), real = me;
+  /* 技士、科主任、管理者的「老師模式」：看某位老師會看到的進度表（只能看，不會改到任何東西） */
+  if (asEmail && isStaff_(real)) me = { email: String(asEmail).toLowerCase().trim(), role: '老師' };
+  var term = setting_('目前學年學期', ''), start = setting_('開學日 ' + term, ''), end = setting_('結業式 ' + term, '');
   var tables = schedTables_(term), ids = {}, visible = tables.filter(function (t) { return canSeeTable_(me, t); });      // 老師只看得到自己是授課老師的（或還沒指定授課老師的）進度表
   visible.forEach(function (t) { ids[t.id] = 1; });
   var allCells = schedCells_(), weeks = L_weeks(start, end);

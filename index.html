@@ -263,9 +263,10 @@ const isAdmin=()=>realStaff()&&!S.asT;      // 老師模式（預覽）時，當
 const canPlan=()=>!!S.user;                       // 每個身分都能排課備料
 const canTech=()=>isAdmin();
 /* 老師送材料單被關閉時：老師只能看、不能改（管理者、技士、科主任不受影響） */
-const locked=()=>!!S.user&&(S.user.role==='老師'||S.asT)&&S.accepting===false;
+const locked=()=>!!S.user&&(!!S.asT||(S.user.role==='老師'&&S.accepting===false));
 const SCHED_MSG='這是教學進度表排給你的課，產品和班級要改，請到「教學進度表」修改。';
-const LOCK_MSG='目前已關閉老師送出材料單，只能查看，不能新增或修改。需要修改請聯絡技士、科主任或管理者。';
+const LOCK_MSG_='目前已關閉老師送出材料單，只能查看，不能新增或修改。需要修改請聯絡技士、科主任或管理者。';
+const lockMsg=()=>S.asT?'老師模式（預覽）只能看，不能修改。':LOCK_MSG_;
 const norm=e=>({id:e.id||'',pid:e.pid,title:e.title||'',dept:e.dept||'日間部',course:e.course||'',tools:Array.isArray(e.tools)?e.tools.map(t=>({who:t.who,name:t.name,qty:t.qty})):null,
   sid:e.sid||'',group:e.group||'',draft:!!e.draft,pend:!!e.pend,
   omit:Array.isArray(e.omit)?e.omit.slice():[],conv:(e.conv&&typeof e.conv==='object'&&!Array.isArray(e.conv))?JSON.parse(JSON.stringify(e.conv)):{},
@@ -307,9 +308,10 @@ const dirty=()=>sigOf(S.entries)!==S.savedSig;
 function render(){
   if(!S.user){return;}
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
-  const views=[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
+  const views=S.asT?[['sched','教學進度表']]:[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
-  if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500">老師模式（預覽）：你現在看到的是老師的畫面。</div>`;
+  if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>老師模式（預覽）：你正在看 <b>${esc(uName(S.asT))}</b> 的教學進度表。只能看，不能修改。</span><button class="btn sm ghost" data-a="asTpick">換一位老師</button></div>`;
+  if(S.pickT){const l=S.pickList;h+=`<div class="card" style="margin:10px 0"><div class="cb"><b>老師模式：要看哪一位老師的畫面？</b>${l?`<select class="in" id="asTsel" style="width:100%;margin:8px 0">${l.filter(x=>x.role==='老師').concat(l.filter(x=>x.role!=='老師')).map(x=>`<option value="${esc(x.email)}"${x.email===S.asT?' selected':''}>${esc(x.name)}（${esc(x.role)}）</option>`).join('')}</select><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-a="asTcancel">取消</button><button class="btn" data-a="asTgo">進入老師模式</button></div>`:'<p class="mut">載入名單中…</p>'}</div></div>`;}
   if(S.err)h+=`<div class="err">${esc(S.err)}</div>`;
   if(S.info)h+=`<div class="ok-msg">${esc(S.info)}</div>`;
   h+=S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
@@ -344,6 +346,7 @@ function extraHTML(){
 }
 /* 教學進度表 → 確認重量 → 準備器具 → 匯出：進度表排好之後，直接接著做下去 */
 function flowHTML(){
+  if(S.asT)return schedHTML();
   const st=[[0,'進度表'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
   let h=`<div class="steps">${st.map(([n,l],i)=>`<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''}">${i+1} ${l}</button>`).join('')}</div>`;
   if(S.step===0){
@@ -355,7 +358,7 @@ function flowHTML(){
   return h+(S.step===3?step3():S.step===4?stepTools():step5())+`<div style="margin-top:10px;text-align:center"><button class="linkb" data-a="view" data-v="extra">臨時活動要開進度表以外的材料單？到「額外材料單」</button></div>`;
 }
 function sentPill(){
-  if(locked())return `<div class="spill warn">🔒 ${LOCK_MSG}${S.openNote?`<small style="display:block">${esc(S.openNote)}</small>`:''}</div>`;
+  if(locked())return `<div class="spill warn">🔒 ${lockMsg()}${S.openNote?`<small style="display:block">${esc(S.openNote)}</small>`:''}</div>`;
   const l=sc();
   if(!l.length&&S.savedSig==='[]')return '';
   const nd=l.filter(e=>e.draft).length,np=l.filter(e=>e.pend).length;
@@ -541,7 +544,7 @@ function step5(){
     <div style="margin-top:6px">技士現在打開「每週材料總量」就看得到。${S.sent.file?`<br>也下載了「${esc(S.sent.file.name)}」（A4，可以直接列印）。${S.sent.file.url?`沒有自動下載的話，<a href="${S.sent.file.url}" download="${esc(S.sent.file.name)}">按這裡</a>。`:''}`:'這次沒有下載檔案。'}</div>
     <div class="mut" style="margin-top:6px">之後臨時要改：改完再按一次，技士看到的會更新，並標示「已修改」。</div></div>`:'';
   const list=gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span>${md(e.date)}</span><span>${esc(titleOf(e))}<small class="mut"> ${fmt(e.sets)}組${k_(e)!==1?'・×'+fmt(k_(e)):''}</small></span><span class="mut">${fmt(kgOf(e))} 公斤</span></div>`;}).join('')}</div>`).join('');
-  return `<h2>確認並送出</h2>${sb}${locked()?`<p class="sub">${LOCK_MSG}要下載之前已經送出的材料單，按下面的按鈕。</p>`:`<p class="sub"><b>匯出之後，技士才看得到。</b>按「確認並匯出」，先核對一次日期和產品，再選要不要下載檔案（只匯出／進度表／進度表加材料單），沒問題就送給技士。還沒匯出的都只是草稿（已自動存起來），技士看不到、也不算。</p>`}
+  return `<h2>確認並送出</h2>${sb}${locked()?`<p class="sub">${lockMsg()}要下載之前已經送出的材料單，按下面的按鈕。</p>`:`<p class="sub"><b>匯出之後，技士才看得到。</b>按「確認並匯出」，先核對一次日期和產品，再選要不要下載檔案（只匯出／進度表／進度表加材料單），沒問題就送給技士。還沒匯出的都只是草稿（已自動存起來），技士看不到、也不算。</p>`}
   <div class="card"><div class="cb" style="padding-top:12px">${list}<p class="mut" style="margin:10px 0 0">${sc().length} 堂課，跨 ${weeks} 週。</p></div></div>
   ${locked()?bar(S.busy||'',`<button class="btn" data-a="dlSent" ${S.busy?'disabled':''}>${S.busy?'處理中…':'下載已送出的材料單'}</button>`)
     :bar(S.busy||'',`<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
@@ -745,8 +748,11 @@ function setRatio(i){
 document.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;S.err='';S.info='';
   if(a==='signout')return signOut();
-  if(a==='asT'){S.asT=!S.asT;S.view='sched';S.step=0;S.sstep=0;S.info=S.asT?'老師模式：這是老師看到的畫面。上方不會有「每週材料總量」和「後台」，也會跟老師一樣受「開放送單」限制。再按一次「回到管理模式」就回來。':'';return loadSched();}
-  if(locked()&&!['view','step','toggle','t4toggle','gtoggle','gall','dept','course','tab','dlSent','closePrev','hOpen','hClose','pOpen','pNo','pGo','scRefresh'].includes(a)){S.err=LOCK_MSG;return render();}
+  if(a==='asT'){if(S.asT){S.asT='';S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.info='';return loadSched();}S.pickT=true;S.view='admin';return pickLoad();}
+  if(a==='asTpick'){S.pickT=true;return pickLoad();}
+  if(a==='asTcancel'){S.pickT=false;if(!S.asT)S.view='sched';return render();}
+  if(a==='asTgo'){const em=($('#asTsel')||{}).value;if(!em)return;S.asT=em;S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.sc.data=null;S.sc.tab='';return loadSched();}
+  if(locked()&&!['view','step','toggle','t4toggle','gtoggle','gall','dept','course','tab','dlSent','closePrev','hOpen','hClose','pOpen','pNo','pGo','scRefresh'].includes(a)){S.err=lockMsg();return render();}
   if(a==='view'){
     const v=b.dataset.v;
     if(S.view==='sched')S.sstep=S.step;else if(S.view==='extra')S.estep=S.step;
@@ -859,7 +865,7 @@ document.addEventListener('click',async ev=>{
       const by=[];Object.values(m).forEach(p=>{if(p.tid===c.tid)by.push({week:p.week,cls:p.cls,day:p.day,cell:p.cell,base:p.base});});
       if(by.length){const r=await run('apiScheduleSaveCells',c.tid,by,a==='scConfYes');if(r.conflicts&&r.conflicts.length){S.sc.conflict={tid:c.tid,list:r.conflicts,after:c.after};S.busy='';return render();}Object.keys(m).forEach(k=>{if(m[k].tid===c.tid)delete m[k];});}
       const r2=pendCount()?await commitSched(c.after):{saved:0};if(r2.conflicts){S.busy='';return render();}
-      S.sc.data=await run('apiScheduleGet');await refreshEntries();S.info='已儲存。';
+      S.sc.data=await run('apiScheduleGet',S.asT||'');await refreshEntries();S.info='已儲存。';
       if(c.after&&c.after.n){S.busy='';S.view='sched';S.step=c.after.n;window.scrollTo(0,0);return render();}
     }catch(er){S.err=er.message;}
     S.busy='';return render();}
@@ -922,7 +928,7 @@ document.addEventListener('click',async ev=>{
   if(a==='scDates'){const d=S.sc.data;S.sc.datesEd={start:d.start||'',end:d.end||''};return render();}
   if(a==='scDatesNo'){S.sc.datesEd=null;return render();}
   if(a==='scDatesSave'){
-    try{await run('apiScheduleSetDates',S.sc.datesEd.start,S.sc.datesEd.end);S.sc.datesEd=null;S.sc.data=await run('apiScheduleGet');await refreshEntries();S.info='已設定。每一週的日期都排好了，排給老師的課日期也一起更新。';}
+    try{await run('apiScheduleSetDates',S.sc.datesEd.start,S.sc.datesEd.end);S.sc.datesEd=null;S.sc.data=await run('apiScheduleGet',S.asT||'');await refreshEntries();S.info='已設定。每一週的日期都排好了，排給老師的課日期也一起更新。';}
     catch(e){S.err=e.message;}
     return render();}
   if(a==='scEditTable'){const t=schedTable(S.sc.tab);S.sc.tableEd={id:t.id,classes:t.classes.map(c=>({cls:c.cls,days:clDays(c)})),groups:t.groups.join('、'),teachers:(t.teachers||[]).slice()};return render();}
@@ -1188,7 +1194,7 @@ document.addEventListener('dragover',ev=>{if(S.sc&&S.sc.drag&&ev.target.closest&
 document.addEventListener('drop',ev=>{
   const td=ev.target.closest&&ev.target.closest('td.sc');if(!td||!S.sc||!S.sc.drag)return;
   ev.preventDefault();const d=S.sc.drag;S.sc.drag=null;
-  if(locked()){S.err=LOCK_MSG;return render();}
+  if(locked()){S.err=lockMsg();return render();}
   const t=schedTable(S.sc.tab),cell=t&&schedCell(t.id,d.w,d.cl,d.day),w=+td.dataset.w,cl=td.dataset.cl,day=+td.dataset.d||0;
   if(!cell||(d.w===w&&d.cl===cl&&d.day===day))return;
   pasteInto(t,w,cl,day,cellCopy(cell));
@@ -1320,12 +1326,12 @@ async function commitSched(after){
     if(r.conflicts&&r.conflicts.length){S.sc.conflict={tid,list:r.conflicts,after:after||null};return {conflicts:true};}
     saved+=r.saved;Object.keys(m).forEach(k=>{if(m[k].tid===tid)delete m[k];});
   }
-  S.sc.data=await run('apiScheduleGet');await refreshEntries();
+  S.sc.data=await run('apiScheduleGet',S.asT||'');await refreshEntries();
   return {saved};
 }
-async function quietSched(){try{S.sc.data=await run('apiScheduleGet');render();}catch(e){}}
+async function quietSched(){try{S.sc.data=await run('apiScheduleGet',S.asT||'');render();}catch(e){}}
 
-const uName=em=>{const u=((S.sc.data&&S.sc.data.users)||[]).find(x=>x.email===em);return u?u.name:(em||'').split('@')[0];};
+const uName=em=>{const u=((S.sc.data&&S.sc.data.users)||[]).find(x=>x.email===em)||(S.pickList||[]).find(x=>x.email===em);return u?u.name:(em||'').split('@')[0];};
 const pTitle=pid=>{const p=S.cat.pmap[pid];if(p)return p.title;const c=S.sc&&S.sc.data&&S.sc.data.cellProducts&&S.sc.data.cellProducts[pid];return c?c.title:'（找不到的材料單）';};
 const usableProducts=()=>S.cat.products.filter(p=>!p.deleted&&!p.hidden&&!(p.custom&&!p.shared&&p.owner!==S.user.email));      // 自己自創的（還沒分享的）也可以排進進度表
 const fullDate=s=>String(s||'').replace(/-/g,'/');
@@ -1333,9 +1339,15 @@ const tWeeks=t=>t.weeks||S.sc.data.weeks;
 const wLabel=w=>w.vac?`寒暑假 ${w.label}`:`第 ${w.n} 週`;
 const clDays=c=>{const d=(c.days&&c.days.length?c.days:[c.wd||1]).slice().sort();return d;};
 const daysText=(d,short)=>{d=d.slice().sort();if(d.length===1)return (short?'W':'週')+WDN[d[0]%7];if(d.length===5)return short?'每天':'每天（週一到週五）';const seq=d.every((x,i)=>i===0||x===d[i-1]+1);if(seq)return short?`W${WDN[d[0]%7]}~${WDN[d[d.length-1]%7]}`:`週${WDN[d[0]%7]}到週${WDN[d[d.length-1]%7]}`;return d.map(x=>(short?'W':'週')+WDN[x%7]).join('、');};
+async function pickLoad(){
+  render();
+  if(S.pickList)return;
+  try{const l=await run('apiUsersList');S.pickList=l.filter(x=>x.role==='老師'||x.role==='技士'||x.role==='科主任'||x.role==='管理者');}catch(e){S.err=e.message;}
+  render();
+}
 async function loadSched(){
   S.sc.busy=true;S.err='';render();
-  try{const d=await run('apiScheduleGet');S.sc.data=d;if(!S.sc.tab||!d.tables.some(t=>t.id===S.sc.tab))S.sc.tab=(d.tables[0]||{}).id||'';}catch(e){S.err=e.message;}
+  try{const d=await run('apiScheduleGet',S.asT||'');S.sc.data=d;if(!S.sc.tab||!d.tables.some(t=>t.id===S.sc.tab))S.sc.tab=(d.tables[0]||{}).id||'';}catch(e){S.err=e.message;}
   S.sc.busy=false;render();
 }
 /* 進度表改了，自己的排課（待確認的課）也會跟著變：沒有未儲存的修改就直接更新 */
@@ -1471,7 +1483,7 @@ function schedHTML(){
   <select class="in" style="width:100%;margin-bottom:8px;font-weight:700" data-k="scTabSel" aria-label="哪一門課的進度表">${list.map(x=>`<option value="${esc(x.id)}" ${x.id===t.id?'selected':''}>${esc(x.title||x.course)}（${x.classes.map(c=>esc(c.cls)).join('、')}）</option>`).join('')}</select>
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><span class="mut" style="font-size:13px">${t.classes.map(c=>`${esc(c.cls)}：${daysText(clDays(c))}`).join('　')}${t.groups.length?`　分組：${esc(t.groups.join('、'))}`:''}</span>${d.canConfig?(S.sc.delAsk===t.id?`<span><button class="btn sm danger" data-a="scDelYes">確定刪除這張</button> <button class="btn sm ghost" data-a="scDelNo">取消</button></span>`:`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日、分組、授課老師</button> <button class="btn sm ghost" data-a="scDelAsk">刪除</button></span>`):(t.classes.length===1?`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日</button></span>`:'')}</div>
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${t.ext?`寒暑假加課：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}`:'寒暑假也要上課？'}</span><span><button class="btn sm ghost" data-a="hOpen">叫出以前的進度表</button> <button class="btn sm ghost" data-a="scExtra">${t.ext?'修改寒暑假的週':'＋ 加寒暑假的週'}</button></span></div>
-  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${(t.teachers&&t.teachers.length)?`授課老師：${t.teachers.map(uName).map(esc).join('、')}`:(d.canConfig?'還沒指定授課老師：現在所有老師都看得到、都能排。':'')}</span><span><button class="btn sm ghost" data-a="scRefresh">重新整理</button> <button class="btn sm" data-a="pOpen">匯出列印進度表</button></span></div>
+  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${(t.teachers&&t.teachers.length)?`授課老師：${t.teachers.map(uName).map(esc).join('、')}`:(d.canConfig?'還沒指定授課老師：老師都看不到這張，請按「修改」指定授課老師，老師才能編輯。':'')}</span><span><button class="btn sm ghost" data-a="scRefresh">重新整理</button> <button class="btn sm" data-a="pOpen">匯出列印進度表</button></span></div>
   <p class="sub" style="margin:0 0 6px">點格子來排。<span class="tg" style="background:#FFF6D0">黃色</span>是你開單的，灰色是放假、考前複習等不排實習的。</p>`;
   const tw=tWeeks(t),hasVac=tw.some(w=>w.vac),wf=S.sc.wf||'all';
   const filt=hasVac?`<div class="seg" role="group" aria-label="看哪些週" style="margin:0 0 8px">${[['all','全部'],['sem','只看學期'],['vac','只看寒暑假']].map(([v,n])=>`<button data-a="scWf" data-v="${v}" class="${wf===v?'on':''}">${n}</button>`).join('')}</div>`:'';
@@ -1569,7 +1581,7 @@ function scTableModal(){
     ${e.classes.map(c=>`<div class="prow"><b>${esc(c.cls)}</b> <span class="mut">每週上課日：${esc(daysText(c.days))}</span><div class="ccs" style="margin-top:4px">${[1,2,3,4,5].map(n=>`<button class="cc ${c.days.includes(n)?'on':''}" data-a="scTDay" data-cl="${esc(c.cls)}" data-n="${n}">週${WDN[n]}</button>`).join('')}${one?`<button class="cc ${c.days.length===5?'on':''}" data-a="scTDay" data-cl="${esc(c.cls)}" data-n="all">每天</button>`:''}</div>${one?`<div class="rgrow" style="margin-top:6px"><label>從 <select class="in" data-k="scTFrom">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.min(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label><label>到 <select class="in" data-k="scTTo">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.max(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label></div>`:''}</div>`).join('')}
     ${one?'<p class="mut" style="margin:4px 0 0">只有這一個班的話，可以選好幾天，或用「從…到…」選週幾到週幾（不一定要週一到週五）。某一週想額外加一天，到進度表按那一週的「＋日」。</p>':''}
     ${!S.sc.data.canConfig?'':t.dept==='夜間部'?'<p class="mut" style="margin:8px 0 0">夜間部的實習課只有一位老師，不分組。</p>':`<label class="lbl" style="margin-top:8px">分組上課？（填組別，用「、」隔開，例如：單數組、雙數組。不分組就留空）</label><input class="in" style="width:100%" data-k="sctgroups" maxlength="20" value="${esc(e.groups)}">`}
-    ${S.sc.data.canConfig?`<label class="lbl" style="margin-top:10px">這學期的授課老師（進度表只能排這幾位，也只會出現在這幾位老師的教學進度表；都不選 = 所有老師）</label><div class="ccs">${S.sc.data.users.map(u=>`<button class="cc ${e.teachers.includes(u.email)?'on':''}" data-a="scTTeach" data-em="${esc(u.email)}" aria-pressed="${e.teachers.includes(u.email)}">${esc(u.name)}</button>`).join('')}</div>`:''}
+    ${S.sc.data.canConfig?`<label class="lbl" style="margin-top:10px">這學期的授課老師（進度表只能排這幾位，也只會出現在這幾位老師的教學進度表；都不選 = 只有技士、科主任、管理者能編輯）</label><div class="ccs">${S.sc.data.users.map(u=>`<button class="cc ${e.teachers.includes(u.email)?'on':''}" data-a="scTTeach" data-em="${esc(u.email)}" aria-pressed="${e.teachers.includes(u.email)}">${esc(u.name)}</button>`).join('')}</div>`:''}
     <p class="mut" style="margin:8px 0 0">改了上課日，排給老師的課日期會一起改。</p>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="scTableNo">取消</button><button class="btn" data-a="scTableSave">儲存</button></div></div></div>`;
 }
