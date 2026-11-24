@@ -258,11 +258,12 @@ const gname=g=>(S.cat&&S.cat.gradeNames&&S.cat.gradeNames[g])||g+'年級';
 const catLabel=c=>{const g=GRADES.find(x=>c===x+'年級');return g?gname(g):c;};
 const gradeOf=p=>{const c=p.category||'';if(GRADES.some(g=>c===g+'年級'))return c[0];return (!p.custom&&!c)?p.sem[0]:'';};
 /* 技士、科主任、管理者：一樣的管理功能（看每週總量、後台、刪除老師開錯的課），也都能排課備料。 */
-const isAdmin=()=>S.user&&['技士','科主任','管理者'].includes(S.user.role);
+const realStaff=()=>!!S.user&&['技士','科主任','管理者'].includes(S.user.role);
+const isAdmin=()=>realStaff()&&!S.asT;      // 老師模式（預覽）時，當作老師來顯示
 const canPlan=()=>!!S.user;                       // 每個身分都能排課備料
 const canTech=()=>isAdmin();
 /* 老師送材料單被關閉時：老師只能看、不能改（管理者、技士、科主任不受影響） */
-const locked=()=>!!S.user&&S.user.role==='老師'&&S.accepting===false;
+const locked=()=>!!S.user&&(S.user.role==='老師'||S.asT)&&S.accepting===false;
 const SCHED_MSG='這是教學進度表排給你的課，產品和班級要改，請到「教學進度表」修改。';
 const LOCK_MSG='目前已關閉老師送出材料單，只能查看，不能新增或修改。需要修改請聯絡技士、科主任或管理者。';
 const norm=e=>({id:e.id||'',pid:e.pid,title:e.title||'',dept:e.dept||'日間部',course:e.course||'',tools:Array.isArray(e.tools)?e.tools.map(t=>({who:t.who,name:t.name,qty:t.qty})):null,
@@ -305,9 +306,10 @@ const dirty=()=>sigOf(S.entries)!==S.savedSig;
 /* ---------- 畫面 ---------- */
 function render(){
   if(!S.user){return;}
-  let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span><button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
+  let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
   const views=[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
+  if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500">老師模式（預覽）：你現在看到的是老師的畫面。</div>`;
   if(S.err)h+=`<div class="err">${esc(S.err)}</div>`;
   if(S.info)h+=`<div class="ok-msg">${esc(S.info)}</div>`;
   h+=S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
@@ -743,6 +745,7 @@ function setRatio(i){
 document.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;S.err='';S.info='';
   if(a==='signout')return signOut();
+  if(a==='asT'){S.asT=!S.asT;S.view='sched';S.step=0;S.sstep=0;S.info=S.asT?'老師模式：這是老師看到的畫面。上方不會有「每週材料總量」和「後台」，也會跟老師一樣受「開放送單」限制。再按一次「回到管理模式」就回來。':'';return loadSched();}
   if(locked()&&!['view','step','toggle','t4toggle','gtoggle','gall','dept','course','tab','dlSent','closePrev','hOpen','hClose','pOpen','pNo','pGo','scRefresh'].includes(a)){S.err=LOCK_MSG;return render();}
   if(a==='view'){
     const v=b.dataset.v;
