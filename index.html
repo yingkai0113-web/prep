@@ -820,8 +820,8 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='rqOpen'){S.rq={form:null,delAsk:''};return render();}
   if(a==='rqClose'){S.rq=null;return render();}
-  if(a==='rqNew'){const dp=S.dept;S.rq.form={id:'',dept:dp,course:(S.courses[dp]||[])[0]||'',classes:[],groups:'',half:'每',note:''};return render();}
-  if(a==='rqEdit'){const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.map(c=>({cls:c.cls,days:c.days.slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||''};return render();}
+  if(a==='rqNew'){const dp=S.dept;S.rq.form={id:'',dept:dp,course:(S.courses[dp]||[])[0]||'',classes:[],groups:'',half:'每',note:'',teachers:[]};return render();}
+  if(a==='rqEdit'){const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.map(c=>({cls:c.cls,days:c.days.slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||'',teachers:reqTeachers(x)};return render();}
   if(a==='rqBack'){S.rq.form=null;return render();}
   if(a==='rqDept'){const f=S.rq.form;f.dept=b.dataset.d;f.course=(S.courses[f.dept]||[])[0]||'';f.classes=[];if(f.dept==='夜間部')f.groups='';return render();}
   if(a==='rqCourse'){S.rq.form.course=b.dataset.c;return render();}
@@ -848,7 +848,9 @@ document.addEventListener('click',async ev=>{
     try{const r=await run('apiClassRemove',f.dept,b.dataset.cl);S.classes=r.classes;f.classes=f.classes.filter(x=>x.cls!==b.dataset.cl);S.info='已刪掉。';}
     catch(er){S.err=er.message;}
     return render();}
-  if(a==='rqSave'){try{S.sc.data=await run('apiRequiredSave',S.rq.form);S.rq.form=null;await refreshEntries();S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。';}catch(e){S.err=e.message;}return render();}
+  if(a==='rqTeach'){const f=S.rq.form,em=b.dataset.em;f.teachers=f.teachers.includes(em)?f.teachers.filter(x=>x!==em):f.teachers.concat([em]);return render();}
+  if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;f.busy=true;f.err='';render();
+    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));S.rq.form=null;await refreshEntries();S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。';}catch(e){f.busy=false;f.err=e.message;}return render();}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
   if(a==='rqDelNo'){S.rq.delAsk='';return render();}
   if(a==='rqDelYes'){try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.rq.delAsk='';}catch(e){S.err=e.message;}return render();}
@@ -948,9 +950,9 @@ document.addEventListener('click',async ev=>{
     else{const k=+n;c.days=c.days.includes(k)?c.days.filter(x=>x!==k):c.days.concat([k]).sort();if(!c.days.length)c.days=[k];}
     return render();}
   if(a==='scTableSave'){
-    const e=S.sc.tableEd;
-    try{const res=await run('apiScheduleSaveTable',S.sc.data.canConfig?{id:e.id,classes:e.classes,groups:e.groups,teachers:e.teachers}:{id:e.id,classes:e.classes,groups:e.groups});S.sc.data=res;S.sc.tableEd=null;await refreshEntries();S.info=res.notice||'存好了。排給老師的課，日期已經跟著改。';}
-    catch(er){S.err=er.message;}
+    const e=S.sc.tableEd;if(!e||e.busy)return;e.busy=true;e.err='';render();
+    try{const res=await run('apiScheduleSaveTable',{id:e.id,classes:e.classes,groups:e.groups});S.sc.data=res;S.sc.tableEd=null;await refreshEntries();S.info=res.notice||'存好了。排給老師的課，日期已經跟著改。';}
+    catch(er){e.busy=false;e.err=er.message;}
     return render();}
   if(a==='scDelAsk'){S.sc.delAsk=S.sc.tab;return render();}
   if(a==='scDelNo'){S.sc.delAsk='';return render();}
@@ -1321,6 +1323,8 @@ document.addEventListener('change',ev=>{
 /* ---------- 教學進度表 ---------- */
 const WDN=['日','一','二','三','四','五','六'];
 const SC_NOTES=['放假','考前複習','期初打掃','期末打掃','定期評量','運動會','補假'];
+const reqTeachers=x=>{if(x.teachers&&x.teachers.length)return x.teachers.slice();const t=(S.sc.data.tables||[]).find(t=>t.dept===x.dept&&t.course===x.course&&t.classes.some(c=>x.classes.some(k=>k.cls===c.cls)));return t?(t.teachers||[]).slice():[];};
+const reqTeachNames=x=>{const l=reqTeachers(x),u=S.sc.data.users||[];if(!l.length)return '<span class="mut">還沒指定（只有你們能編輯）</span>';return l.map(em=>{const n=(u.find(y=>y.email===em)||{}).name||em;return esc(n)+(em===S.sc.data.me?' <span class="tg">我的課</span>':'');}).join('、');};
 const schedTable=id=>(S.sc.data&&S.sc.data.tables.find(t=>t.id===id))||null;
 /* 進度表改的時候，先只留在畫面上（還沒儲存）；按「儲存進度表」或「下一步」才真的生效，材料單才會排給老師。 */
 const pkey=(tid,w,cl,day)=>tid+'|'+w+'|'+cl+'|'+(day||0);
@@ -1597,9 +1601,9 @@ function scTableModal(){
     ${e.classes.map(c=>`<div class="prow"><b>${esc(c.cls)}</b> <span class="mut">每週上課日：${esc(daysText(c.days))}</span><div class="ccs" style="margin-top:4px">${[1,2,3,4,5].map(n=>`<button class="cc ${c.days.includes(n)?'on':''}" data-a="scTDay" data-cl="${esc(c.cls)}" data-n="${n}">週${WDN[n]}</button>`).join('')}${one?`<button class="cc ${c.days.length===5?'on':''}" data-a="scTDay" data-cl="${esc(c.cls)}" data-n="all">每天</button>`:''}</div>${one?`<div class="rgrow" style="margin-top:6px"><label>從 <select class="in" data-k="scTFrom">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.min(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label><label>到 <select class="in" data-k="scTTo">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.max(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label></div>`:''}</div>`).join('')}
     ${one?'<p class="mut" style="margin:4px 0 0">只有這一個班的話，可以選好幾天，或用「從…到…」選週幾到週幾（不一定要週一到週五）。某一週想額外加一天，到進度表按那一週的「＋日」。</p>':''}
     ${!S.sc.data.canConfig?'':t.dept==='夜間部'?'<p class="mut" style="margin:8px 0 0">夜間部的實習課只有一位老師，不分組。</p>':`<label class="lbl" style="margin-top:8px">分組上課？（填組別，用「、」隔開，例如：單數組、雙數組。不分組就留空）</label><input class="in" style="width:100%" data-k="sctgroups" maxlength="20" value="${esc(e.groups)}">`}
-    ${S.sc.data.canConfig?`<label class="lbl" style="margin-top:10px">這學期的授課老師（進度表只能排這幾位，也只會出現在這幾位老師的教學進度表；都不選 = 只有技士、科主任、管理者能編輯）</label><div class="ccs">${S.sc.data.users.map(u=>`<button class="cc ${e.teachers.includes(u.email)?'on':''}" data-a="scTTeach" data-em="${esc(u.email)}" aria-pressed="${e.teachers.includes(u.email)}">${esc(u.name)}</button>`).join('')}</div>`:''}
+    ${e.err?`<div class="err" style="margin-top:10px">${esc(e.err)}</div>`:''}
     <p class="mut" style="margin:8px 0 0">改了上課日，排給老師的課日期會一起改。</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="scTableNo">取消</button><button class="btn" data-a="scTableSave">儲存</button></div></div></div>`;
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="scTableNo">取消</button><button class="btn" data-a="scTableSave"${e.busy?' disabled':''}>${e.busy?'儲存中…':'儲存'}</button></div></div></div>`;
 }
 
 /* ---------- 叫出以前的紀錄 ---------- */
@@ -1684,7 +1688,7 @@ function rqModal(){
   const q=S.rq,d=S.sc.data,f=q.form;
   const clText=c=>`${esc(c.cls)}（${daysText(c.days,true)}）`;
   if(!f)return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">每學期要有哪些進度表</h2><p class="mut" style="margin:0 0 8px">設定一次，每學期都照這份清單自動建好進度表。同一門課、同一班只會有一張，老師只能在裡面共同編輯，不能自己新增。</p>
-    ${(d.requiredAll||[]).map(x=>`<div class="parow"><span>${esc(x.dept)}・${esc(x.course)} <span class="tg gr">${{'每':'每學期','上':'上學期','下':'下學期','假':'只有寒暑假'}[x.half]||x.half}</span><small>${x.classes.map(clText).join('、')}${x.groups&&x.groups.length?'　分組：'+esc(x.groups.join('、')):''}${x.note?'　'+esc(x.note):''}</small></span><span>${q.delAsk===x.id?`<button class="btn danger sm" data-a="rqDelYes" data-id="${esc(x.id)}">確定刪除</button> <button class="btn ghost sm" data-a="rqDelNo">取消</button>`:`<button class="btn sm ghost" data-a="rqEdit" data-id="${esc(x.id)}">修改</button> <button class="btn sm ghost" data-a="rqDelAsk" data-id="${esc(x.id)}">刪除</button>`}</span></div>`).join('')||'<p class="mut">還沒有。</p>'}
+    ${(d.requiredAll||[]).map(x=>`<div class="parow"><span>${esc(x.dept)}・${esc(x.course)} <span class="tg gr">${{'每':'每學期','上':'上學期','下':'下學期','假':'只有寒暑假'}[x.half]||x.half}</span><small>${x.classes.map(clText).join('、')}${x.groups&&x.groups.length?'　分組：'+esc(x.groups.join('、')):''}${x.note?'　'+esc(x.note):''}<br>授課老師：${reqTeachNames(x)}</small></span><span>${q.delAsk===x.id?`<button class="btn danger sm" data-a="rqDelYes" data-id="${esc(x.id)}">確定刪除</button> <button class="btn ghost sm" data-a="rqDelNo">取消</button>`:`<button class="btn sm ghost" data-a="rqEdit" data-id="${esc(x.id)}">修改</button> <button class="btn sm ghost" data-a="rqDelAsk" data-id="${esc(x.id)}">刪除</button>`}</span></div>`).join('')||'<p class="mut">還沒有。</p>'}
     <div style="display:flex;gap:8px;justify-content:space-between;margin-top:10px"><button class="btn" data-a="rqNew">＋ 新增一門</button><button class="btn ghost" data-a="rqClose">關閉</button></div></div></div>`;
   const cls=S.classes[f.dept]||[],courses=S.courses[f.dept]||[],one=f.classes.length===1;
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 8px">${f.id?'修改':'新增'}：要有進度表的課</h2>
@@ -1697,8 +1701,10 @@ function rqModal(){
     ${f.classes.length?`<p class="mut" style="margin:4px 0 0">${one?'只有一個班的話可以選好幾天，或用「從…到…」選週幾到週幾（不一定要週一到週五）。某一週想額外加一天（例如週六也要練），到進度表按那一週的「＋日」。':'一個班一天。每學期上課日不一樣的話，之後到進度表按「修改上課日、分組」改。'}</p>`:''}
     ${f.dept==='夜間部'?'<p class="mut" style="margin:8px 0 0">夜間部的實習課只有一位老師，不分組。</p>':`<label class="lbl" style="margin-top:8px">分組上課？（填組別，用「、」隔開，例如：單數組、雙數組。不分組就留空）</label><input class="in" style="width:100%" data-k="rqgroups" maxlength="20" value="${esc(f.groups)}">`}
     <label class="lbl" style="margin-top:8px">哪個學期要有</label>${f.half==='假'?'<p class="mut" style="margin:0 0 4px">只有寒暑假：每學期都建一張進度表，但清單只看寒暑假加的那幾週，學期內沒排也不會顯示還沒排完。</p>':''}<div class="seg">${[['每','每學期'],['上','只有上學期'],['下','只有下學期'],['假','只有寒暑假']].map(([v,n])=>`<button data-a="rqHalf" data-h="${v}" class="${f.half===v?'on':''}">${n}</button>`).join('')}</div>
+    <label class="lbl" style="margin-top:8px">授課老師（點名字選，可以選好幾位；這門課只會出現在這幾位老師的教學進度表。都不選 = 只有技士、科主任、管理者能編輯）</label><div class="ccs">${S.sc.data.users.map(u=>`<button class="cc ${f.teachers.includes(u.email)?'on':''}" data-a="rqTeach" data-em="${esc(u.email)}" aria-pressed="${f.teachers.includes(u.email)}">${esc(u.name)}</button>`).join('')}</div>
     <label class="lbl" style="margin-top:8px">備註（可以不填）</label><input class="in" style="width:100%" data-k="rqnote" maxlength="30" value="${esc(f.note)}">
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="rqBack">取消</button><button class="btn" data-a="rqSave">儲存</button></div></div></div>`;
+    ${f.err?`<div class="err" style="margin-top:10px">${esc(f.err)}</div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="rqBack">取消</button><button class="btn" data-a="rqSave"${f.busy?' disabled':''}>${f.busy?'儲存中…':'儲存'}</button></div></div></div>`;
 }
 
 /* ---------- 開始 ---------- */

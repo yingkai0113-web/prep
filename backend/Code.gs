@@ -132,7 +132,7 @@ function setting_(key, fallback) {
 /* 寫一個「設定」值（沒有就新增一列） */
 function setSetting_(key, value) {
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = ss_().getSheetByName('設定');
     if (!sh) throw new Error('試算表裡找不到分頁「設定」');
@@ -247,7 +247,7 @@ function requireAdmin_() {
 /* 寫入（新增或更新）某張預設材料單的修改，保留沒傳的欄位 */
 function writeOverride_(me, pid, patch) {
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = ovrSheet_(), values = sh.getDataRange().getValues(), idx = -1;
     for (var i = 1; i < values.length; i++) if (str_(values[i][0]) === pid) { idx = i; break; }
@@ -396,7 +396,7 @@ function apiSavePlan(entries, mode) {
   if (me.role === '老師' && !submissionOpen_()) throw new Error('目前已關閉老師送出材料單，不能新增或修改。需要修改請聯絡技士、科主任或管理者。');
   if (!entries || entries.length > 800) throw new Error('一次最多 800 堂課。');
   var lock = LockService.getScriptLock(), clean = [];
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var mineOld = {};
     readPlans_().forEach(function (e) { if (e.teacher === me.email && e.term === term) mineOld[e.id] = e; });
@@ -447,7 +447,7 @@ function apiSavePlan(entries, mode) {
 function apiSaveCustom(rec) {
   var me = whoami_(), clean = L_cleanCustom(rec || {}, nameMap_()), admin = isStaff_(me);
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = customSheet_(), values = sh.getDataRange().getValues(), idx = -1, shared = '';
     if (clean.pid) {
@@ -476,7 +476,7 @@ function apiSaveCustom(rec) {
 /* 刪掉（其實是隱藏，排過的課還是看得到）。自己的，或管理者刪共用的。 */
 function apiDeleteCustom(pid) {
   var me = whoami_(), lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = customSheet_(), values = sh.getDataRange().getValues();
     for (var i = 1; i < values.length; i++) {
@@ -511,7 +511,7 @@ function apiSetTemplateHidden(pid, hidden) {
 function apiRevertTemplate(pid) {
   requireAdmin_();
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = ovrSheet_(), values = sh.getDataRange().getValues(), keep = [values[0]];
     for (var i = 1; i < values.length; i++) if (str_(values[i][0]) !== str_(pid)) keep.push(values[i]);
@@ -640,7 +640,7 @@ function schedEmails_() { return readTable_('使用者').map(function (u) { retu
 /* ---------------- 每學期應該有哪些進度表（常態清單，不用每學期重設） ----------------
  * 「應有進度表」分頁：每列一門課（哪個部、哪門課、哪幾個班、上學期／下學期／每學期都要）。
  * 每學期直接用這份清單對照「教學進度表」，就知道哪些課還沒建進度表、哪些還沒送單。 */
-var REQ_HEAD = ['編號', '部別', '課程', '班級', '學期別', '備註', '建立者', '建立時間', '最後修改', '組別'];
+var REQ_HEAD = ['編號', '部別', '課程', '班級', '學期別', '備註', '建立者', '建立時間', '最後修改', '組別', '授課老師'];
 function reqClasses_(v) {                                  // 班級欄：舊的寫法是班級名稱的清單，新的是 [{cls, days}]；依星期排
   return L_sortClasses((Array.isArray(v) ? v : []).map(function (x) { var cls = typeof x === 'string' ? x : x && x.cls; return cls ? { cls: cls, days: L_classDays(typeof x === 'string' ? {} : x) } : null; }).filter(Boolean));
 }
@@ -649,7 +649,7 @@ function requiredAll_() {
   ensureSheet_('應有進度表', REQ_HEAD);
   if (fresh) writeRequired_(L_REQUIRED_DEFAULTS.map(function (e) { return { id: e.id, dept: e.dept, course: e.course, classes: e.classes.map(function (c) { return { cls: c.cls, days: c.days.slice() }; }), groups: e.groups.slice(), half: e.half, note: e.note }; }), '系統預設');   // 第一次用：放進預設的清單
   return readTable_('應有進度表').map(function (r) {
-    return { id: str_(r['編號']), dept: str_(r['部別']), course: str_(r['課程']), classes: reqClasses_(jparse_(r['班級'], [])), groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [], half: str_(r['學期別']) || '每', note: str_(r['備註']) };
+    return { id: str_(r['編號']), dept: str_(r['部別']), course: str_(r['課程']), classes: reqClasses_(jparse_(r['班級'], [])), groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [], half: str_(r['學期別']) || '每', note: str_(r['備註']), teachers: teachersOf_(r['授課老師']) };
   });
 }
 function requiredSkips_(term) { return setting_('本學期不開 ' + term, '').split(/[、,\s]+/).filter(Boolean); }
@@ -660,7 +660,7 @@ function requiredForTerm_(term) {
 function writeRequired_(list, by) {
   var old = {}; readTable_('應有進度表').forEach(function (r) { old[str_(r['編號'])] = r; });
   writeSched_('應有進度表', REQ_HEAD, list.map(function (e) {
-    var o = old[e.id]; return [e.id, e.dept, e.course, JSON.stringify(e.classes), e.half, e.note || '', o ? str_(o['建立者']) : by, o ? str_(o['建立時間']) : nowStr_(), nowStr_(), (e.groups || []).join('、')];
+    var o = old[e.id]; return [e.id, e.dept, e.course, JSON.stringify(e.classes), e.half, e.note || '', o ? str_(o['建立者']) : by, o ? str_(o['建立時間']) : nowStr_(), nowStr_(), (e.groups || []).join('、'), (e.teachers || []).join('、')];
   }));
 }
 /* 清單改了（例如國中技藝班加了幾個國中），這學期已經建好的那張進度表也跟著改：新的班加進去；拿掉的班，沒有內容才拿掉（有內容的留著） */
@@ -684,6 +684,17 @@ function reconcileTables_(oldE, e) {
   if (kept.length !== all.length) writeSched_('教學進度內容', SCHED_CELL_HEAD, kept.map(cellRow_));
   syncSchedule_(t.id);
 }
+/* 清單裡設的授課老師，同步到這學期已經建好的那張進度表 */
+function applyReqTeachers_(e) {
+  var term = setting_('目前學年學期', ''), names = {}; e.classes.forEach(function (c) { names[c.cls] = 1; });
+  var mine = schedTables_(term).filter(function (t) { return t.dept === e.dept && t.course === e.course && t.classes.some(function (c) { return names[c.cls]; }); });
+  if (!mine.length) return;
+  var t = mine[0]; if ((t.teachers || []).join('、') === (e.teachers || []).join('、')) return;
+  var old = readTable_('教學進度表').filter(function (r) { return str_(r['表ID']) === t.id; })[0];
+  var rows = allTableRows_().filter(function (r) { return r[0] !== t.id; });
+  rows.push(tableRow_(Object.assign({}, t, { teachers: e.teachers || [] }), old ? str_(old['建立時間']) : ''));
+  writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
+}
 function apiRequiredSave(rec) {
   var me = requireAdmin_(); rec = rec || {};
   var dept = String(rec.dept || ''), classes = classes_(), course = L_safeText(rec.course, 20), half = String(rec.half || '每');
@@ -701,7 +712,13 @@ function apiRequiredSave(rec) {
   var groups = (Array.isArray(rec.groups) ? rec.groups.join('、') : String(rec.groups || '')).split(/[、,，\s]+/).map(function (g) { return L_safeText(g, 6); }).filter(Boolean);
   if (groups.length === 1 || groups.length > 3) throw new Error('分組要填 2 到 3 組，例如：單數組、雙數組。');
   if (dept === '夜間部' && groups.length) throw new Error('夜間部的實習課只有一位老師，不能分組。');
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var known = schedEmails_(), teachers = [];
+  (Array.isArray(rec.teachers) ? rec.teachers : String(rec.teachers || '').split(/[、,，\s]+/)).forEach(function (x) {
+    x = String(x).toLowerCase().trim(); if (!x || teachers.indexOf(x) >= 0) return;
+    if (known.indexOf(x) < 0) throw new Error('找不到這位老師：' + x);
+    teachers.push(x);
+  });
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var list = requiredAll_(), id = String(rec.id || '');
     if (id && !list.some(function (e) { return e.id === id; })) throw new Error('找不到這一筆。');
@@ -711,17 +728,18 @@ function apiRequiredSave(rec) {
       if (!(o.half === '每' || half === '每' || o.half === '假' || half === '假' || o.half === half)) return;
       cl.forEach(function (c) { if (o.classes.some(function (x) { return x.cls === c.cls; })) throw new Error('「' + dept + '・' + course + '」的「' + c.cls + '」已經有了。同一門課同一班只能有一張進度表，大家共同編輯那一張。'); });
     });
-    var e = { id: id, dept: dept, course: course, classes: cl, groups: groups, half: half, note: L_safeText(rec.note, 30) };
+    var e = { id: id, dept: dept, course: course, classes: cl, groups: groups, half: half, note: L_safeText(rec.note, 30), teachers: teachers };
     var oldE = list.filter(function (x) { return x.id === id; })[0] || null;
     list = list.filter(function (x) { return x.id !== id; }); list.push(e);
     writeRequired_(list, me.email);
     if (oldE) reconcileTables_(oldE, e);
+    applyReqTeachers_(e);
   } finally { lock.releaseLock(); }
   return apiScheduleGet();
 }
 function apiRequiredDelete(id) {
   requireAdmin_();
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var list = requiredAll_(), n = list.length;
     list = list.filter(function (x) { return x.id !== String(id); });
@@ -753,14 +771,14 @@ function ensureTables_() {
     return requiredForTerm_(term).filter(function (r) { return !r.skip && !tables.some(function (t) { return t.dept === r.dept && t.course === r.course && r.classes.some(function (c) { return t.classes.some(function (tc) { return tc.cls === c.cls; }); }); }); });
   };
   if (!need().length) return;
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var rows = allTableRows_();
     var lastTeachers = function (dept, course) {                                                  // 這門課上一次指定的授課老師，先帶過來（每學期可以再改）
       var best = null; rows.forEach(function (x) { if (x[2] === dept && x[3] === course && x[1] < term && x[10] !== undefined && x[11] && (!best || x[1] > best[1])) best = x; }); return best ? teachersOf_(best[11]) : [];
     };
     need().forEach(function (r) {
-      var t = { id: Utilities.getUuid().slice(0, 8), term: term, dept: r.dept, course: r.course, classes: r.classes.map(function (c) { var d = L_classDays(c); return { cls: c.cls, wd: d[0], days: d }; }), groups: r.groups || [], title: '', creator: '系統', teachers: lastTeachers(r.dept, r.course) };
+      var t = { id: Utilities.getUuid().slice(0, 8), term: term, dept: r.dept, course: r.course, classes: r.classes.map(function (c) { var d = L_classDays(c); return { cls: c.cls, wd: d[0], days: d }; }), groups: r.groups || [], title: '', creator: '系統', teachers: (r.teachers && r.teachers.length) ? r.teachers : lastTeachers(r.dept, r.course) };
       rows.push(tableRow_(t, ''));
     });
     writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
@@ -795,7 +813,7 @@ function apiScheduleSetDates(start, end) {
   if ((L_parseDate(end).t - L_parseDate(s).t) / 86400000 / 7 > 40) throw new Error('學期最多 40 週。');
   var term = setting_('目前學年學期', '');
   setSetting_('開學日 ' + term, s); setSetting_('結業式 ' + term, end);
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try { syncSchedule_(null); } finally { lock.releaseLock(); }
   return { start: s, end: end, weeks: L_weeks(s, end) };
 }
@@ -808,7 +826,7 @@ function apiScheduleSaveTable(rec) {
   if (!mgr) schedGuard_(me);
   var term = setting_('目前學年學期', ''), id = String(rec.id || '');
   if (!id) throw new Error('進度表是依「每學期要有哪些進度表」自動建立的，不能自己新增。要新增請到清單裡設定。');
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var t = schedTables_(term).filter(function (x) { return x.id === id; })[0];
     if (!t) throw new Error('找不到這張進度表。');
@@ -875,7 +893,7 @@ function apiScheduleSetExtra(tableId, from, to) {
   var bad = {}; schedCells_().forEach(function (x) { if (x.tableId === t.id && !keep[x.week]) bad[x.week] = 1; });
   var badList = oldW.filter(function (w) { return bad[w.n]; }).map(function (w) { return w.label; });
   if (badList.length) throw new Error('這幾週已經排了課，不能縮掉：' + badList.join('、') + '。要縮短，請先清除那幾週的格子。');
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var old = readTable_('教學進度表').filter(function (r) { return str_(r['表ID']) === t.id; })[0];
     var rows = allTableRows_().filter(function (r) { return r[0] !== t.id; });
@@ -898,7 +916,7 @@ function apiScheduleImport(targetId, sourceId, pairs, overwrite, stageOnly) {
   if (pairs.length > 600) throw new Error('一次最多複製 600 格。');
   var weeks = tableWeeks_(t), wok = {}; weeks.forEach(function (w) { wok[w.n] = w; });
   var users = schedEmails_(), products = loadCatalog_().products;
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   var copied = 0, skipped = [];
   try {
     var all = schedCells_(), src = all.filter(function (x) { return x.tableId === String(sourceId); }), mine = all.filter(function (x) { return x.tableId === t.id; });
@@ -934,7 +952,7 @@ function apiScheduleImport(targetId, sourceId, pairs, overwrite, stageOnly) {
 function apiScheduleDeleteTable(id) {
   requireAdmin_();
   var term = setting_('目前學年學期', '');
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var rows = allTableRows_(), n = rows.length;
     rows = rows.filter(function (r) { return !(r[0] === String(id) && r[1] === term); });
@@ -969,7 +987,7 @@ function apiScheduleSaveCells(tableId, changes, force) {
     var clean = null; if (ch.cell) { try { clean = L_cleanCell(ch.cell, t, products, users, me.email, okPids); } catch (e) { throw new Error(where + '：' + e.message); } }
     norm.push({ w: w, cls: cls, day: day, clean: clean, base: ch.base });
   });
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var all = schedCells_(), hit = {}; norm.forEach(function (n) { hit[keyOf(n.w, n.cls, n.day)] = 1; });
     if (force !== true) {                                                                       // 大家一起編輯：你打開之後，如果別人先改了同一格，先讓你知道，不要默默蓋掉
@@ -1005,7 +1023,7 @@ function apiScheduleSaveCell(tableId, week, cls, cell, day) {
   if (!multi && day === days[0]) day = 0;                                                       // 只有一天上課的班，平常那一天的格子存成 0
   if (day > 0 && days.indexOf(day) < 0 && t.classes.length !== 1) throw new Error('加練（平常上課日以外的一天）只有在這張進度表只有一個班的時候才能用。');
   var clean = cell ? L_cleanCell(cell, t, loadCatalog_().products, schedEmails_(), me.email, tablePids_(t.id)) : null;
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var rows = schedCells_().filter(function (x) { return !(x.tableId === t.id && x.week === w && x.cls === cls && (x.day || 0) === day); }).map(cellRow_);
     if (clean) rows.push(cellRow_({ tableId: t.id, week: w, cls: cls, day: day, cell: clean, by: me.email, at: nowStr_() }));
@@ -1099,7 +1117,7 @@ function apiScheduleStatus(start, end) {
 /* 進度表有排、但排課不見了（例如被刪掉）的課，重新補給開單的老師（待確認） */
 function apiScheduleRepair() {
   requireAdmin_();
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try { syncSchedule_(null); } finally { lock.releaseLock(); }
   return apiScheduleStatus('', '');
 }
@@ -1229,7 +1247,7 @@ function apiSetCategory(pid, category) {
   if (p.custom && !p.shared) throw new Error('私人自創的材料單不能放進分類（要先設成共用）。');
   if (n && categories_().indexOf(n) < 0 && GRADE_CATS.indexOf(n) < 0) throw new Error('找不到分類「' + n + '」。');
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try { var map = readCatMap_(); if (n) map[p.pid] = n; else delete map[p.pid]; writeCatMap_(map); } finally { lock.releaseLock(); }
   return { pid: p.pid, category: n };
 }
@@ -1283,7 +1301,7 @@ function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_we
 /* 刪除老師開錯的課。技士、科主任、管理者都可以；會留一筆紀錄在「排課刪除紀錄」分頁。 */
 function apiDeletePlanEntry(id) {
   var me = requireAdmin_(), lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = ss_().getSheetByName('排課');
     if (!sh) throw new Error('試算表裡找不到分頁「排課」');
@@ -1339,7 +1357,7 @@ function apiUserSave(u, oldEmail) {
   if (!validEmail_(email)) throw new Error('信箱格式不對：' + email);
   if (!name) throw new Error('請填姓名。');
   if (name.length > 20) throw new Error('姓名太長了。');
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var t = userRows_(), old = oldEmail ? String(oldEmail).toLowerCase().trim() : '', cur = null, dup = null;
     t.rows.forEach(function (r) { if (r.email === old) cur = r; if (r.email === email && r.email !== old) dup = r; });
@@ -1359,7 +1377,7 @@ function apiUserSave(u, oldEmail) {
 function apiUserDelete(email) {
   var me = requireStaff_();
   email = String(email || '').toLowerCase().trim();
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var t = userRows_(), cur = null;
     t.rows.forEach(function (r) { if (r.email === email) cur = r; });
@@ -1377,7 +1395,7 @@ function apiUsersBulkAdd(text) {
   var lines = String(text || '').split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
   if (!lines.length) throw new Error('請先貼上名單。');
   if (lines.length > 200) throw new Error('一次最多 200 行。');
-  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
   var added = 0, skipped = [], bad = [];
   try {
     var t = userRows_(), have = {}; t.rows.forEach(function (r) { have[r.email] = 1; });
