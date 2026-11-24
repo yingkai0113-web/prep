@@ -43,6 +43,7 @@ function verifyToken_(token) {
 
 /* 網頁用 POST 呼叫：body 是 JSON 字串 {fn, args, token}。只允許名稱 api 開頭的函式。 */
 function doPost(e) {
+  var t0_ = Date.now();
   try {
     var req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var name = String(req.fn || '');
@@ -52,7 +53,7 @@ function doPost(e) {
     REQ_EMAIL_ = verifyToken_(req.token);
     try { var sp = SpreadsheetApp.getActiveSpreadsheet(); if (sp.getSpreadsheetTimeZone() !== TZ) sp.setSpreadsheetTimeZone(TZ); } catch (tzErr) {}   // 複製到別的帳號時，試算表時區會變成預設的美國時區，日期會差一天
     var out = fn.apply(null, Array.isArray(req.args) ? req.args : []);
-    return json_({ ok: true, data: out === undefined ? null : out });
+    return json_({ ok: true, data: out === undefined ? null : out, ms: Date.now() - t0_ });
   } catch (err) {
     var msg = String((err && err.message) || err);
     var auth = msg.indexOf('AUTH:') === 0;
@@ -69,7 +70,7 @@ function curEmail_() {
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
 var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1 };   // 同一次請求內，這幾個分頁讀過就不再重讀（寫入時會清掉）
-function rtClear_() { RT_ = {}; }
+function rtClear_() { RT_ = {}; CAT_ = null; }
 function readTable_(name) {
   if (RT_OK_[name] && RT_[name]) return RT_[name].map(function (o) { return Object.assign({}, o); });
   var out0 = readTableRaw_(name);
@@ -99,7 +100,13 @@ function dateStr_(v) {
   return str_(v).slice(0, 10);
 }
 
+var CAT_ = null;
 function loadCatalog_() {
+  if (CAT_) return CAT_;
+  CAT_ = loadCatalogRaw_();
+  return CAT_;
+}
+function loadCatalogRaw_() {
   var P = readTable_('產品').map(function (r) {
     return { pid: str_(r['產品編號']), sem: str_(r['學期']), course: str_(r['來源課程']), cls: '',
              title: str_(r['實習項目']), serving: str_(r['份量說明']), note: str_(r['備註']), dsets: num_(r['預設組數']) || 1 };
@@ -509,7 +516,7 @@ function apiSaveTemplate(pid, rec) {
   var clean = L_cleanCustom(Object.assign({}, rec || {}, { pid: p.pid }), nameMap_());
   L_assignRowIds(p.pid, clean.items);
   writeOverride_(me, p.pid, { title: clean.title, serving: clean.serving, dsets: clean.dsets, items: clean.items, tools: clean.tools });
-  var fresh = loadCatalog_();
+  rtClear_(); var fresh = loadCatalog_();
   return { product: fresh.products[p.pid], items: fresh.items[p.pid], tools: fresh.tools[p.pid] };
 }
 /* 隱藏或恢復（老師的選單看不到，排過的課不受影響） */
@@ -530,7 +537,7 @@ function apiRevertTemplate(pid) {
     sh.getRange(1, 1, values.length, OVR_HEAD.length).clearContent();
     sh.getRange(1, 1, keep.length, OVR_HEAD.length).setValues(keep);
   } finally { rtClear_(); lock.releaseLock(); }
-  var fresh = loadCatalog_(), p = fresh.products[str_(pid)];
+  rtClear_(); var fresh = loadCatalog_(), p = fresh.products[str_(pid)];
   return { product: p, items: fresh.items[str_(pid)], tools: fresh.tools[str_(pid)] };
 }
 
@@ -748,7 +755,8 @@ function apiRequiredSave(rec) {
     var oldE = list.filter(function (x) { return x.id === id; })[0] || null;
     list = list.filter(function (x) { return x.id !== id; }); list.push(e);
     writeRequired_(list, me.email);
-    if (oldE) reconcileTables_(oldE, e);
+    var sameShape = oldE && JSON.stringify(oldE.classes) === JSON.stringify(e.classes) && oldE.groups.join('、') === e.groups.join('、');
+    if (oldE && !sameShape) reconcileTables_(oldE, e);
     applyReqTeachers_(e);
   } finally { rtClear_(); lock.releaseLock(); }
   return apiScheduleGet();

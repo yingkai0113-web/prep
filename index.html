@@ -199,7 +199,8 @@ function signOut(){saveTok('');try{if(window.google&&google.accounts&&google.acc
 const run=async(fn,...a)=>{
   if(!TOKEN){const e=new Error('請先登入。');e.auth=true;throw e;}
   let j;
-  try{const r=await fetch(CFG.backend,{method:'POST',body:JSON.stringify({fn,args:a,token:TOKEN})});j=await r.json();}
+  const t0=Date.now();
+  try{const r=await fetch(CFG.backend,{method:'POST',body:JSON.stringify({fn,args:a,token:TOKEN})});j=await r.json();window.__last={fn,total:Date.now()-t0,server:j.ms};try{console.log('[prep]',fn,'總共',window.__last.total,'ms，伺服器',j.ms,'ms');}catch(e){}}
   catch(e){throw new Error('連不上伺服器，請檢查網路後再試一次。');}
   if(!j.ok){
     if(j.code==='AUTH'){saveTok('');const e=new Error(j.error||'請重新登入。');e.auth=true;if(S.user)loginOverlay(e.message);else loginScreen(e.message);throw e;}
@@ -850,7 +851,7 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='rqTeach'){const f=S.rq.form,em=b.dataset.em;f.teachers=f.teachers.includes(em)?f.teachers.filter(x=>x!==em):f.teachers.concat([em]);return render();}
   if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;f.busy=true;f.err='';render();
-    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));S.rq.form=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。';}catch(e){f.busy=false;f.err=e.message;return render();}render();refreshEntries().then(render);return;}
+    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));S.rq.form=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
   if(a==='rqDelNo'){S.rq.delAsk='';return render();}
   if(a==='rqDelYes'){try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.rq.delAsk='';}catch(e){S.err=e.message;}return render();}
