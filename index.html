@@ -195,7 +195,7 @@ function loginOverlay(msg){
   o.innerHTML=`<div class="deny" style="margin:0;max-width:360px;width:100%">${loginHTML(msg)}<p class="mut" style="font-size:12px">登入後，請再按一次剛才的動作。</p></div>`;
   drawGbtn($('#gbtn',o),()=>{o.remove();S.info='已重新登入，請再按一次剛才的動作。';render();});
 }
-function signOut(){saveTok('');try{if(window.google&&google.accounts&&google.accounts.id)google.accounts.id.disableAutoSelect();}catch(e){}S.user=null;loginScreen();}
+function signOut(){saveTok('');try{localStorage.removeItem('prep_cache');}catch(e){}try{if(window.google&&google.accounts&&google.accounts.id)google.accounts.id.disableAutoSelect();}catch(e){}S.user=null;loginScreen();}
 const run=async(fn,...a)=>{
   if(!TOKEN){const e=new Error('請先登入。');e.auth=true;throw e;}
   let j;
@@ -875,7 +875,7 @@ document.addEventListener('click',async ev=>{
       const by=[];Object.values(m).forEach(p=>{if(p.tid===c.tid)by.push({week:p.week,cls:p.cls,day:p.day,cell:p.cell,base:p.base});});
       if(by.length){const r=await run('apiScheduleSaveCells',c.tid,by,a==='scConfYes');if(r.conflicts&&r.conflicts.length){S.sc.conflict={tid:c.tid,list:r.conflicts,after:c.after};S.busy='';return render();}Object.keys(m).forEach(k=>{if(m[k].tid===c.tid)delete m[k];});}
       const r2=pendCount()?await commitSched(c.after):{saved:0};if(r2.conflicts){S.busy='';return render();}
-      S.sc.data=await run('apiScheduleGet',S.asT||'');await refreshEntries();S.info='已儲存。';
+      await Promise.all([run('apiScheduleGet',S.asT||'').then(d=>{S.sc.data=d;}),refreshEntries()]);S.info='已儲存。';
       if(c.after&&c.after.n){S.busy='';S.view='sched';S.step=c.after.n;window.scrollTo(0,0);return render();}
     }catch(er){S.err=er.message;}
     S.busy='';return render();}
@@ -938,7 +938,7 @@ document.addEventListener('click',async ev=>{
   if(a==='scDates'){const d=S.sc.data;S.sc.datesEd={start:d.start||'',end:d.end||''};return render();}
   if(a==='scDatesNo'){S.sc.datesEd=null;return render();}
   if(a==='scDatesSave'){
-    try{await run('apiScheduleSetDates',S.sc.datesEd.start,S.sc.datesEd.end);S.sc.datesEd=null;S.sc.data=await run('apiScheduleGet',S.asT||'');await refreshEntries();S.info='已設定。每一週的日期都排好了，排給老師的課日期也一起更新。';}
+    try{await run('apiScheduleSetDates',S.sc.datesEd.start,S.sc.datesEd.end);S.sc.datesEd=null;await Promise.all([run('apiScheduleGet',S.asT||'').then(d=>{S.sc.data=d;}),refreshEntries()]);S.info='已設定。每一週的日期都排好了，排給老師的課日期也一起更新。';}
     catch(e){S.err=e.message;}
     return render();}
   if(a==='scEditTable'){const t=schedTable(S.sc.tab);S.sc.tableEd={id:t.id,classes:t.classes.map(c=>({cls:c.cls,days:clDays(c)})),groups:t.groups.join('、'),teachers:(t.teachers||[]).slice()};return render();}
@@ -1192,8 +1192,8 @@ document.addEventListener('click',async ev=>{
     const what=expWhat();S.confirmSend='';S.busy=what==='none'?'正在送出…':'正在送出並製作檔案…';S.sent=null;render();
     try{
       const rc=await run('apiSavePlan',payload(),curScope());
-      let file=null;if(what!=='none'){const r=await run('apiExportRequisition',curScope(),what,S.expOrder);file=deliver(r);}
-      const saved=await run('apiBootstrap');S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;
+      let file=null;const pSaved=run('apiBootstrap');if(what!=='none'){const r=await run('apiExportRequisition',curScope(),what,S.expOrder);file=deliver(r);}
+      const saved=await pSaved;S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;
       S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
     }catch(e){S.err=e.message;}
     S.busy='';return render();}
@@ -1347,7 +1347,7 @@ async function commitSched(after){
     if(r.conflicts&&r.conflicts.length){S.sc.conflict={tid,list:r.conflicts,after:after||null};return {conflicts:true};}
     saved+=r.saved;Object.keys(m).forEach(k=>{if(m[k].tid===tid)delete m[k];});
   }
-  S.sc.data=await run('apiScheduleGet',S.asT||'');await refreshEntries();
+  await Promise.all([run('apiScheduleGet',S.asT||'').then(d=>{S.sc.data=d;}),refreshEntries()]);
   return {saved};
 }
 async function quietSched(){try{S.sc.data=await run('apiScheduleGet',S.asT||'');render();}catch(e){}}
@@ -1718,25 +1718,44 @@ function rqModal(){
 function denyScreen(msg){
   $('#app').innerHTML=`<div class="deny"><h2>員林農工材料單系統</h2><p>${msg}</p><button class="btn" data-a="signout">切換帳號</button><button class="btn ghost" onclick="location.reload()">重新整理</button><p class="mut" style="margin:14px 0 0">換帳號後還是進不來的話，請管理者到「後台 → 使用者」把你的信箱加進名單。</p></div>`;
 }
+const jwtEmail=t=>{try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email||'';}catch(e){return '';}};
+const fixTab=()=>{const d=S.sc.data;if(d&&d.tables&&(!S.sc.tab||!d.tables.some(t=>t.id===S.sc.tab)))S.sc.tab=(d.tables[0]||{}).id||'';};
+function applyBoot(d,first){
+  S.user=d.user;S.term=d.term;S.cat=d.catalog;S.classes=d.catalog.classes||S.classes;S.courses=d.catalog.courses||{'日間部':[],'夜間部':[]};S.cat.pmap={};S.cat.products.forEach(p=>S.cat.pmap[p.pid]=p);
+  refreshStd();S.adminUrl=d.adminUrl||'';S.accepting=d.open!==false;S.openNote=d.openNote||'';
+  S.extraOpen=d.extraOpen===true;S.extraNote=d.extraNote||'';
+  if(!first&&dirty())return;                       // 已經動手改了就不要蓋掉
+  S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));S.savedSig=sigOf(S.entries);S.sentAt=S.entries.map(e=>e.updated).filter(Boolean).sort().pop()||'';
+  if(!first)return;
+  S.dept=(S.entries[0]&&S.entries[0].dept)||'日間部';S.course=(S.entries[0]&&S.entries[0].course)||(S.courses[S.dept]||[])[0]||'';
+  const t0=today(),w0=weekStart(t0);S.rgFrom=w0;S.rgTo=addDays(w0,6);
+  S.view=S.user.role==='技士'?'tech':'sched';S.step=S.entries.some(e=>e.sid)?3:0;S.sstep=S.step;S.estep=1;
+  if(S.entries.some(e=>e.sid))S.info=`已載入你的 ${S.entries.filter(e=>e.sid).length} 堂進度表的課。要改別的地方，直接點上面的步驟。`;
+}
 async function boot(){
   if(!TOKEN)return loginScreen();
+  const em=jwtEmail(TOKEN);let cache=null;
+  try{const c=JSON.parse(localStorage.getItem('prep_cache')||'null');if(c&&em&&c.em===em&&c.boot&&c.boot.user&&c.boot.catalog)cache=c;}catch(e){}
+  const pHello=run('apiHello'),pBoot=run('apiBootstrap'),pSched=run('apiScheduleGet','');   // 三個一起問，不排隊
+  pBoot.catch(()=>{});pSched.catch(()=>{});
+  let shown=false;
+  if(cache){try{applyBoot(cache.boot,true);if(cache.sched){S.sc.data=cache.sched;fixTab();}shown=true;render();}catch(e){shown=false;}}   // 先用上次的資料秒開，背景再更新
   try{
-    const h=await run('apiHello');S.appUrl=h.appUrl||'';
+    const h=await pHello;S.appUrl=h.appUrl||'';
     if(!h.email)return denyScreen('沒有抓到你的帳號，請重新登入。');
-    if(!h.listed)return denyScreen(`你目前登入的帳號是 <b>${esc(h.email)}</b>，這個帳號<b>還沒有被加入系統</b>，不能使用。<br>請切換成學校帳號，或請管理者把這個信箱加進來。`);
-    const d=await run('apiBootstrap');
-    S.user=d.user;S.term=d.term;S.cat=d.catalog;S.classes=d.catalog.classes||S.classes;S.courses=d.catalog.courses||{'日間部':[],'夜間部':[]};S.cat.pmap={};S.cat.products.forEach(p=>S.cat.pmap[p.pid]=p);
-    refreshStd();S.adminUrl=d.adminUrl||'';S.accepting=d.open!==false;S.openNote=d.openNote||'';
-    S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));
-    S.dept=(S.entries[0]&&S.entries[0].dept)||'日間部';S.course=(S.entries[0]&&S.entries[0].course)||(S.courses[S.dept]||[])[0]||'';
-    S.savedSig=sigOf(S.entries);S.sentAt=S.entries.map(e=>e.updated).filter(Boolean).sort().pop()||'';
-    const t0=today(),w0=weekStart(t0);S.rgFrom=w0;S.rgTo=addDays(w0,6);
-    S.extraOpen=d.extraOpen===true;S.extraNote=d.extraNote||'';
-    S.view=S.user.role==='技士'?'tech':'sched';S.step=S.entries.some(e=>e.sid)?3:0;S.sstep=S.step;S.estep=1;
-    if(S.entries.some(e=>e.sid))S.info=`已載入你的 ${S.entries.filter(e=>e.sid).length} 堂進度表的課。要改別的地方，直接點上面的步驟。`;
+    if(!h.listed){try{localStorage.removeItem('prep_cache');}catch(e){}return denyScreen(`你目前登入的帳號是 <b>${esc(h.email)}</b>，這個帳號<b>還沒有被加入系統</b>，不能使用。<br>請切換成學校帳號，或請管理者把這個信箱加進來。`);}
+    const d=await pBoot;
+    applyBoot(d,!shown);
     render();
-    if(S.view==='tech')loadRange();else if(S.step===0)loadSched();
-  }catch(e){if(e.auth)return;denyScreen(esc(e.message));}
+    if(S.view==='tech'){loadRange();}
+    else{
+      if(!S.sc.data){S.sc.busy=true;render();}
+      let sd=null;try{sd=await pSched;S.sc.data=sd;fixTab();}catch(e){if(!S.sc.data)S.err=e.message;}
+      S.sc.busy=false;
+      if(S.step===0||!shown)render();
+    }
+    try{localStorage.setItem('prep_cache',JSON.stringify({em,boot:d,sched:S.sc.data||null}));}catch(e){}
+  }catch(e){if(e.auth)return;if(shown){S.err=e.message;return render();}denyScreen(esc(e.message));}
 }
 boot();
 
