@@ -346,7 +346,6 @@ function extraHTML(){
 }
 /* 教學進度表 → 確認重量 → 準備器具 → 匯出：進度表排好之後，直接接著做下去 */
 function flowHTML(){
-  if(S.asT)return schedHTML();
   const st=[[0,'進度表'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
   let h=`<div class="steps">${st.map(([n,l],i)=>`<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''}">${i+1} ${l}</button>`).join('')}</div>`;
   if(S.step===0){
@@ -382,7 +381,7 @@ async function saveDraft(){
   }catch(er){S.draftErr=er.message;}
   S.draftBusy=false;refreshPill();
 }
-setInterval(()=>{if(S.user&&dirty())saveDraft();},2500);
+setInterval(()=>{if(S.user&&!S.asT&&dirty())saveDraft();},2500);
 window.addEventListener('beforeunload',ev=>{if(S.user&&((dirty()&&S.draftErr)||(S.sc&&pendCount()))){ev.preventDefault();ev.returnValue='';}});           // 進度表有還沒儲存的修改，或草稿存不進去的時候，離開網頁前提醒
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.user&&S.view==='sched'&&S.step===0&&S.sc.data&&!pendCount()&&!S.sc.cellEd&&!S.sc.conflict)quietSched();});           // 回到這個網頁時，如果沒有沒儲存的修改，就更新成最新的（別人可能剛改過）           // 草稿存不進去的時候，離開網頁前提醒
 /* 輸入時不整頁重畫，所以「有修改還沒送出」的提示要另外更新 */
@@ -755,10 +754,10 @@ function setRatio(i){
 document.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;S.err='';S.info='';
   if(a==='signout')return signOut();
-  if(a==='asT'){if(S.asT){S.asT='';S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.info='';return loadSched();}S.pickT=true;S.view='admin';return pickLoad();}
+  if(a==='asT'){if(S.asT){S.asT='';S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.info='';S.sc.data=null;S.sc.tab='';await Promise.all([loadEntriesOf(''),loadSched()]);return render();}S.pickT=true;S.view='admin';return pickLoad();}
   if(a==='asTpick'){S.pickT=true;return pickLoad();}
   if(a==='asTcancel'){S.pickT=false;if(!S.asT)S.view='sched';return render();}
-  if(a==='asTgo'){const em=($('#asTsel')||{}).value;if(!em)return;S.asT=em;S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.sc.data=null;S.sc.tab='';return loadSched();}
+  if(a==='asTgo'){const em=($('#asTsel')||{}).value;if(!em)return;S.asT=em;S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.sc.data=null;S.sc.tab='';await Promise.all([loadEntriesOf(em),loadSched()]);return render();}
   if(a.startsWith('sc')&&!['scTab','scDept','scRefresh','scEditTable','scTableNo','scTableSave','scTDay','scDates','scDatesNo','scDatesSave'].includes(a)&&S.sc.data&&!S.asT){const ct=schedTable(S.sc.tab);if(ct&&!ct.canEdit){S.err='這張進度表你不是授課老師，只能看，不能編輯。要編輯請到「每學期要有哪些進度表」把自己加成授課老師。';return render();}}
   if(locked()&&!['view','step','toggle','t4toggle','gtoggle','gall','dept','course','tab','dlSent','closePrev','hOpen','hClose','pOpen','pNo','pGo','scRefresh'].includes(a)){S.err=lockMsg();return render();}
   if(a==='view'){
@@ -1372,7 +1371,12 @@ async function loadSched(){
   S.sc.busy=false;render();
 }
 /* 進度表改了，自己的排課（待確認的課）也會跟著變：沒有未儲存的修改就直接更新 */
+/* 載入某個人的材料單（老師模式＝那位老師的；不給＝自己的），不管有沒有未儲存的修改 */
+async function loadEntriesOf(em){
+  try{const d=await run('apiBootstrap',em||'');S.cat=d.catalog;S.cat.pmap={};S.cat.products.forEach(p=>S.cat.pmap[p.pid]=p);refreshStd();S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));S.savedSig=sigOf(S.entries);S.step=0;}catch(e){S.err=e.message;}
+}
 async function refreshEntries(){
+  if(S.asT){await loadEntriesOf(S.asT);return;}
   if(dirty()){S.info='進度表已更新。你目前的修改還沒送出，送出後重新整理網頁，就會看到進度表排給你的新課。';return;}
   try{const d=await run('apiBootstrap');S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));S.savedSig=sigOf(S.entries);}catch(e){}
 }

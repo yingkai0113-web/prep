@@ -390,8 +390,10 @@ function workingCopies_(list) {
   });
   return out;
 }
-function apiBootstrap() {
-  var me = whoami_(), term = setting_('目前學年學期', ''), cat = loadCatalog_();
+function apiBootstrap(asEmail) {
+  var me = whoami_();
+  if (asEmail && isStaff_(me)) me = { email: String(asEmail).toLowerCase().trim(), role: '老師', name: teacherNames_()[String(asEmail).toLowerCase().trim()] || String(asEmail).split('@')[0] };      // 老師模式（預覽）：看那位老師的材料單
+  var term = setting_('目前學年學期', ''), cat = loadCatalog_();
   var all = readPlans_(), mine = all.filter(function (e) { return e.teacher === me.email && e.term === term; });
   var admin = isStaff_(me), hist = {};
   all.forEach(function (e) { if (e.teacher === me.email && e.term !== term && !e.draft && L_customized(e)) hist[e.pid] = (hist[e.pid] || 0) + 1; });
@@ -713,10 +715,12 @@ function apiRequiredSave(rec) {
   if (['日間部', '夜間部'].indexOf(dept) < 0) throw new Error('請選日間部或夜間部。');
   if (!course) throw new Error('請選課程。');
   if (['每', '上', '下', '假'].indexOf(half) < 0) throw new Error('請選哪個學期要有（每學期、上學期、下學期、只有寒暑假）。');
+  var oldClsOk = {};
+  requiredAll_().forEach(function (o) { if (o.id === String(rec.id || '') && o.dept === dept) o.classes.forEach(function (c) { oldClsOk[c.cls] = 1; }); });      // 這一筆原本就有的班，清單裡沒有也讓它存（例如「技藝競賽選手」）
   var cl = [];
   (Array.isArray(rec.classes) ? rec.classes : []).forEach(function (x) {
     var name = L_safeText(typeof x === 'string' ? x : x && x.cls, 10); if (!name || cl.some(function (c) { return c.cls === name; })) return;
-    if ((classes[dept] || []).indexOf(name) < 0) throw new Error('「' + name + '」不在' + dept + '的班級清單裡。');
+    if ((classes[dept] || []).indexOf(name) < 0 && !oldClsOk[name]) throw new Error('「' + name + '」不在' + dept + '的班級清單裡。');
     cl.push({ cls: name, days: L_classDays(typeof x === 'string' ? {} : x) });
   });
   if (!cl.length) throw new Error('請選這門課有哪些班。');
