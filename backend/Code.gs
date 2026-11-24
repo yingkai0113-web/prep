@@ -1503,3 +1503,27 @@ function apiResetTerm(confirmText) {
     return { term: term, plans: counts.plans, cells: counts.cells };
   } finally { rtClear_(); lock.releaseLock(); }
 }
+
+/* 量一下各分頁讀取要多久（找哪裡慢）。只有技士、科主任、管理者能呼叫。 */
+function apiProfile() {
+  requireAdmin_();
+  var out = { sheets: [], phases: [] }, t0;
+  ss_().getSheets().forEach(function (sh) {
+    t0 = Date.now(); var v = sh.getDataRange().getValues(); out.sheets.push({ name: sh.getName(), rows: v.length, cols: sh.getLastColumn(), ms: Date.now() - t0 });
+  });
+  var ph = function (name, f) { var t = Date.now(); try { f(); } catch (e) { name += ' ERR ' + e.message; } out.phases.push({ name: name, ms: Date.now() - t }); };
+  rtClear_();
+  var term = '';
+  ph('setting_', function () { term = setting_('目前學年學期', ''); });
+  ph('whoami_', function () { whoami_(); });
+  ph('ensureTables_', function () { ensureTables_(); });
+  ph('schedTables_', function () { schedTables_(term); });
+  ph('schedCells_', function () { schedCells_(); });
+  ph('requiredAll_', function () { requiredAll_(); });
+  ph('readPlans_', function () { readPlans_(); });
+  ph('loadProductsLite_', function () { loadProductsLite_(); });
+  ph('requiredStatus_', function () { var tb = schedTables_(term), ce = schedCells_(); requiredStatus_(term, tb, ce, L_weeks(setting_('開學日 ' + term, ''), setting_('結業式 ' + term, ''))); });
+  ph('cellProducts_', function () { cellProducts_(schedCells_()); });
+  ph('apiScheduleGet', function () { rtClear_(); apiScheduleGet(); });
+  return out;
+}
