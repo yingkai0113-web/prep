@@ -619,10 +619,10 @@ function usersHTML(){
   return `<div class="adm">${head}${rows||'<p class="mut">名單是空的。</p>'}${form}${bulk}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-a="umNew">＋ 新增使用者</button><button class="btn ghost" data-a="umBulk">一次貼上很多位</button></div></div>`;
 }
 function resetHTML(){
-  if(!['科主任','管理者'].includes(S.user.role))return '';
+  if(!realStaff())return '';
   const r=S.rs;
   const body=r.open?`<div style="margin-top:10px;border:1px solid var(--err);border-radius:10px;padding:12px"><p style="margin:0 0 6px"><b>確定要刪除 ${esc(S.term)} 的所有資料嗎？</b></p><p class="mut" style="margin:0 0 8px">會刪掉：這學期<b>所有老師</b>排的課、送出的材料單、草稿，還有教學進度表格子裡排的內容。<br>不會刪：使用者名單、材料單、設定、「每學期要有哪些進度表」和授課老師。<br>刪之前會先在試算表的「刪除前備份」分頁存一份，但<b>網頁上沒辦法還原</b>。</p><label class="lbl">請輸入「刪除本學期資料」來確認</label><input class="in" style="width:100%" data-k="rstxt" placeholder="刪除本學期資料" value="${esc(r.txt)}"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn ghost" data-a="rsNo">取消</button><button class="btn danger" data-a="rsYes" ${r.busy?'disabled':''}>${r.busy?'刪除中…':'刪除'}</button></div></div>`:`<button class="btn danger" style="margin-top:10px" data-a="rsAsk">刪除本學期所有資料</button>`;
-  return `<div class="adm"><b>刪除本學期所有資料</b><p class="mut" style="margin:4px 0 0">老師測試完，想清掉重來時用。只有科主任和管理者看得到這個按鈕。</p>${body}</div>`;
+  return `<div class="adm"><b>刪除本學期所有資料</b><p class="mut" style="margin:4px 0 0">老師測試完，想清掉重來時用。技士、科主任、管理者看得到這個按鈕。</p>${body}</div>`;
 }
 function adminHTML(){
   const cats=S.cat.categories||[];

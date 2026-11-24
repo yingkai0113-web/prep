@@ -1401,11 +1401,10 @@ function apiUsersBulkAdd(text) {
 
 
 /* ---------------- 後台：刪除本學期所有資料（測試完要重來用） ---------------- */
-/* 只有科主任、管理者可以用。刪掉：本學期所有老師的排課／送出的材料單／草稿、教學進度表格子裡排的內容。
+/* 技士、科主任、管理者都可以用（老師不行）。刪掉：本學期所有老師的排課／送出的材料單／草稿、教學進度表格子裡排的內容。
  * 保留：使用者名單、材料單與分類、設定、「每學期要有哪些進度表」和授課老師。刪之前先把內容存一份到「刪除前備份」分頁。 */
 function apiResetTerm(confirmText) {
   var me = requireStaff_();
-  if (me.role !== '科主任' && me.role !== '管理者') throw new Error('只有科主任或管理者可以刪除本學期的資料。');
   if (String(confirmText || '') !== '刪除本學期資料') throw new Error('請輸入「刪除本學期資料」才能刪除。');
   var term = setting_('目前學年學期', '');
   if (!term) throw new Error('找不到目前的學年學期。');
