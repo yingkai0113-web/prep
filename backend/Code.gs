@@ -70,7 +70,7 @@ function curEmail_() {
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
 var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1 };   // 同一次請求內，這幾個分頁讀過就不再重讀（寫入時會清掉）
-function rtClear_() { RT_ = {}; CAT_ = null; }
+function rtClear_() { RT_ = {}; CAT_ = null; PL_ = null; }
 function readTable_(name) {
   if (RT_OK_[name] && RT_[name]) return RT_[name].map(function (o) { return Object.assign({}, o); });
   var out0 = readTableRaw_(name);
@@ -100,6 +100,25 @@ function dateStr_(v) {
   return str_(v).slice(0, 10);
 }
 
+/* 只要「產品名稱、份量、預設組數」的輕量版（不讀幾千列的配方明細），進度表畫面用這個，比 loadCatalog_ 快很多 */
+var PL_ = null;
+function loadProductsLite_() {
+  if (CAT_) return CAT_.products;
+  if (PL_) return PL_;
+  var prods = {};
+  readTable_('產品').forEach(function (r) {
+    var pid = str_(r['產品編號']); if (!pid) return;
+    prods[pid] = { pid: pid, sem: str_(r['學期']), course: str_(r['來源課程']), cls: '', title: str_(r['實習項目']), serving: str_(r['份量說明']), note: str_(r['備註']), dsets: num_(r['預設組數']) || 1 };
+  });
+  readCustom_().forEach(function (cu) { prods[cu.pid] = L_customToCatalog(cu).product; });
+  readOverrides_().forEach(function (o) {
+    var p = prods[o.pid]; if (!p || p.custom) return;
+    p.hidden = !!o.hidden;
+    if (o.items && o.items.length) { p.modified = true; if (o.title) p.title = o.title; p.serving = o.serving == null ? p.serving : o.serving; if (o.dsets) p.dsets = o.dsets; }
+  });
+  PL_ = prods;
+  return PL_;
+}
 var CAT_ = null;
 function loadCatalog_() {
   if (CAT_) return CAT_;
@@ -784,7 +803,7 @@ function apiRequiredSkip(id, skip) {
 }
 function requiredStatus_(term, tables, cells, weeks) {
   var ids = {}; tables.forEach(function (t) { ids[t.id] = 1; });
-  return L_requiredStatus(requiredForTerm_(term), tables, cells.filter(function (x) { return ids[x.tableId]; }), weeks, readPlans_().filter(function (e) { return e.term === term; }), loadCatalog_().products, tableWeeks_);
+  return L_requiredStatus(requiredForTerm_(term), tables, cells.filter(function (x) { return ids[x.tableId]; }), weeks, readPlans_().filter(function (e) { return e.term === term; }), loadProductsLite_(), tableWeeks_);
 }
 
 /* 這學期要有的進度表（技士、科主任、管理者設定的清單），還沒有的自動建好。老師不能自己新增進度表，只能在裡面排課、共同編輯。 */
@@ -824,7 +843,7 @@ function apiScheduleGet(asEmail) {
 }
 /* 進度表格子裡用到的材料單名稱（別人自創的，這邊的目錄裡沒有，也要能顯示名稱） */
 function cellProducts_(cells) {
-  var prods = loadCatalog_().products, out = {};
+  var prods = loadProductsLite_(), out = {};
   cells.forEach(function (x) { if (x.cell.kind === 'lesson') x.cell.groups.forEach(function (g) { g.pids.forEach(function (p) { if (!out[p] && prods[p]) out[p] = { title: prods[p].title, serving: prods[p].serving || '', custom: !!prods[p].custom }; }); }); });
   return out;
 }
