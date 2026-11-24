@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>員林農工材料單系統</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>window.PREP_CFG={"backend":"__BACKEND__","clientId":"464168761979-8jfd9ut1fjpst60hqlsva6peopvol2n6.apps.googleusercontent.com"};</script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#1D6B57;--ink:#14302B;--mut:#5D716B;--line:#D5E0DB;--bg:#F1F6F4;--card:#fff;--hi:#F6D66B;--hi-ink:#5B4300;--err:#B3261E}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #E0A800;outline-offset:2px}
+.wrap{max-width:920px;margin:0 auto;padding:0 14px 96px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;flex-wrap:wrap}
+.logo{width:28px;height:28px;border-radius:7px;background:var(--pri);color:#fff;display:grid;place-items:center;font-size:15px}
+.term{font-size:13px;font-weight:500;background:#DDEBE6;color:#164F41;border-radius:99px;padding:1px 10px}
+.who{display:flex;align-items:center;gap:8px;font-size:14px}
+.role{font-size:12px;background:#E1EFEA;color:#164F41;border-radius:99px;padding:1px 9px}
+.tabs{display:flex;gap:8px;margin:2px 0 12px}
+.tabs button,.gt{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 14px;font-size:15px}
+.tabs button.on,.gt.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0 0 14px}
+.steps button{border:0;border-radius:10px;background:#E2EBE8;color:var(--mut);padding:7px 1px;font-size:12.5px;font-weight:500;line-height:1.25}
+.steps button.on{background:var(--pri);color:#fff}
+.steps button.ok{background:#CFE5DD;color:#164F41}
+h2{font-size:20px;margin:0 0 4px}
+.sub{color:var(--mut);font-size:14px;margin:0 0 12px}
+.err{background:#FCE8E6;color:var(--err);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.ok-msg{background:#E3F2EC;color:#164F41;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tile{display:flex;align-items:flex-start;gap:8px;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px}
+.tile small{display:block;color:var(--mut);font-size:12px}
+.box{flex:none;width:20px;height:20px;border:1.5px solid #9DB0AA;border-radius:5px;display:grid;place-items:center;margin-top:1px}
+.tile.on{border-color:var(--pri);background:#E8F3EF}
+.tile.on .box{background:var(--pri);border-color:var(--pri)}
+.tile.on .box::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;overflow:hidden}
+.ch{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;padding:12px;text-align:left}
+.ch b{font-size:16px}
+.ch small{color:var(--mut);display:block;font-size:13px}
+.cb{padding:0 12px 12px}
+.erow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 12px;padding:10px 12px;border-top:1px dashed var(--line)}
+.erow .dt{flex:1 1 9em;max-width:12em}
+.erow .cw{flex:1 1 100%}
+.lbl{display:block;font-size:13px;color:var(--mut);margin:0 0 3px}
+.ccs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.ccs .dl{font-size:12px;color:var(--mut);width:3.6em}
+.cc{position:relative;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer;user-select:none}
+.cc input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.cc.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.cc.part{border-style:dashed;border-color:var(--pri);color:var(--pri)}
+.prow{padding:8px 0;border-top:1px dashed var(--line)}.prow>b{display:block;margin-bottom:2px}
+.cc:focus-within{outline:3px solid #E0A800;outline-offset:2px}
+.tw{position:relative}
+.tw .ed{position:absolute;right:8px;bottom:8px;border:0;background:#E2EBE8;border-radius:8px;padding:2px 8px;font-size:12px}
+.tile.add{border-style:dashed;align-items:center;color:var(--pri);font-weight:500}
+.g2{display:grid;grid-template-columns:1fr 7em;gap:8px;margin-top:10px}
+.er{display:grid;grid-template-columns:1fr 1fr 1fr 2.4em;gap:6px;padding:8px 0;border-bottom:1px dashed var(--line);align-items:center}
+.er .nm,.er .nt{grid-column:1/4}
+.er .ap{font-size:14px;display:flex;align-items:center;gap:4px}
+.edact{display:flex;justify-content:space-between;gap:8px;margin-top:16px}
+.btn.danger{background:var(--err)}
+.sentbox{background:#E3F2EC;border:1.5px solid #9FCBB9;color:#164F41;border-radius:14px;padding:14px;margin:0 0 12px}
+.sentbox .big{font-size:20px;font-weight:700;margin-bottom:4px}
+.spill{display:flex;align-items:center;gap:8px;border-radius:10px;padding:8px 12px;margin:0 0 12px;font-size:14px}
+.spill.ok{background:#E3F2EC;color:#164F41}.spill.warn{background:#FFF1C7;color:#6B4E00}.spill.none{background:#E9EEEC;color:var(--mut)}
+.xf{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#F6FAF8;border-radius:10px;padding:10px;margin-top:8px}
+.xf .full{grid-column:1/-1}.xf .acts{display:flex;gap:8px}
+.scell{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0 0;font:inherit;cursor:pointer;color:inherit}
+.scell b{display:block;font-size:13px}.scell b small{font-weight:400;color:var(--mut)}
+.scell.me{background:#FFF6D0;border-color:#E3C25B}.scell.note{background:#EEF1F0}
+.scell .gl{display:block;padding:2px 0}.scell .gl small{color:var(--mut)}
+.sres{max-height:12em;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.sres button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:#fff;padding:7px 9px;font:inherit;cursor:pointer}
+.sres button:last-child{border-bottom:0}.sres small{color:var(--mut)}
+.pchip2{display:inline-flex;align-items:center;gap:4px;background:#E1EFEA;border-radius:99px;padding:2px 4px 2px 10px;margin:2px 4px 2px 0;font-size:14px}
+.pchip2 button{border:0;background:transparent;font-size:16px;cursor:pointer;color:var(--mut)}
+.pbar3{height:8px;background:#DDE8E3;border-radius:99px;overflow:hidden;margin:4px 0 6px}.pbar3 i{display:block;height:100%;background:var(--pri)}
+.sgw{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.sgrid{width:100%;border-collapse:collapse;font-size:12px;background:#fff;table-layout:fixed}
+.sgrid th,.sgrid td{border:1px solid var(--line);padding:4px 3px;text-align:center;vertical-align:middle;word-break:break-all}
+.sgrid th{background:#E1EFEA;font-weight:700}.sgrid th small,.sgrid td small{display:block;font-weight:400;color:var(--mut);font-size:10.5px}
+.sgrid th.wkc,.sgrid th.dtc{width:3.9em;background:#F3F7F5;font-size:12px}.sgrid th.wkc small{white-space:nowrap;font-size:10px}.sgrid th.wkc{position:sticky;left:0;z-index:2}.sgrid th.dtc{position:sticky;left:3.9em;z-index:2}.sgrid th.vac{background:#FFF1DA}.sgrid button.ad{display:block;margin:3px auto 0;border:1px dashed var(--pri);background:#fff;color:var(--pri);border-radius:6px;font-size:10px;padding:1px 3px;cursor:pointer;line-height:1.3}.sgrid th.g{font-weight:600;background:#EEF6F2}
+.sgrid td.sc{cursor:pointer;min-height:44px;height:46px}.sgrid td.me{background:#FFF6D0}.sgrid td.note{background:#EEF1F0;color:#5D716B}.sgrid td.empty{color:#9DB0A8}
+.sgrid td.sc{position:relative}.sgrid button.cp{position:absolute;top:1px;right:1px;border:0;background:rgba(255,255,255,.75);color:var(--pri);font-size:13px;line-height:1;padding:2px 4px;border-radius:5px;cursor:pointer}.sgrid td.pd{box-shadow:inset 0 0 0 2px #E39B2B}.sgrid.pm td.sc{outline:1px dashed var(--pri);outline-offset:-2px}
+.sgrid button.sw{border:1px dashed var(--pri);background:#fff;color:var(--pri);border-radius:8px;font-size:11px;padding:3px 6px;cursor:pointer}
+.gwrap{margin:0 0 14px}
+.gh{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--pri);color:#fff;border:0;border-radius:12px;padding:11px 14px;font:inherit;cursor:pointer;gap:8px}
+.gh small{display:block;font-size:12px;font-weight:400;opacity:.9}
+.gh.st{cursor:default}
+.gbody{padding:8px 0 0}
+.gwarn{color:#FFE9A8;font-weight:600}
+.linkb{border:0;background:transparent;color:var(--pri);font:inherit;font-weight:600;padding:0;text-decoration:underline;cursor:pointer}
+.deny{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 18px;margin-top:24px;text-align:center}
+.deny h2{margin:0 0 8px}.deny .btn{display:inline-block;text-decoration:none;margin:6px 4px}
+.cl{display:grid;grid-template-columns:7.5em 1fr auto;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.cg{margin:0 0 12px}.cgh{font-weight:700;background:#E8F3EF;border-radius:8px;padding:6px 10px;margin-bottom:4px}
+.dup{color:var(--err);font-weight:600}
+.rgrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px}
+.rgrow label{font-size:14px;color:var(--mut);display:flex;align-items:center;gap:6px}
+.rgrow .in{width:auto}
+.tr2{display:grid;grid-template-columns:1fr 6.6em 2.2em 2.2em;gap:6px;margin:0 0 6px;align-items:center}
+.tr2 .x{padding:2px 0;text-align:center;font-size:18px}
+.tr2 .mv{border:0;background:#E2EBE8;border-radius:8px;height:2.2em;font-size:15px}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:99px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:5px 14px;font-size:14px}
+.seg button.on{background:var(--pri);color:#fff}
+.tctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.tctl select{width:auto;max-width:100%}
+.lr{display:grid;grid-template-columns:1fr 4.8em 2.6em 5.6em;gap:6px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:14px;align-items:baseline}
+.lr small{display:block;color:var(--mut);font-size:12px}
+.lr .t{text-align:right;font-variant-numeric:tabular-nums}
+.lr.h{color:var(--mut);font-size:12px}
+.arow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.arow small{display:block;color:var(--mut);font-size:12px}
+.tg{display:inline-block;font-size:11px;border-radius:99px;padding:0 7px;margin-left:6px;background:#FFF1C7;color:#6B4E00}
+.tg.gr{background:#E2EBE8;color:var(--mut)}
+.adm{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 12px;font-size:14px}
+.cur{background:#E8F3EF;color:#164F41;border-radius:10px;padding:8px 12px;margin:0 0 10px;font-size:14px}
+h3.hh{font-size:15px;margin:14px 0 6px;color:var(--mut);font-weight:500}
+.tag{display:inline-block;font-size:12px;background:#E1EFEA;color:#164F41;border-radius:99px;padding:0 8px;margin-top:2px}
+.erow label,.ctl label{font-size:13px;color:var(--mut);display:block}
+.in{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:7px 9px;min-width:0}
+.in.chg{background:var(--hi);border-color:#D9B93F;color:var(--hi-ink);font-weight:700}
+.btn{border:0;background:var(--pri);color:#fff;border-radius:10px;padding:10px 16px;font-weight:500}
+.btn.ghost{background:#E2EBE8;color:var(--ink)}
+.btn.sm{padding:6px 10px;font-size:14px}
+.btn[disabled]{background:#C9D5D0;color:#6E837C;cursor:default}
+.x{border:0;background:transparent;color:var(--mut);font-size:20px;padding:4px 8px}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#F6FAF8;border-radius:10px;padding:10px;margin-bottom:10px}
+.ctl .wide{grid-column:1/-1}
+.yr{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.yr .in{width:5.5em}
+.thead,.tr{display:grid;grid-template-columns:1fr 7.4em 5.2em 2em;gap:6px;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line)}
+.thead::after{content:'';}
+.tr .x{justify-self:end}
+.thead{color:var(--mut);font-size:13px}
+.tr .nm small{color:var(--mut);display:block;font-size:12px;line-height:1.3}
+.tr .rv{display:flex;align-items:center;gap:4px}
+.tr .rv .in{padding:5px 6px}
+.tr .u{font-size:12px;color:var(--mut)}
+.tr .tot,.thead span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.sum{display:flex;justify-content:space-between;font-weight:700;padding-top:8px}
+.oth{font-size:13px;color:var(--mut);margin-top:8px}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);padding:10px 14px}
+.bar div{max-width:920px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bar .btn{min-width:8em}
+.mut{color:var(--mut);font-size:14px}
+.chip{display:inline-block;font-size:13px;background:#E1EFEA;color:#164F41;border-radius:99px;padding:2px 10px;margin:0 6px 6px 0}
+.chip small{color:#5A6F68}
+.wr{display:grid;grid-template-columns:6.2em 1fr 6em;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+.wr .b{height:10px;background:#E6EEEA;border-radius:99px;overflow:hidden}
+.wr .b i{display:block;height:100%;background:var(--pri);border-radius:99px}
+.wr .g{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.wr .use{grid-column:1/-1;font-size:12px;color:var(--mut);margin-top:-4px}
+.load{text-align:center;color:var(--mut);padding:60px 0}
+.modal{position:fixed;inset:0;background:rgba(20,48,43,.5);display:grid;place-items:center;padding:12px;z-index:50}
+.modal .mb{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:14px}
+@media(min-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}.ctl{grid-template-columns:auto 1fr auto;align-items:end}.ctl .wide{grid-column:auto}.er{grid-template-columns:2fr 6em 5em auto 3fr 2.4em}.er .nm,.er .nt{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="load">載入中…</p></div>
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2=n=>Math.round(n*100)/100, r3=n=>Math.round(n*1000)/1000, r4=n=>Math.round(n*10000)/10000;
+const fmt=n=>r3(n).toLocaleString('en-US',{maximumFractionDigits:3});
+const WD=['日','一','二','三','四','五','六'];
+/* ---------- Google 登入（畫面在 GitHub Pages，資料由 Apps Script 提供） ---------- */
+const CFG=window.PREP_CFG||{},TK_KEY='prep_idtoken';
+let TOKEN='';
+const jwtExp=t=>{try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp*1000}catch(e){return 0}};
+const saveTok=t=>{TOKEN=t||'';try{t?localStorage.setItem(TK_KEY,t):localStorage.removeItem(TK_KEY)}catch(e){}};
+try{const t=localStorage.getItem(TK_KEY)||'';if(t&&jwtExp(t)>Date.now()+120000)TOKEN=t;}catch(e){}
+const waitGis=()=>new Promise(res=>{let n=0;(function w(){if(window.google&&google.accounts&&google.accounts.id)return res(true);if(++n>100)return res(false);setTimeout(w,100);})();});
+async function drawGbtn(el,cb){
+  if(!await waitGis()){el.innerHTML='<p class="mut">Google 登入元件載入失敗，請檢查網路後重新整理。</p>';return;}
+  google.accounts.id.initialize({client_id:CFG.clientId,callback:r=>{saveTok(r.credential);cb();},auto_select:false,use_fedcm_for_prompt:true});
+  google.accounts.id.renderButton(el,{theme:'outline',size:'large',text:'signin_with',shape:'pill',locale:'zh-TW',width:260});
+}
+function loginHTML(msg){return `<h2>員林農工材料單系統</h2><p>${msg||'請用 Google 帳號登入（學校信箱，或管理者加進名單的信箱）。'}</p><div id="gbtn" style="display:flex;justify-content:center;margin:14px 0"></div><p class="mut" style="margin:10px 0 0;font-size:12px">按登入後會跳出視窗，可以從你已登入的帳號裡選一個，不會被其他帳號干擾。</p>`;}
+function loginScreen(msg){$('#app').innerHTML=`<div class="deny">${loginHTML(msg)}</div>`;drawGbtn($('#gbtn'),()=>boot());}
+function loginOverlay(msg){
+  let o=document.getElementById('loginov');if(!o){o=document.createElement('div');o.id='loginov';o.style.cssText='position:fixed;inset:0;background:rgba(20,30,25,.55);z-index:99;display:flex;align-items:center;justify-content:center;padding:16px';document.body.appendChild(o);}
+  o.innerHTML=`<div class="deny" style="margin:0;max-width:360px;width:100%">${loginHTML(msg)}<p class="mut" style="font-size:12px">登入後，請再按一次剛才的動作。</p></div>`;
+  drawGbtn($('#gbtn',o),()=>{o.remove();S.info='已重新登入，請再按一次剛才的動作。';render();});
+}
+function signOut(){saveTok('');try{if(window.google&&google.accounts&&google.accounts.id)google.accounts.id.disableAutoSelect();}catch(e){}S.user=null;loginScreen();}
+const run=async(fn,...a)=>{
+  if(!TOKEN){const e=new Error('請先登入。');e.auth=true;throw e;}
+  let j;
+  try{const r=await fetch(CFG.backend,{method:'POST',body:JSON.stringify({fn,args:a,token:TOKEN})});j=await r.json();}
+  catch(e){throw new Error('連不上伺服器，請檢查網路後再試一次。');}
+  if(!j.ok){
+    if(j.code==='AUTH'){saveTok('');const e=new Error(j.error||'請重新登入。');e.auth=true;if(S.user)loginOverlay(e.message);else loginScreen(e.message);throw e;}
+    throw new Error(j.error||'發生錯誤');
+  }
+  return j.data;
+};
+
+/* ---------- 日期 ---------- */
+const pd=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');if(!m)return null;const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));return d.getUTCMonth()===+m[2]-1?d:null};
+const md=s=>{const d=pd(s);return d?`${d.getUTCMonth()+1}/${d.getUTCDate()}（${WD[d.getUTCDay()]}）`:'未填日期'};
+const fmtT=s=>{const m=/^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2})/.exec(s||'');return m?`${+m[1]}/${+m[2]} ${m[3]}`:'';};
+const md0=s=>{const d=pd(s);return d?`${d.getUTCMonth()+1}/${d.getUTCDate()}`:''};
+const addDays=(s,n)=>{const d=pd(s);d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const weekStart=s=>addDays(s,-((pd(s).getUTCDay()+6)%7));
+const today=()=>{if(window.PREP_START_DATE)return window.PREP_START_DATE;const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+
+/* ---------- 材料計算（和伺服器的 L_lines 同一套規則） ---------- */
+const k_=e=>Number(e.scale)>0?Number(e.scale):1;
+/* 老師另外加的材料（跟伺服器的 L_extraItems 同一套規則）：per 存的是倍率 ×1 的數字 */
+const extraItems=e=>(e.extra||[]).map(r=>({id:r.id,raw:r.raw,per:r.per===undefined?null:r.per,total:r.total===undefined?null:r.total,unit:r.unit||'g',kind:r.kind||'',note:r.note||'',procure:'',extra:true}));
+/* 每一列的量（和伺服器的 L_lines 同一套規則）：改過的數字也是 ×1 的，之後再改倍率照樣跟著變 */
+function lines(e){
+  const ov=e.ov||{},k=k_(e),om=new Set(e.omit||[]);
+  return (S.cat.items[e.pid]||[]).filter(it=>!om.has(it.id)).concat(extraItems(e)).map(it=>{
+    const o={id:it.id,raw:it.raw,unit:it.unit||'',note:it.note||'',procure:it.procure||'',extra:!!it.extra,mode:'text',per:null,total:null,text:'',orig:null,changed:false};
+    const has=Object.prototype.hasOwnProperty.call(ov,it.id),cv=it.kind?(e.conv||{})[it.id]:null;
+    if(it.kind)o.origText=it.kind==='適量'?'適量':(/^範圍 /.test(it.kind)?it.kind.replace(/^範圍 /,''):'原表沒填');
+    if(cv&&cv.mode==='per'){o.mode='per';o.per=r2(cv.per*k);o.unit=cv.unit||'g';o.sets=e.sets;o.total=r3(o.per*e.sets);o.changed=true;o.conv=true;}
+    else if(cv&&cv.mode==='fixed'){o.mode='fixed';o.total=cv.total;o.unit=cv.unit||'g';o.changed=true;o.conv=true;}
+    else if(cv&&cv.mode==='text'){o.text=cv.text;o.conv=true;}
+    else if(!it.kind&&it.per!==null){o.mode='per';o.orig=it.per;o.per=r2((has?ov[it.id]:it.per)*k);o.total=r3(o.per*e.sets);o.changed=has;}
+    else if(!it.kind&&it.total!==null){o.mode='fixed';o.orig=it.total;o.total=has?ov[it.id]:it.total;o.changed=has;}
+    else o.text=it.kind==='適量'?'適量':(/^範圍 /.test(it.kind||'')?it.kind.replace(/^範圍 /,''):'原表沒填');
+    return o;});
+}
+function parseYield(s){
+  if(!s||/[、*＊]/.test(s))return null;
+  const m=[...s.matchAll(/(?<![\d\/.])(\d+(?:\.\d+)?)\s*(個|顆|條|片|杯|碗|罐|支|捲|盤|公克|g)/g)];
+  return m.length===1?{n:+m[0][1],unit:m[0][2]==='公克'?'g':m[0][2]}:null;
+}
+
+/* ---------- 狀態 ---------- */
+const K=(d,c,p)=>d+'||'+c+'||'+p, kd=k=>k.split('||')[0], kc=k=>k.split('||')[1], kp=k=>k.split('||')[2];
+const UNITS=['g','ml','顆','個','條','包','罐','瓶','支','片','束','公分'];
+const DEPTS=['日間部','夜間部'];
+const S={user:null,term:'',cat:null,classes:{'日間部':[],'夜間部':[]},stdNames:[],ed:null,view:'sched',step:0,extraOpen:false,extraNote:'',estep:1,dept:'日間部',course:'',courses:{'日間部':[],'夜間部':[]},tab:'一',atab:'一',confirmTerm:'',adminUrl:'',
+  expWhat:'all',expOrder:'date',tOrder:'date',tTeacher:'',tFilter:{course:'',cls:'',q:'',id:''},tMode:'stats',tOpen:new Set(),tDel:'',open4:new Set(),xf:null,gOpen:{},confirmSend:'',accepting:true,openNote:'',confirmClose:false,sub:null,um:{list:null,busy:false,err:'',ed:null,bulk:null,del:''},subOpen:true,catAdd:null,catDel:'',ren:null,cv:null,ss:null,ssOpen:true,ssAll:true,remind:'',rq:null,pstep:1,sstep:0,seen:new Set(),sc:{data:null,tab:'',cellEd:null,tableEd:null,datesEd:null,delAsk:'',busy:false},hu:null,hist:{},appUrl:'',sel:new Set(),entries:[],open:new Set(),
+  err:'',info:'',busy:'',done:null,sent:null,savedSig:'[]',sentAt:'',preview:'',rgFrom:'',rgTo:'',tech:null};
+const P=pid=>S.cat.pmap[pid];
+const titleOf=e=>e.title||P(e.pid).title;              // 這堂課的產品名稱（老師可以改，沒改就用原本的）
+/* 這張材料單放在哪個年級：原本的年級，或管理者把它移到／放進的年級（沒有的話回傳空字串） */
+const GRADES=['一','二','三'];
+/* 一、二、三年級的名稱可以在後台改；分類的名稱也是。顯示都用這兩個。 */
+const gname=g=>(S.cat&&S.cat.gradeNames&&S.cat.gradeNames[g])||g+'年級';
+const catLabel=c=>{const g=GRADES.find(x=>c===x+'年級');return g?gname(g):c;};
+const gradeOf=p=>{const c=p.category||'';if(GRADES.some(g=>c===g+'年級'))return c[0];return (!p.custom&&!c)?p.sem[0]:'';};
+/* 技士、科主任、管理者：一樣的管理功能（看每週總量、後台、刪除老師開錯的課），也都能排課備料。 */
+const isAdmin=()=>S.user&&['技士','科主任','管理者'].includes(S.user.role);
+const canPlan=()=>!!S.user;                       // 每個身分都能排課備料
+const canTech=()=>isAdmin();
+/* 老師送材料單被關閉時：老師只能看、不能改（管理者、技士、科主任不受影響） */
+const locked=()=>!!S.user&&S.user.role==='老師'&&S.accepting===false;
+const SCHED_MSG='這是教學進度表排給你的課，產品和班級要改，請到「教學進度表」修改。';
+const LOCK_MSG='目前已關閉老師送出材料單，只能查看，不能新增或修改。需要修改請聯絡技士、科主任或管理者。';
+const norm=e=>({id:e.id||'',pid:e.pid,title:e.title||'',dept:e.dept||'日間部',course:e.course||'',tools:Array.isArray(e.tools)?e.tools.map(t=>({who:t.who,name:t.name,qty:t.qty})):null,
+  sid:e.sid||'',group:e.group||'',draft:!!e.draft,pend:!!e.pend,
+  omit:Array.isArray(e.omit)?e.omit.slice():[],conv:(e.conv&&typeof e.conv==='object'&&!Array.isArray(e.conv))?JSON.parse(JSON.stringify(e.conv)):{},
+  extra:Array.isArray(e.extra)?e.extra.map(x=>({id:x.id||'',raw:x.raw,per:x.per===undefined?null:x.per,total:x.total===undefined?null:x.total,unit:x.unit||'g',kind:x.kind||'',note:x.note||''})):[],
+  date:e.date||'',cls:String(e.cls||'').split('、')[0],sets:Number(e.sets)||1,
+  scale:Number(e.scale)>0?Number(e.scale):1,yFrom:e.yFrom||null,yTo:e.yTo||null,yUnit:e.yUnit||'',ov:e.ov||{},updated:e.updated||''});
+const newEntry=(pid,dept,course)=>{const p=P(pid);return norm({pid,dept,course,date:'',cls:'',sets:p.dsets,ov:{}});};
+const order=()=>S.entries.map((e,i)=>i).sort((a,b)=>{const x=S.entries[a],y=S.entries[b];return (x.date||'~')<(y.date||'~')?-1:(x.date||'~')>(y.date||'~')?1:x.pid<y.pid?-1:1});
+/* 依「課程＋班級」分欄：一位老師同時有很多門課、很多班，才不會混在一起 */
+const eKey=e=>[e.pid,e.date,e.dept,e.course,e.cls,e.group||''].join('|');           // 這堂課看過（確認過）了沒
+/* 兩條路完全分開：「教學進度表」排的課（有 sid），和「額外材料單」（臨時活動，不在進度表裡） */
+const curScope=()=>S.view==='extra'?'extra':'sched';
+const inScope=e=>curScope()==='extra'?!e.sid:!!e.sid;
+const sc=()=>S.entries.filter(inScope);
+const canExtra=()=>S.extraOpen||isAdmin();
+const dIdx=d=>DEPTS.indexOf(d);
+const cIdx=e=>(S.courses[e.dept]||[]).indexOf(e.course);
+const clIdx=e=>{const i=(S.classes[e.dept]||[]).indexOf(e.cls);return i<0?99:i;};
+function groups(byClass){
+  const m=new Map();
+  S.entries.forEach((e,i)=>{if(!inScope(e))return;const k=e.dept+'||'+e.course+(byClass?'||'+(e.cls||''):'');if(!m.has(k))m.set(k,{key:k,dept:e.dept,course:e.course,cls:byClass?(e.cls||''):null,idx:[]});m.get(k).idx.push(i);});   // 同一班的單數組、雙數組放在一起（老師這週上單數組，下週就上雙數組）
+  const ex=i=>S.entries[i],dk=i=>ex(i).date||'~';
+  const gs=[...m.values()].sort((a,b)=>{const x=ex(a.idx[0]),y=ex(b.idx[0]);return (dIdx(x.dept)-dIdx(y.dept))||(cIdx(x)-cIdx(y))||(byClass?clIdx(x)-clIdx(y):0);});
+  gs.forEach(g=>g.idx.sort((a,b)=>dk(a)<dk(b)?-1:dk(a)>dk(b)?1:(ex(a).pid<ex(b).pid?-1:1)));
+  return gs;
+}
+const gLabel=g=>`${g.dept}・${g.course}${g.cls?`｜${g.cls}`:''}`;
+const gIsOpen=(st,g,n)=>{const v=S.gOpen[st+':'+g.key];return v===undefined?(st==='2'||n===0):v;};
+const gHead=(st,g,n,small)=>{const o=gIsOpen(st,g,n);return `<button class="gh" data-a="gtoggle" data-g="${esc(st+':'+g.key)}" data-o="${o?1:0}"><span><b>${esc(gLabel(g))}</b><small>${small}</small></span><span>${o?'▴':'▾'}</span></button>`;};
+const gAll=st=>`<div style="text-align:right;margin:-4px 0 8px"><button class="linkb" data-a="gall" data-st="${st}" data-o="1">全部展開</button>　<button class="linkb" data-a="gall" data-st="${st}" data-o="0">全部收合</button></div>`;
+function syncEntries(){}
+const entriesOk=scope=>S.entries.filter(e=>scope==='extra'?!e.sid:!!e.sid).every(e=>pd(e.date)&&e.course&&(!e.cls||(S.classes[e.dept]||[]).includes(e.cls)));
+/* 「有沒有改過、送出了沒」：用內容指紋比對 */
+const sigOf=es=>JSON.stringify(es.map(e=>JSON.stringify([e.pid,e.dept,e.course,e.date,e.cls,e.sets,e.scale,e.yFrom||null,e.yTo||null,e.yUnit||'',Object.keys(e.ov||{}).sort().map(k=>[k,e.ov[k]]),
+  e.tools?e.tools.filter(t=>t.name.trim()).map(t=>[t.who,t.name.trim(),t.qty.trim()]):null,(e.extra||[]).map(x=>[x.per===undefined?null:x.per,x.total===undefined?null:x.total,x.unit,x.kind||'']),(e.omit||[]).slice().sort(),e.title||'',Object.keys(e.conv||{}).sort().map(k=>[k,e.conv[k]])])).sort());
+const dirty=()=>sigOf(S.entries)!==S.savedSig;
+
+/* ---------- 畫面 ---------- */
+function render(){
+  if(!S.user){return;}
+  let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span><button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
+  const views=[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
+  if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
+  if(S.err)h+=`<div class="err">${esc(S.err)}</div>`;
+  if(S.info)h+=`<div class="ok-msg">${esc(S.info)}</div>`;
+  h+=S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
+  if(S.preview)h+=`<div class="modal"><div class="mb"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>匯出內容預覽</b><button class="btn sm ghost" data-a="closePrev">關閉</button></div>${S.preview}</div></div>`;
+  if(S.confirmSend)h+=confirmHTML();
+  if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
+  if(S.sc.tableEd)h+=scTableModal();
+  if(S.hu)h+=histModal();
+  if(S.remind)h+=remindModal();
+  if(S.rq)h+=rqModal();
+  if(S.ed)h+=editorHTML();
+  h+=`<datalist id="toollist">${[...new Set(Object.values(S.cat.tools).flat().map(t=>t.name))].sort().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
+  h+=`<datalist id="stdlist">${S.stdNames.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
+  const sc=$('.modal .mb'),top=sc?sc.scrollTop:0;
+  $('#app').innerHTML=h;
+  const m=$('.modal .mb');if(m&&top)m.scrollTop=top;
+  if(locked()&&(S.view==='extra'||(S.view==='sched'&&S.step>=3)))$$('#app .in, #app input[type=radio]').forEach(x=>{x.disabled=true;});
+}
+/* 「額外材料單」：不在教學進度表裡的臨時材料單（例如活動）。平常關閉，技士開放了老師才能送；跟教學進度表完全分開（自己的步驟、自己的匯出） */
+function extraHTML(){
+  if(!canExtra()){
+    const n=S.entries.filter(e=>!e.sid).length;
+    return `<div class="card"><div class="cb" style="padding-top:12px"><b>目前沒有開放「額外材料單」</b><p class="mut" style="margin:6px 0 0">額外材料單是給臨時的活動用的（不在教學進度表裡的材料單）。平常是關閉的，臨時有活動要送材料單，請聯絡技士、科主任或管理者開放。</p>${S.extraNote?`<small class="mut">${esc(S.extraNote)}</small>`:''}${n?`<div style="margin-top:8px"><button class="btn sm ghost" data-a="dlSent">下載之前送出的額外材料單</button></div>`:''}</div></div>`;
+  }
+  if(S.step<1||S.step>5)S.step=1;
+  const st=[[1,'選產品'],[2,'課程名稱、日期'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
+  let h=`<div class="steps">${st.map(([n,l])=>`<button data-a="step" data-n="${n}" class="${S.step===n?'on':S.step>n?'ok':''}">${n} ${l}</button>`).join('')}</div>`;
+  if(S.step<=2)h+=`<p class="sub" style="margin:0 0 8px">臨時活動用的材料單（不在教學進度表裡）。跟教學進度表分開送、分開匯出。</p>`;
+  h+=sentPill();
+  if(S.step>=3&&!sc().length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>還沒有額外材料單</b><p class="mut" style="margin:6px 0 0">先「選產品」，再填課程名稱和日期。</p><button class="btn" style="margin-top:8px" data-a="step" data-n="1">去選產品</button></div></div>`;
+  return h+(S.step===1?step1():S.step===2?step2():S.step===3?step3():S.step===4?stepTools():step5());
+}
+/* 教學進度表 → 確認重量 → 準備器具 → 匯出：進度表排好之後，直接接著做下去 */
+function flowHTML(){
+  const st=[[0,'進度表'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
+  let h=`<div class="steps">${st.map(([n,l],i)=>`<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''}">${i+1} ${l}</button>`).join('')}</div>`;
+  if(S.step===0){
+    const n=sc().length,dr=sc().filter(e=>e.draft).length;
+    return h+schedHTML()+((n||pendCount())?bar(pendCount()?`有 ${pendCount()} 格還沒儲存`:dr?`進度表排給你 ${dr} 堂，等你確認`:`${n} 堂課`,`<button class="btn" data-a="step" data-n="3">${pendCount()?'儲存並下一步：確認重量':'下一步：確認重量'}</button>`):'');
+  }
+  h+=sentPill();
+  if(!sc().length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>還沒有要確認的材料單</b><p class="mut" style="margin:6px 0 0">先到「教學進度表」把課排好，材料單就會出現在這裡。不在進度表裡的課，到「額外材料單」新增。</p><button class="btn" style="margin-top:8px" data-a="step" data-n="0">回教學進度表</button></div></div>`;
+  return h+(S.step===3?step3():S.step===4?stepTools():step5())+`<div style="margin-top:10px;text-align:center"><button class="linkb" data-a="view" data-v="extra">臨時活動要開進度表以外的材料單？到「額外材料單」</button></div>`;
+}
+function sentPill(){
+  if(locked())return `<div class="spill warn">🔒 ${LOCK_MSG}${S.openNote?`<small style="display:block">${esc(S.openNote)}</small>`:''}</div>`;
+  const l=sc();
+  if(!l.length&&S.savedSig==='[]')return '';
+  const nd=l.filter(e=>e.draft).length,np=l.filter(e=>e.pend).length;
+  if(nd||np||dirty()){
+    const what=[nd?`${nd} 堂還沒匯出`:'',np?`${np} 堂改了還沒匯出`:''].filter(Boolean).join('、')||'有修改還沒匯出';
+    return `<div class="spill warn">✎ 草稿：${what}。<b>匯出之後，技士才看得到</b>，沒匯出的技士看不到、也不算。<small style="display:block">${S.draftErr?`⚠ 草稿沒存到：${esc(S.draftErr)}`:(dirty()?'正在自動存草稿…':'已自動存成草稿，離開網頁也不會不見。')}</small></div>`;
+  }
+  return `<div class="spill ok">✓ 已匯出給技士${S.sentAt?`（${esc(fmtT(S.sentAt))}）`:''}，共 ${l.length} 堂課</div>`;
+}
+/* 做到一半的自動存成草稿（只有自己看得到，技士看不到）。沒填完的（缺日期、課程名稱）先不存。 */
+async function saveDraft(){
+  if(!S.user||S.busy||S.draftBusy||locked()||!dirty())return;
+  if(S.entries.some(e=>!(pd(e.date)&&e.course)))return;
+  const snap=S.entries.slice(),sig=sigOf(snap),body=payload();
+  S.draftBusy=true;
+  try{
+    const r=await run('apiSavePlan',body,'draft');
+    snap.forEach((e,i)=>{if(!e.id&&r.ids&&r.ids[i])e.id=r.ids[i];});
+    (r.flags||[]).forEach(f=>{const x=S.entries.find(y=>y.id===f.id);if(x){x.draft=f.draft;x.pend=f.pend;}});
+    S.savedSig=sig;S.draftErr='';
+  }catch(er){S.draftErr=er.message;}
+  S.draftBusy=false;refreshPill();
+}
+setInterval(()=>{if(S.user&&dirty())saveDraft();},2500);
+window.addEventListener('beforeunload',ev=>{if(S.user&&((dirty()&&S.draftErr)||(S.sc&&pendCount()))){ev.preventDefault();ev.returnValue='';}});           // 進度表有還沒儲存的修改，或草稿存不進去的時候，離開網頁前提醒
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.user&&S.view==='sched'&&S.step===0&&S.sc.data&&!pendCount()&&!S.sc.cellEd&&!S.sc.conflict)quietSched();});           // 回到這個網頁時，如果沒有沒儲存的修改，就更新成最新的（別人可能剛改過）           // 草稿存不進去的時候，離開網頁前提醒
+/* 輸入時不整頁重畫，所以「有修改還沒送出」的提示要另外更新 */
+function refreshPill(){
+  if(S.view!=='extra'&&S.view!=='sched')return;
+  const html=sentPill(),el=$('.spill');
+  if(!html){if(el)el.remove();return;}
+  const t=document.createElement('div');t.innerHTML=html;
+  if(el)el.replaceWith(t.firstElementChild);else{const st=$('.steps');if(st)st.after(t.firstElementChild);}
+}
+const expWhat=()=>curScope()==='extra'&&S.expWhat==='schedule'?'all':S.expWhat;
+function confirmHTML(){
+  const gs=groups(true),dup=[],seen={};
+  S.entries.forEach((e,i)=>{if(!inScope(e))return;const k=[e.date,e.cls,e.pid,e.course].join('|');if(seen[k]!==undefined){dup.push(i);dup.push(seen[k]);}else seen[k]=i;});
+  return `<div class="modal"><div class="mb">
+  <h2 style="margin:0 0 6px">送出前，請再確認一次</h2>
+  <p class="mut" style="margin:0 0 10px">共 ${sc().length} 堂課。請對照你的課表，<b>日期（星期）、產品</b>有沒有對？分成「課程｜班級」，比較好核對。</p>
+  ${sc().some(e=>!S.seen.has(eKey(e)))?`<div class="spill warn">還有 ${sc().filter(e=>!S.seen.has(eKey(e))).length} 堂課的重量你還沒確認過。用預設的量也可以直接送出；想再看，按「不對，回去改」。</div>`:''}
+  ${dup.length?`<div class="err">⚠ 有重複的課（同一天、同班、同一個產品排了兩次），請確認是不是多按了。</div>`:''}
+  ${gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span class="${dup.includes(i)?'dup':''}">${md(e.date)}</span><span>${esc(titleOf(e))}</span><span class="mut">${fmt(e.sets)} 組</span></div>`;}).join('')}</div>`).join('')}
+  <div class="card" style="margin:12px 0 0"><div class="cb" style="padding-top:10px"><b>匯出之後要下載什麼？</b><span class="mut" style="display:block;font-size:13px">不管選哪一個，都會送給技士。</span>
+    ${(curScope()==='extra'?[['none','只匯出（不下載檔案）'],['all','匯出 ＋ 下載材料單']]:[['none','只匯出（不下載檔案）'],['schedule','匯出 ＋ 下載教學進度表'],['all','匯出 ＋ 下載教學進度表 ＋ 材料單']]).map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="expwhat" data-k="expwhat" value="${v}" ${expWhat()===v?'checked':''}> <span>${n}</span></label>`).join('')}${expWhat()==='all'?`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['class','依課程、班級排（同一個班再依日期）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="exporder" data-k="exporder" value="${v}" ${S.expOrder===v?'checked':''}> <span>${n}</span></label>`).join('')}`:''}</div></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px"><button class="btn ghost" data-a="sendNo">不對，回去改</button><button class="btn" data-a="sendYes">正確，送出</button></div>
+  </div></div>`;
+}
+function bar(left,btn){return `<div class="bar"><div><span class="mut">${left}</span>${btn}</div></div>`;}
+
+function step1(){
+  const half=S.term.endsWith('-2')?'下':'上';
+  const cats=S.cat.categories||[];
+  if(S.tab.startsWith('c:')&&!cats.includes(S.tab.slice(2)))S.tab='一';
+  const cntD=d=>S.entries.filter(e=>!e.sid&&e.dept===d).length;
+  const on=p=>S.entries.some(e=>!e.sid&&e.pid===p.pid&&e.dept===S.dept);
+  const tile=p=>`<button class="tile ${on(p)?'on':''}" data-a="pick" data-p="${esc(p.pid)}"><span class="box"></span><span>${esc(p.title)}<small>${esc(p.serving)}${p.shared&&p.ownerName?(p.serving?'・':'')+'建立：'+esc(p.ownerName):''}${S.hist[p.pid]?` <span class="tg">以前改過</span>`:''}</small></span></button>`;
+  const wrapEd=p=>`<div class="tw">${tile(p)}<button class="ed" data-a="edEdit" data-p="${esc(p.pid)}">修改</button></div>`;
+  let body;
+  if(S.tab==='自'){
+    const mine=S.cat.products.filter(p=>p.custom&&!p.deleted&&!p.shared&&p.owner===S.user.email);
+    body=`<p class="sub">模板裡沒有的，自己建一張。建好只有你看得到，之後可以重複用。</p><div class="tiles">${mine.map(wrapEd).join('')}<button class="tile add" data-a="edNew">＋ 自創一張材料單</button></div>`;
+  }else if(S.tab==='共'){
+    const sh=S.cat.products.filter(p=>p.custom&&!p.deleted&&p.shared&&!p.category);
+    body=`<p class="sub">${isAdmin()?'這裡的材料單所有老師都選得到。':'管理者建立、大家都能選的材料單。'}</p><div class="tiles">${sh.map(p=>isAdmin()?wrapEd(p):tile(p)).join('')}${isAdmin()?'<button class="tile add" data-a="edNew" data-sh="1">＋ 新增共用材料單</button>':''}</div>${!sh.length&&!isAdmin()?'<p class="sub">目前還沒有共用的材料單。</p>':''}`;
+  }else if(S.tab.startsWith('c:')){
+    const name=S.tab.slice(2),l=S.cat.products.filter(p=>p.category===name&&!p.deleted&&(isAdmin()||!p.hidden));
+    body=`<p class="sub">${isAdmin()?'要把材料單放進這個分類：到材料單右邊的「修改」，選「分類」。':''}</p><div class="tiles">${l.map(p=>isAdmin()?wrapEd(p):tile(p)).join('')}${isAdmin()?`<button class="tile add" data-a="edNew" data-sh="1" data-cat="${esc(name)}">＋ 新增產品</button>`:''}</div>${!l.length?'<p class="sub">這個分類裡還沒有材料單。</p>':''}
+      ${isAdmin()?`<div style="margin-top:14px">${S.catDel===name?`<button class="btn danger sm" data-a="catDelYes">確定刪除分類</button> <button class="btn ghost sm" data-a="catDelNo">取消</button><p class="mut">刪除分類後，裡面的材料單會回到原本的年級（或共用），材料單本身不會不見。</p>`:`<button class="btn ghost sm" data-a="catDelAsk">刪除「${esc(name)}」這個分類</button>`}</div>`:''}`;
+  }else{
+    const ps=S.cat.products.filter(p=>!p.custom&&!p.hidden&&gradeOf(p)===S.tab),added=S.cat.products.filter(p=>p.custom&&!p.deleted&&p.shared&&gradeOf(p)===S.tab);
+    body=[half,half==='上'?'下':'上'].map(h=>{const l=ps.filter(p=>p.sem[1]===h);
+      return l.length?`<h3 class="hh">${h}學期${S.tab==='一'&&h==='下'?'（丙檢模擬考）':''}</h3><div class="tiles">${l.map(p=>isAdmin()?wrapEd(p):tile(p)).join('')}</div>`:'';}).join('')
+      +(added.length||isAdmin()?`<h3 class="hh">新增的材料單</h3><div class="tiles">${added.map(p=>isAdmin()?wrapEd(p):tile(p)).join('')}${isAdmin()?`<button class="tile add" data-a="edNew" data-sh="1" data-cat="${S.tab}年級">＋ 新增產品</button>`:''}</div>`:'');
+  }
+  return `<h2>要開哪些材料單？</h2>
+  <div class="seg" role="group" aria-label="部別" style="margin-bottom:8px">${DEPTS.map(d=>`<button data-a="dept" data-d="${d}" class="${S.dept===d?'on':''}">${d}${cntD(d)?`（${cntD(d)}）`:''}</button>`).join('')}</div>
+  <p class="sub" style="margin-bottom:6px">勾要開的材料單，量之後可以改。</p>
+  <div class="tabs" style="flex-wrap:wrap">${['一','二','三'].map(g=>`<button class="gt ${S.tab===g?'on':''}" data-a="tab" data-g="${g}">${esc(gname(g))}</button>`).join('')}${cats.map(n=>`<button class="gt ${S.tab==='c:'+n?'on':''}" data-a="tab" data-g="${esc('c:'+n)}">${esc(n)}</button>`).join('')}<button class="gt ${S.tab==='共'?'on':''}" data-a="tab" data-g="共">共用</button><button class="gt ${S.tab==='自'?'on':''}" data-a="tab" data-g="自">自創</button>${isAdmin()?'<button class="gt" style="border-style:dashed" data-a="catAdd">＋ 新增分類</button>':''}</div>
+  ${S.catAdd!==null?`<div class="rgrow"><input class="in" data-k="catname" maxlength="10" placeholder="分類名稱，例如：技藝競賽" value="${esc(S.catAdd)}"><button class="btn sm" data-a="catAddYes">新增</button><button class="btn sm ghost" data-a="catAddNo">取消</button></div>`:''}
+  ${body}
+  ${bar(`已選 ${sc().length} 項`,`<button class="btn" data-a="step" data-n="2" ${sc().length?'':'disabled'}>下一步：課程名稱、日期</button>`)}`;
+}
+function cvFormHTML(){
+  const f=S.cv;
+  return `<div class="xf"><div class="full"><label class="lbl">「${esc(f.raw)}」目前是「${esc(f.orig)}」，要改成？</label></div>
+    <div><select class="in" data-k="cvmode"><option value="per" ${f.mode==='per'?'selected':''}>每組數量（會加總）</option><option value="fixed" ${f.mode==='fixed'?'selected':''}>固定總量（會加總）</option><option value="text" ${f.mode==='text'?'selected':''}>只改文字（不加總）</option></select></div>
+    <div>${f.mode==='text'?`<input class="in" data-k="cvval" value="${esc(f.val)}" maxlength="20" placeholder="例如：少許">`:`<input class="in" type="number" inputmode="decimal" step="any" min="0" data-k="cvval" value="${esc(f.val)}" placeholder="${f.mode==='fixed'?'總共幾':'每組幾（現在的倍率）'}">`}</div>
+    <div><select class="in" data-k="cvunit" ${f.mode==='text'?'disabled':''}>${UNITS.map(u=>`<option ${u===f.unit?'selected':''}>${u}</option>`).join('')}</select></div>
+    <div class="acts" style="align-items:flex-end"><button class="btn sm" data-a="cvapply">套用</button><button class="btn sm ghost" data-a="cvcancel">取消</button></div></div>`;
+}
+function rowHTML(e,l){
+  const u=l.unit||'g',ix=S.entries.indexOf(e);
+  const back=l.conv?`<small><button class="linkb" style="font-size:12px" data-a="cvreset" data-i="${ix}" data-r="${esc(l.id)}">改回原本的「${esc(l.origText||'')}」</button></small>`:'';
+  const noteTxt=[l.extra?'另外加的':'',l.note,l.procure&&l.mode!=='text'?('原表：'+l.procure):''].filter(Boolean).join('；');
+  const rm=`<button class="x" data-a="${l.extra?'xrem':'mrem'}" data-i="${ix}" data-r="${esc(l.id)}" title="這堂課不要這項材料" aria-label="刪掉材料 ${esc(l.raw)}">×</button>`;
+  if(l.mode==='text'){       // 適量、範圍、原表沒填數量：也列在材料表裡；點一下可以改成有數量的（會加總）或改文字
+    const form=S.cv&&S.cv.i===ix&&S.cv.id===l.id?cvFormHTML():'';
+    return `<div class="tr" data-r="${esc(l.id)}"><span class="nm">${esc(l.raw)}${noteTxt?`<small>${esc(noteTxt)}</small>`:''}<small>不加總</small>${back}</span><span class="rv"><button class="btn sm ghost" style="white-space:normal;text-align:left" data-a="cvopen" data-i="${ix}" data-r="${esc(l.id)}" title="改數量，或變成會加總" aria-label="改「${esc(l.raw)}」的數量">${esc(l.text)} ✎</button></span><span class="tot mut">—</span>${rm}</div>${form}`;
+  }
+  return `<div class="tr" data-r="${esc(l.id)}"><span class="nm">${esc(l.raw)}${noteTxt?`<small>${esc(noteTxt)}</small>`:''}${l.mode==='fixed'?'<small>固定總量，不跟組數變</small>':''}${back}</span>
+  <span class="rv"><input class="in ${l.changed?'chg':''}" type="number" inputmode="decimal" step="any" min="0" data-k="cell" data-i="${ix}" data-r="${esc(l.id)}" value="${l.mode==='per'?l.per:l.total}"><span class="u">${esc(u)}</span></span>
+  <span class="tot" data-tot>${fmt(l.total)}${esc(u)}</span>${rm}</div>`;
+}
+function rowsHTML(e){
+  const ls=lines(e),ix=S.entries.indexOf(e);
+  const g=ls.filter(l=>l.mode!=='text'&&(l.unit||'g')==='g').reduce((s,l)=>s+l.total,0);
+  const gone=(S.cat.items[e.pid]||[]).filter(it=>(e.omit||[]).includes(it.id));
+  return `<div class="thead"><span>材料</span><span>每組</span><span>總量</span><span></span></div>${ls.map(l=>rowHTML(e,l)).join('')}
+  <div class="sum"><span>合計（公克類）</span><span data-sum>${fmt(g/1000)} 公斤</span></div>
+  ${gone.length?`<div class="oth"><b>這堂課刪掉的材料（點一下加回來）：</b>${gone.map(it=>`<button class="btn sm ghost" style="margin:2px 4px 2px 0" data-a="madd" data-i="${ix}" data-r="${esc(it.id)}">＋ ${esc(it.raw)}</button>`).join('')}</div>`:''}`;
+}
+function xformHTML(i){
+  const f=S.xf;
+  if(!f||f.i!==i)return `<div style="margin-top:8px"><button class="btn sm ghost" data-a="xopen" data-i="${i}">＋ 新增材料</button></div>`;
+  return `<div class="xf"><div class="full"><label class="lbl">材料名稱</label><input class="in" list="stdlist" data-k="xraw" value="${esc(f.raw)}" placeholder="從提示裡選，或自己打" maxlength="30"></div>
+    <div><label class="lbl">類型</label><select class="in" data-k="xmode">${[['per','每組數量'],['fixed','固定總量'],['text','文字（適量…）']].map(([v,n])=>`<option value="${v}" ${f.mode===v?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div>${f.mode==='text'?`<label class="lbl">內容</label><input class="in" data-k="xval" value="${esc(f.val)}" placeholder="例如：適量" maxlength="20">`:`<label class="lbl">${f.mode==='fixed'?'總共幾':'每組幾（現在的倍率）'}</label><input class="in" type="number" inputmode="decimal" step="any" min="0" data-k="xval" value="${esc(f.val)}">`}</div>
+    <div><label class="lbl">單位</label><select class="in" data-k="xunit" ${f.mode==='text'?'disabled':''}>${UNITS.map(u=>`<option ${u===f.unit?'selected':''}>${u}</option>`).join('')}</select></div>
+    <div class="acts" style="align-items:flex-end"><button class="btn sm" data-a="xadd">加入</button><button class="btn sm ghost" data-a="xcancel">取消</button></div></div>`;
+}
+function kgOf(e){return lines(e).filter(l=>l.mode!=='text'&&(l.unit||'g')==='g').reduce((s,l)=>s+l.total,0)/1000;}
+function step2(){
+  const l=S.entries.map((e,i)=>[e,i]).filter(([e])=>!e.sid);
+  const names=[...new Set(l.map(([e])=>e.course).filter(Boolean))];
+  const ok=entriesOk('extra')&&l.length>0;
+  return `<h2>課程名稱、日期</h2><p class="sub">課程名稱自己填（例如活動名稱），班級可以不填。</p>`
+  +l.map(([e,i])=>`<div class="card"><div class="cb" style="padding-top:10px"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(P(e.pid).title)}<small class="mut" style="display:block;font-weight:400">${esc(e.dept)}・${esc(P(e.pid).serving||'')}</small></b><button class="x" data-a="delEntry" data-i="${i}" aria-label="刪掉這堂" title="刪掉這堂">×</button></div>
+    <label class="lbl">課程名稱／活動名稱</label><input class="in" style="width:100%" data-k="xcourse" data-i="${i}" maxlength="20" value="${esc(e.course)}" placeholder="例如：校慶活動">
+    ${names.filter(n=>n!==e.course).length?`<div style="margin-top:4px">${names.filter(n=>n!==e.course).map(n=>`<button class="pchip" style="font-size:13px" data-a="xname" data-i="${i}" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`:''}
+    <label class="lbl" style="margin-top:8px">日期</label><input class="in" type="date" data-k="date" data-i="${i}" value="${esc(e.date)}">
+    <label class="lbl" style="margin-top:8px">班級（可以不填）</label><div class="ccs">${(S.classes[e.dept]||[]).map(c=>`<button class="cc ${e.cls===c?'on':''}" data-a="xcls" data-i="${i}" data-cl="${esc(c)}" aria-pressed="${e.cls===c}">${esc(c)}</button>`).join('')}</div>
+    <div style="margin-top:8px"><button class="btn sm ghost" data-a="addEntry" data-i="${i}">＋ 再加一堂（同一個產品別天）</button></div></div></div>`).join('')
+  +bar(ok?`共 ${l.length} 堂`:'每一堂都要填課程名稱和日期',`<button class="btn" data-a="step" data-n="3" ${ok?'':'disabled'}>下一步：確認重量</button>`);
+}
+function card3(i){
+  const e=S.entries[i],p=P(e.pid),open=S.open.has(i),base=parseYield(p.serving);
+  return `<div class="card" data-c="${i}"><button class="ch" data-a="toggle" data-i="${i}"><span><b>${md(e.date)} ${esc(titleOf(e))}</b><small>${esc(e.dept)}・${esc(e.course)}・${esc(e.cls)}${e.group?'（'+esc(e.group)+'）':''}・${fmt(e.sets)} 組${k_(e)!==1?'・份量 ×'+fmt(k_(e)):''}${e.sid?` <span class="tg">${e.draft?'進度表・還沒匯出':(e.pend?'進度表・改了還沒匯出':'進度表・已匯出')}</span>`:(e.draft?' <span class="tg">還沒匯出</span>':(e.pend?' <span class="tg">改了還沒匯出</span>':''))}</small></span><span data-kg>${S.seen.has(eKey(e))?'✓ ':''}${fmt(kgOf(e))} 公斤 ${open?'▴':'▾'}</span></button>
+    ${open?`<div class="cb"><div class="ctl">
+      <div class="wide" style="flex-basis:100%"><label>產品名稱（申請單上印這個，只改這一堂課）</label><input class="in" style="width:100%" data-k="etitle" data-i="${i}" maxlength="40" value="${esc(titleOf(e))}" placeholder="${esc(p.title)}">${e.title?`<button class="linkb" style="font-size:13px" data-a="titleReset" data-i="${i}">還原成原本的名稱「${esc(p.title)}」</button>`:''}</div>
+      <div><label>組數</label><input class="in" style="width:5em" type="number" min="1" max="200" step="1" data-k="sets" data-i="${i}" value="${e.sets}"></div>
+      <div class="wide"><label>每組份量：原本 → 改成</label><div class="yr"><input class="in" type="number" step="any" min="0" data-k="yFrom" data-i="${i}" placeholder="${base?base.n:''}" value="${e.yFrom||''}"><span>→</span><input class="in" type="number" step="any" min="0" data-k="yTo" data-i="${i}" value="${e.yTo||''}"><span class="mut" data-yu>${esc(e.yUnit||(base?base.unit:''))}</span></div></div>
+      <div><label>材料倍率 ×</label><input class="in" style="width:5.5em" type="number" step="any" min="0.05" max="20" data-k="scale" data-i="${i}" value="${k_(e)}"></div></div>
+      <div data-rows>${rowsHTML(e)}</div>
+      <div data-xform>${xformHTML(i)}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ${S.seen.has(eKey(e))?'ghost':''}" data-a="okEntry" data-i="${i}">${S.seen.has(eKey(e))?'✓ 已確認':'✓ 這堂沒問題'}</button>${S.entries.some((x,j)=>j!==i&&x.pid===e.pid)?`<button class="btn sm ghost" data-a="applyAll" data-i="${i}">套用到其他同產品的課</button>`:''}<button class="btn sm ${S.hist[e.pid]?'':'ghost'}" data-a="histOpen" data-i="${i}">${S.hist[e.pid]?'以前改過，叫出來沿用':'叫出以前的紀錄'}</button><button class="btn sm ghost" data-a="resetEntry" data-i="${i}">全部還原成模板</button></div></div>`:''}</div>`;
+}
+function step3(){
+  const gs=groups(true);
+  if(!S.open.size&&gs.length)S.open.add(gs[0].idx[0]);
+  return `<h2>確認材料重量</h2><p class="sub">數量可以直接改。想改每組做幾個，填「原本 → 改成」，材料會跟著換算。材料不夠按「新增材料」。同一班的單、雙數組放在一起。</p>${gs.length>1?gAll('3'):''}`
+  +gs.map((g,n)=>{const seen=g.idx.filter(i=>S.seen.has(eKey(S.entries[i]))).length;return `<div class="gwrap">${gHead('3',g,n,`${g.idx.length} 堂課・已確認 ${seen}/${g.idx.length}・${fmt(g.idx.reduce((t,i)=>t+kgOf(S.entries[i]),0))} 公斤`)}${gIsOpen('3',g,n)?`<div class="gbody">${seen<g.idx.length?`<div style="text-align:right;margin:0 0 6px"><button class="btn sm ghost" data-a="okGroup" data-g="${esc(g.key)}">這個班的全部都沒問題</button></div>`:''}${g.idx.map(card3).join('')}</div>`:''}</div>`;}).join('')
+  +bar(`${sc().length} 堂課`,`<button class="btn" data-a="step" data-n="4">下一步：準備器具</button>`);
+}
+
+const toolsOf=e=>Array.isArray(e.tools)?e.tools:(S.cat.tools[e.pid]||[]).map(t=>({who:t.who,name:t.name,qty:t.qty}));
+const ensureTools=e=>{if(!Array.isArray(e.tools))e.tools=toolsOf(e).map(t=>({...t}));return e.tools;};
+const WHO=[['技士','技士準備'],['實習股長','小老師準備']];
+function toolGroup(i,who,label){
+  const e=S.entries[i],list=toolsOf(e).map((t,ti)=>[t,ti]).filter(([t])=>t.who===who);
+  const other=who==='技士'?'小老師':'技士';
+  return `<h3 class="hh" style="margin-top:10px">${label}（${list.length}）</h3>${list.map(([t,ti])=>`<div class="tr2"><input class="in" list="toollist" data-k="tname" data-i="${i}" data-ti="${ti}" value="${esc(t.name)}" placeholder="器具名稱" maxlength="30" aria-label="器具名稱"><input class="in" data-k="tqty" data-i="${i}" data-ti="${ti}" value="${esc(t.qty)}" placeholder="例如 4支" maxlength="20" aria-label="數量"><button class="mv" data-a="tmove" data-i="${i}" data-ti="${ti}" title="改給${other}準備" aria-label="改給${other}準備">⇄</button><button class="x" data-a="tdel" data-i="${i}" data-ti="${ti}" title="不需要這項" aria-label="刪掉這項器具">×</button></div>`).join('')||'<p class="mut" style="margin:0 0 6px">沒有。</p>'}
+  <button class="btn sm ghost" data-a="tadd" data-i="${i}" data-w="${who}">＋ 加器具</button>`;
+}
+function card4(i){
+  const e=S.entries[i],p=P(e.pid),open=S.open4.has(i),tl=toolsOf(e),n1=tl.filter(t=>t.who==='技士').length,n2=tl.length-n1;
+  const same=S.entries.filter((x,j)=>j!==i&&x.pid===e.pid).length;
+  return `<div class="card" data-t="${i}"><button class="ch" data-a="t4toggle" data-i="${i}"><span><b>${md(e.date)} ${esc(titleOf(e))}</b><small>${esc(e.cls)}・技士 ${n1} 項、小老師 ${n2} 項${Array.isArray(e.tools)?'・已調整':''}</small></span><span>${open?'▴':'▾'}</span></button>
+    ${open?`<div class="cb">${WHO.map(([w,l])=>toolGroup(i,w,l)).join('')}
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ${S.hist[e.pid]?'':'ghost'}" data-a="toolHist" data-i="${i}">${S.hist[e.pid]?'以前調整過，叫出來沿用':'叫出以前的器具'}</button>${Array.isArray(e.tools)?`<button class="btn sm ghost" data-a="treset" data-i="${i}">還原成模板</button>`:''}${same?`<button class="btn sm ghost" data-a="tcopy" data-i="${i}">套用到同一個產品的其他 ${same} 堂</button>`:''}</div></div>`:''}</div>`;
+}
+function stepTools(){
+  const gs=groups(true);
+  if(!S.open4.size&&gs.length)S.open4.add(gs[0].idx[0]);
+  return `<h2>準備器具</h2><p class="sub">每堂課的器具，分給技士和小老師準備。先帶入模板的，可以改數量、換邊、加減，也能叫出以前的。</p>${gs.length>1?gAll('4'):''}`
+  +gs.map((g,n)=>`<div class="gwrap">${gHead('4',g,n,`${g.idx.length} 堂課`)}${gIsOpen('4',g,n)?`<div class="gbody">${g.idx.map(card4).join('')}</div>`:''}</div>`).join('')
+  +bar(`${sc().length} 堂課`,`<button class="btn" data-a="step" data-n="5">下一步：匯出</button>`);
+}
+function step5(){
+  const gs=groups(true),weeks=[...new Set(sc().map(e=>weekStart(e.date)))].length;
+  const sb=S.sent?`<div class="sentbox"><div class="big">✓ 已傳給技士</div><div>共 ${S.sent.n} 堂課（${md0(S.sent.first)}～${md0(S.sent.last)}），${esc(fmtT(S.sent.at))} 送出。</div>
+    <div style="margin-top:6px">技士現在打開「每週材料總量」就看得到。${S.sent.file?`<br>也下載了「${esc(S.sent.file.name)}」（A4，可以直接列印）。${S.sent.file.url?`沒有自動下載的話，<a href="${S.sent.file.url}" download="${esc(S.sent.file.name)}">按這裡</a>。`:''}`:'這次沒有下載檔案。'}</div>
+    <div class="mut" style="margin-top:6px">之後臨時要改：改完再按一次，技士看到的會更新，並標示「已修改」。</div></div>`:'';
+  const list=gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span>${md(e.date)}</span><span>${esc(titleOf(e))}<small class="mut"> ${fmt(e.sets)}組${k_(e)!==1?'・×'+fmt(k_(e)):''}</small></span><span class="mut">${fmt(kgOf(e))} 公斤</span></div>`;}).join('')}</div>`).join('');
+  return `<h2>確認並送出</h2>${sb}${locked()?`<p class="sub">${LOCK_MSG}要下載之前已經送出的材料單，按下面的按鈕。</p>`:`<p class="sub"><b>匯出之後，技士才看得到。</b>按「確認並匯出」，先核對一次日期和產品，再選要不要下載檔案（只匯出／進度表／進度表加材料單），沒問題就送給技士。還沒匯出的都只是草稿（已自動存起來），技士看不到、也不算。</p>`}
+  <div class="card"><div class="cb" style="padding-top:12px">${list}<p class="mut" style="margin:10px 0 0">${sc().length} 堂課，跨 ${weeks} 週。</p></div></div>
+  ${locked()?bar(S.busy||'',`<button class="btn" data-a="dlSent" ${S.busy?'disabled':''}>${S.busy?'處理中…':'下載已送出的材料單'}</button>`)
+    :bar(S.busy||'',`<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
+}
+
+/* ---------- 材料單編輯（自創、共用、預設模板都用這個） ---------- */
+const MODES=[['per','每組數量'],['fixed','固定總量'],['text','文字']];
+const blankRow=()=>({id:'',raw:'',origRaw:'',std:'',procure:'',kind:'',mode:'per',per:'',total:'',text:'',unit:'g',note:''});
+const rowOf=it=>({id:it.id,raw:it.raw,origRaw:it.raw,std:it.std,procure:it.procure||'',kind:it.kind||'',unit:it.unit||'g',note:it.note||'',
+  mode:it.kind?'text':(it.per!==null?'per':'fixed'),per:it.per===null?'':it.per,total:it.total===null?'':it.total,
+  text:it.kind==='適量'?'適量':(it.kind||'').replace(/^範圍 /,'').replace('原表沒填數量','')});
+function editorHTML(){
+  const d=S.ed,tpl=d.kind==='template',p=tpl?P(d.pid):null;
+  const rows=d.rows.map((r,i)=>`<div class="er"><input class="in nm" list="stdlist" data-ed="raw" data-ri="${i}" value="${esc(r.raw)}" placeholder="材料名稱" maxlength="30" aria-label="材料名稱">
+    <button class="x" data-a="edDelRow" data-ri="${i}" aria-label="刪掉這項材料" ${d.rows.length<2?'disabled style="visibility:hidden"':''}>×</button>
+    <select class="in" data-ed="mode" data-ri="${i}" aria-label="類型">${MODES.map(([m,n])=>`<option value="${m}" ${m===r.mode?'selected':''}>${n}</option>`).join('')}</select>
+    ${r.mode==='text'?`<input class="in" data-ed="text" data-ri="${i}" value="${esc(r.text)}" placeholder="例如：適量" maxlength="20" aria-label="內容">`
+      :`<input class="in" type="number" inputmode="decimal" step="any" min="0" data-ed="${r.mode==='fixed'?'total':'per'}" data-ri="${i}" value="${esc(r.mode==='fixed'?r.total:r.per)}" placeholder="${r.mode==='fixed'?'總共幾':'每組量'}" aria-label="數量">`}
+    <select class="in" data-ed="unit" data-ri="${i}" aria-label="單位" ${r.mode==='text'?'disabled':''}>${UNITS.map(u=>`<option ${u===r.unit?'selected':''}>${u}</option>`).join('')}</select>
+    <input class="in nt" data-ed="note" data-ri="${i}" value="${esc(r.note)}" placeholder="備註（選填）" maxlength="40" aria-label="備註"></div>`).join('');
+  const tools=d.showTools?`<div style="margin-top:8px">${d.tools.map((t,i)=>`<div class="er" style="grid-template-columns:7em 1fr 6em 2.4em"><select class="in" data-ed="who" data-ti="${i}"><option ${t.who==='技士'?'selected':''}>技士</option><option ${t.who==='實習股長'?'selected':''}>實習股長</option></select><input class="in" data-ed="name" data-ti="${i}" value="${esc(t.name)}" placeholder="器具名稱" maxlength="30"><input class="in" data-ed="qty" data-ti="${i}" value="${esc(t.qty)}" placeholder="例如 4支" maxlength="20"><button class="x" data-a="edDelTool" data-ti="${i}" aria-label="刪掉這項器具">×</button></div>`).join('')}<button class="btn sm ghost" data-a="edAddTool" style="margin-top:8px">＋ 加一項器具</button></div>`:'';
+  const title=tpl?'修改預設材料單':(d.pid?'修改材料單':(d.forCell?'自己建一張新的材料單':(d.shared?'新增產品（所有老師都選得到）':'自創材料單')));
+  const left=[];
+  if(tpl){
+    if(p&&p.modified)left.push(d.confirmRevert?'<button class="btn danger" data-a="edRevert">確定還原</button>':'<button class="btn ghost" data-a="edRevert">還原成原本</button>');
+    left.push(`<button class="btn ghost" data-a="edHide">${p&&p.hidden?'恢復顯示':'隱藏這張'}</button>`);
+  }else if(d.pid)left.push(d.confirmDel?'<button class="btn danger" data-a="edDelete">確定刪除</button>':'<button class="btn ghost" data-a="edDelete">刪除這張</button>');
+  return `<div class="modal"><div class="mb">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">${title}</h2><button class="btn sm ghost" data-a="edClose">取消</button></div>
+  ${tpl?`<p class="mut" style="margin:0 0 8px">改的是所有老師看到的預設材料單，之後排的課會用新的量。原本的資料不會被刪，隨時可以還原。${p&&p.modified?'<span class="tg">已修改過</span>':''}${p&&p.hidden?'<span class="tg gr">已隱藏</span>':''}</p>`:''}
+  ${d.forCell?`<p class="mut" style="margin:0 0 8px">預設材料單裡沒有的，自己做一張。做好會自動加進進度表這一格，放在你的「我自創的」分頁，之後也可以重複用；排給哪位老師都可以。</p>`:''}
+  ${d.err?`<div class="err">${esc(d.err)}</div>`:''}
+  <label class="lbl">名稱</label><input class="in" data-ed="title" value="${esc(d.title)}" placeholder="例如：手工餅乾" maxlength="40">
+  <div class="g2"><div><label class="lbl">份量說明（選填）</label><input class="in" data-ed="serving" value="${esc(d.serving)}" placeholder="例如：20片/組" maxlength="20"></div><div><label class="lbl">預設組數</label><input class="in" type="number" min="1" max="200" data-ed="dsets" value="${esc(d.dsets)}"></div></div>
+  ${d.kind==='custom'&&isAdmin()?`<label class="ap" style="display:flex;gap:6px;align-items:center;margin-top:12px"><input type="checkbox" data-ed="shared" ${d.shared?'checked':''}>分享給所有老師（大家都能選）</label>`:''}
+  ${(tpl||d.shared)&&isAdmin()?`<label class="lbl" style="margin-top:12px">放在哪個分類</label><select class="in" data-ed="category"><option value="">${tpl?'原本的年級':'共用（不放進年級或分類）'}</option>${GRADES.map(g=>g+'年級').concat(S.cat.categories||[]).map(c=>`<option value="${esc(c)}" ${d.category===c?'selected':''}>${esc(catLabel(c))}</option>`).join('')}</select>`:''}
+  <span class="lbl" style="margin-top:14px">材料</span>${rows}
+  <div style="margin-top:8px"><button class="btn sm ghost" data-a="edAddRow">＋ 加一項材料</button></div>
+  <p class="mut" style="margin:8px 0 0">「每組數量」會乘組數；「固定總量」不跟組數變（例如油炸用 1 罐）；「文字」不加總（例如適量）。材料名稱盡量從提示裡選，技士的每週總量才會跟其他老師的加在一起。</p>
+  <div style="margin-top:12px"><button class="btn sm ghost" data-a="edTools">${d.showTools?'收起器具':'＋ 應備器具'}</button></div>${tools}
+  <div class="edact"><span style="display:flex;gap:8px;flex-wrap:wrap">${left.join('')}</span><button class="btn" data-a="edSave" ${S.busy?'disabled':''}>${S.busy?'儲存中…':'儲存'}</button></div>
+  </div></div>`;
+}
+const refreshStd=()=>{S.stdNames=[...new Set(Object.values(S.cat.items).flat().map(x=>x.std))].sort();};
+function applyCustom(r){
+  const p=r.product,i=S.cat.products.findIndex(x=>x.pid===p.pid);
+  if(i>=0)S.cat.products[i]=p;else S.cat.products.push(p);
+  S.cat.pmap[p.pid]=p;S.cat.items[p.pid]=r.items;S.cat.tools[p.pid]=r.tools;refreshStd();
+}
+const applyTemplate=applyCustom;
+
+/* ---------- 後台（技士、科主任、管理者） ---------- */
+function catMgrHTML(){
+  const cats=S.cat.categories||[];
+  const renBox=`<span style="display:flex;gap:6px;flex:1;align-items:center;justify-content:flex-end"><input class="in" style="max-width:11em" data-k="renval" maxlength="10" value="${esc(S.ren?S.ren.val:'')}"><button class="btn sm" data-a="renYes">儲存</button><button class="btn sm ghost" data-a="renNo">取消</button></span>`;
+  const editing=(kind,key)=>S.ren&&S.ren.kind===kind&&S.ren.key===key;
+  return `<div class="adm"><b>材料單分類</b><p class="mut" style="margin:4px 0 8px">一、二、三年級和你新增的分類，名稱都可以改，改的是顯示的名字，裡面的材料單不變，所有老師重新整理就看到新名稱。除了年級，也可以自己加分類（例如：技藝競賽）。</p>
+  ${GRADES.map(g=>`<div class="arow"><span>${esc(gname(g))}<small>${gname(g)===g+'年級'?'預設名稱':'原本叫「'+g+'年級」'}</small></span>${editing('grade',g)?renBox:`<button class="btn sm ghost" data-a="renStart" data-kind="grade" data-key="${g}">改名</button>`}</div>`).join('')}
+  ${cats.map(n=>{const c=S.cat.products.filter(p=>p.category===n).length;return `<div class="arow"><span>${esc(n)}<small>${c} 張材料單</small></span>${editing('cat',n)?renBox:(S.catDel===n?`<span><button class="btn danger sm" data-a="catDelYes">確定刪除</button> <button class="btn ghost sm" data-a="catDelNo">取消</button></span>`:`<span><button class="btn sm ghost" data-a="renStart" data-kind="cat" data-key="${esc(n)}">改名</button> <button class="btn sm ghost" data-a="catDelAsk" data-n="${esc(n)}">刪除</button></span>`)}</div>`;}).join('')}
+  ${S.catAdd!==null?`<div class="rgrow" style="margin-top:8px"><input class="in" data-k="catname" maxlength="10" placeholder="分類名稱，例如：技藝競賽" value="${esc(S.catAdd)}"><button class="btn sm" data-a="catAddYes">新增</button><button class="btn sm ghost" data-a="catAddNo">取消</button></div>`:'<button class="btn" style="margin-top:8px" data-a="catAdd">＋ 新增分類</button>'}</div>`;
+}
+function usersHTML(){
+  const u=S.um,me=S.user,roles=me.role==='技士'?['老師','技士']:['老師','技士','科主任','管理者'];
+  if(!u.list&&!u.busy&&!u.err){u.busy=true;run('apiUsersList').then(l=>{u.list=l;u.busy=false;if(S.view==='admin')render();}).catch(e=>{u.busy=false;u.err=e.message;if(S.view==='admin')render();});}
+  const head='<b>使用者（誰可以登入）</b><p class="mut" style="margin:4px 0 8px">沒有列在這裡的信箱不能登入。新增後，對方用這個信箱的 Google 帳號登入就能用。'+(me.role==='技士'?'技士可以新增、修改老師和技士；科主任和管理者要由科主任或管理者來設定。':'')+'</p>';
+  if(u.err&&!u.list)return `<div class="adm">${head}<p class="mut">讀不到名單：${esc(u.err)}</p><button class="btn ghost sm" data-a="umReload">重試</button></div>`;
+  if(!u.list)return `<div class="adm">${head}<p class="mut">載入中…</p></div>`;
+  const grantable=r=>roles.includes(r);
+  const rows=u.list.map(x=>`<div class="arow"><span>${esc(x.name)}${x.email===me.email?' <span class="tg">你</span>':''}<small>${esc(x.email)}</small></span>${u.del===x.email?`<span><button class="btn danger sm" data-a="umDelYes">確定刪除</button> <button class="btn ghost sm" data-a="umDelNo">取消</button></span>`:`<span><span class="tg gr">${esc(x.role)}</span> ${grantable(x.role)?`<button class="btn sm ghost" data-a="umEdit" data-e="${esc(x.email)}">修改</button>${x.email===me.email?'':` <button class="btn sm ghost" data-a="umDelAsk" data-e="${esc(x.email)}">刪除</button>`}`:''}</span>`}</div>`).join('');
+  const form=u.ed?`<div class="rgrow" style="margin-top:10px;flex-wrap:wrap;gap:6px"><input class="in" style="flex:1 1 7em;min-width:7em" data-k="umname" maxlength="20" placeholder="姓名" value="${esc(u.ed.name)}"><input class="in" style="flex:2 1 12em;min-width:12em" data-k="umemail" type="email" inputmode="email" placeholder="信箱，例如 20684@ylvs.tw" value="${esc(u.ed.email)}"><select class="in" style="flex:0 0 auto;width:auto" data-k="umrole" aria-label="角色">${roles.map(r=>`<option${u.ed.role===r?' selected':''}>${r}</option>`).join('')}</select><button class="btn sm" data-a="umSave">${u.ed.old?'儲存':'新增'}</button><button class="btn sm ghost" data-a="umCancel">取消</button></div>`:'';
+  const bulk=u.bulk!==null?`<div style="margin-top:10px"><p class="mut" style="margin:0 0 4px">一行一位：姓名、信箱、角色（可以不寫，不寫就是老師）。可以直接從 Excel 複製貼上。</p><textarea class="in" style="width:100%;min-height:8em" data-k="umbulk" placeholder="王小明 20690@ylvs.tw&#10;李大華 20688@ylvs.tw 老師&#10;陳技士 yi721@ylvs.tw 技士">${esc(u.bulk)}</textarea><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn sm ghost" data-a="umBulkNo">取消</button><button class="btn sm" data-a="umBulkYes">加入名單</button></div></div>`:'';
+  return `<div class="adm">${head}${rows||'<p class="mut">名單是空的。</p>'}${form}${bulk}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-a="umNew">＋ 新增使用者</button><button class="btn ghost" data-a="umBulk">一次貼上很多位</button></div></div>`;
+}
+function adminHTML(){
+  const cats=S.cat.categories||[];
+  if(S.atab.startsWith('c:')&&!cats.includes(S.atab.slice(2)))S.atab='一';
+  const isCat=S.atab.startsWith('c:'),tab=S.atab;
+  const tags=p=>(p.modified?'<span class="tg">已修改</span>':'')+(p.hidden?'<span class="tg gr">已隱藏</span>':'')+(p.category?`<span class="tg gr">分類：${esc(catLabel(p.category))}</span>`:'');
+  const half=S.term.endsWith('-2')?'下':'上';
+  const arow=p=>`<div class="arow"><span>${esc(p.title)}${tags(p)}<small>${esc(p.serving)}${p.custom&&p.ownerName?(p.serving?'・':'')+'新增：'+esc(p.ownerName):''}</small></span><button class="btn sm ghost" data-a="edEdit" data-p="${esc(p.pid)}">修改</button></div>`;
+  let list;
+  if(isCat){
+    const l=S.cat.products.filter(p=>p.category===tab.slice(2)&&!p.deleted);
+    list=l.length?l.map(arow).join(''):'<p class="mut" style="margin:6px 0">這個分類裡還沒有材料單。按下面的「＋ 新增產品」，或到別的材料單的「修改」選這個分類。</p>';
+  }else{
+    const ps=S.cat.products.filter(p=>!p.custom&&gradeOf(p)===tab),added=S.cat.products.filter(p=>p.custom&&!p.deleted&&p.shared&&gradeOf(p)===tab);
+    const sec=h=>{const l=ps.filter(p=>p.sem[1]===h);return l.length?`<h3 class="hh">${h}學期${tab==='一'&&h==='下'?'（丙檢模擬考）':''}</h3>${l.map(arow).join('')}`:'';};
+    list=[half,half==='上'?'下':'上'].map(sec).join('')+(added.length?`<h3 class="hh">新增的產品</h3>${added.map(arow).join('')}`:'');
+  }
+  const place=isCat?tab.slice(2):tab+'年級',placeLabel=isCat?tab.slice(2):gname(tab);
+  const shared=S.cat.products.filter(p=>p.custom&&!p.deleted&&p.shared);
+  const [ty,th]=S.term.split('-').map(Number);
+  const nextTerms=[[ty,th]];{let y=ty,h=th;for(let k=0;k<3;k++){if(h===1)h=2;else{h=1;y++;}nextTerms.push([y,h]);}}
+  const prevTerm=th===2?`${ty}-1`:`${ty-1}-2`;
+  const termOpts=[prevTerm].concat(nextTerms.slice(1).map(([y,h])=>`${y}-${h}`));
+  return `<h2>後台</h2>
+  ${switchHTML()}
+  ${catMgrHTML()}
+  <div class="adm"><b>學年學期：${esc(S.term)}</b><p class="mut" style="margin:4px 0 8px">換學期時在這裡切換。老師打開來是新學期的空白排課，舊學期排過的課都還留著。</p>
+    <div class="tctl" style="margin:0"><select class="in" id="termSel" style="width:auto" aria-label="切換到哪個學期">${termOpts.map((t,i)=>`<option${i===1?' selected':''}>${t}</option>`).join('')}</select>
+    ${S.confirmTerm?`<button class="btn danger" data-a="termGo">確定切換到 ${esc(S.confirmTerm)}</button><button class="btn ghost" data-a="termCancel">取消</button>`:'<button class="btn" data-a="termAsk">切換</button>'}</div></div>
+  <div class="adm"><b>新增材料單給大家選</b><p class="mut" style="margin:4px 0 8px">建好的共用材料單，所有老師都會在「共用」分頁看到。</p><button class="btn" data-a="edNew" data-sh="1">＋ 新增共用材料單</button></div>
+  <div class="adm"><b>共用材料單（${shared.length}）</b>${shared.length?shared.map(p=>`<div class="arow"><span>${esc(p.title)}<small>${esc(p.serving)}${p.ownerName?(p.serving?'・':'')+'建立：'+esc(p.ownerName):''}</small></span><button class="btn sm ghost" data-a="edEdit" data-p="${esc(p.pid)}">修改</button></div>`).join(''):'<p class="mut" style="margin:6px 0 0">還沒有。</p>'}</div>
+  <div class="adm"><b>預設材料單</b><p class="mut" style="margin:4px 0 8px">改這裡，所有老師選到的就是新的。原本的資料會保留，可以還原。新增分類後，上面也會出現那個分類的分頁。</p>
+    <div class="tabs" style="flex-wrap:wrap">${GRADES.map(g=>`<button class="gt ${S.atab===g?'on':''}" data-a="atab" data-g="${g}">${esc(gname(g))}</button>`).join('')}${cats.map(n=>`<button class="gt ${S.atab==='c:'+n?'on':''}" data-a="atab" data-g="${esc('c:'+n)}">${esc(n)}</button>`).join('')}</div>${list}
+    <button class="btn" style="margin-top:10px" data-a="edNew" data-sh="1" data-cat="${esc(place)}">＋ 新增產品到「${esc(placeLabel)}」</button></div>
+  ${usersHTML()}
+  <div class="adm"><b>老師開錯的課</b><p class="mut" style="margin:4px 0 0">到「每週材料總量」的「逐張材料單」裡可以刪掉。日間部、夜間部有哪些班級和課程，在「設定每學期要有哪些進度表」裡調整。</p></div>`;
+}
+
+/* ---------- 技士、科主任、管理者：看任何日期範圍的總量 ---------- */
+function lessonHTML(l,i){
+  const open=S.tOpen.has(i);
+  const rows=l.lines.map(x=>x.mode==='text'
+    ?`<div class="lr"><span>${esc(x.raw)}${x.extra?'<small>另加</small>':''}</span><span class="mut" style="grid-column:2/-1">${esc(x.text)}</span></div>`
+    :`<div class="lr"><span>${esc(x.raw)}${x.extra||x.note?`<small>${esc([x.extra?'另加':'',x.note].filter(Boolean).join('；'))}</small>`:''}</span><span>${x.mode==='per'?fmt(x.per)+esc(x.unit):'固定'}</span><span>${x.mode==='per'?fmt(x.sets):''}</span><span class="t">${fmt(x.total)}${esc(x.unit)}</span></div>`).join('');
+  return `<div class="card"><button class="ch" data-a="tlesson" data-i="${i}"><span><b>${md0(l.date)}（${l.wd}） ${esc(l.title)}</b><small>${esc(l.teacher)}・${esc(l.dept)}・${esc(l.course)}・${esc(l.cls)}・${fmt(l.sets)} 組${l.scaleNote?'・'+esc(l.scaleNote):''}${l.changed?` <span class="tg">已修改 ${esc(fmtT(l.updated))}</span>`:''}</small></span><span>${open?'▴':'▾'}</span></button>
+  ${open?`<div class="cb"><div class="lr h"><span>材料</span><span>每組</span><span>組數</span><span class="t">總量</span></div>${rows}
+  ${l.tools.length?`<div class="oth"><b>技士要備的器具：</b>${l.tools.map(t=>esc(t.name)+' '+esc(t.qty)).join('、')}</div>`:''}${(l.helperTools||[]).length?`<div class="oth"><b>小老師要備的器具：</b>${l.helperTools.map(t=>esc(t.name)+' '+esc(t.qty)).join('、')}</div>`:''}
+  <div style="margin-top:10px">${S.tFilter.id===l.id?'':`<button class="btn sm" data-a="tOne" data-id="${esc(l.id)}">只看這一堂</button>`}</div>
+  <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)">${S.tDel===l.id?`<span class="mut">確定要刪掉 ${esc(l.teacher)} 的這堂課？</span> <button class="btn danger sm" data-a="ldelYes" data-id="${esc(l.id)}">確定刪除</button> <button class="btn ghost sm" data-a="ldelNo">取消</button>`:`<button class="btn ghost sm" data-a="ldel" data-id="${esc(l.id)}">刪除這堂課（老師開錯了）</button>`}</div></div>`:''}</div>`;
+}
+const rangeLen=()=>Math.round((pd(S.rgTo)-pd(S.rgFrom))/86400000)+1;
+const rangeText=()=>`${md0(S.rgFrom)} – ${md0(S.rgTo)}`+(S.rgFrom.slice(0,4)!==S.rgTo.slice(0,4)?`（${S.rgFrom.slice(0,4)}–${S.rgTo.slice(0,4)}）`:'');
+function switchHTML(){
+  const on=S.accepting!==false;
+  return `<div class="spill ${on?'ok':'warn'}" style="flex-wrap:wrap"><span style="flex:1;min-width:12em">老師送材料單：<b>${on?'開放中':'已關閉（老師不能新增或修改）'}</b>${S.openNote?`<small class="mut" style="display:block">${esc(S.openNote)}</small>`:''}</span>${on?(S.confirmClose?`<button class="btn danger sm" data-a="subClose">確定關閉</button><button class="btn ghost sm" data-a="subCancel">取消</button>`:`<button class="btn ghost sm" data-a="subAskClose">關閉老師送單</button>`):`<button class="btn sm" data-a="subOpen">重新開放</button>`}</div>`;
+}
+function extraSwitchHTML(){
+  const on=!!S.extraOpen;
+  return `<div class="spill ${on?'warn':'ok'}" style="flex-wrap:wrap"><span style="flex:1;min-width:12em">額外材料單（臨時活動）：<b>${on?'開放中，老師可以送':'關閉中'}</b><small class="mut" style="display:block">平常請關閉。臨時有活動要送材料單時，再開放給老師；送完請關掉。</small>${S.extraNote?`<small class="mut" style="display:block">${esc(S.extraNote)}</small>`:''}</span>${on?'<button class="btn ghost sm" data-a="xoClose">關閉</button>':'<button class="btn sm" data-a="xoOpen">開放給老師</button>'}</div>`;
+}
+function subHTML(){
+  const t=S.sub;if(!t)return '';
+  const sent=t.rows.filter(r=>r.total>0).length,no=t.rows.length-sent;
+  const row=r=>`<div class="arow"><span><button class="linkb" data-a="tfilter" data-e="${esc(r.email)}">${esc(r.name)}</button>${r.role&&r.role!=='老師'?` <span class="tg gr">${esc(r.role)}</span>`:''}${r.listed===false?' <span class="tg gr">不在使用者名單</span>':''}<small>${r.total?`本學期已匯出 ${r.total} 堂・這段日期 ${r.inRange} 堂・最後送出 ${esc(fmtT(r.lastAt))}${r.changed?` <span class="tg">${r.changed} 堂已修改</span>`:''}`:`<span style="color:var(--err)">還沒匯出</span>${r.drafts?`（有 ${r.drafts} 堂草稿，老師還沒匯出，不算）`:''}`}${r.total&&r.drafts?` <span class="tg">另有 ${r.drafts} 堂草稿（老師還沒匯出）</span>`:''}${r.total&&r.pending?` <span class="tg">${r.pending} 堂改了還沒匯出（你看到的是上次匯出的）</span>`:''}</small></span><span class="mut">${r.total?'✓':''}</span></div>`;
+  return `<div class="card"><button class="ch" data-a="subtoggle"><span><b>誰送單了（${esc(t.term)}）</b><small>已送 ${sent} 位・還沒送 ${no} 位　點名字可以只看那位老師</small></span><span>${S.subOpen?'▴':'▾'}</span></button>${S.subOpen?`<div class="cb">${t.rows.length?t.rows.map(row).join(''):'<p class="mut">還沒有老師。</p>'}${S.tTeacher?'<div style="margin-top:8px"><button class="btn sm ghost" data-a="tfilter" data-e="'+esc(S.tTeacher)+'">顯示全部老師</button></div>':''}</div>`:''}</div>`;
+}
+function techHTML(){
+  const t=S.tech;
+  let h=switchHTML()+extraSwitchHTML()+`<div class="rgrow"><label>從 <input class="in" type="date" data-k="rgFrom" value="${esc(S.rgFrom)}"></label><label>到 <input class="in" type="date" data-k="rgTo" value="${esc(S.rgTo)}"></label></div>
+  <div class="rgrow"><button class="btn sm ghost" data-a="rgShift" data-d="-1" aria-label="往前一段">◀</button><b style="flex:1;min-width:8em;text-align:center">${rangeText()}（${rangeLen()} 天）</b><button class="btn sm ghost" data-a="rgShift" data-d="1" aria-label="往後一段">▶</button></div>
+  <div class="rgrow">${[['week','本週'],['next','下週'],['month','本月'],['nmonth','下個月']].map(([v,n])=>`<button class="btn sm ghost" data-a="rgPreset" data-p="${v}">${n}</button>`).join('')}</div>`;
+  if(!t)return h+`<p class="load">${S.err?'':'計算中…'}</p>`;
+  h+=subHTML();
+  h+=ssHTML();
+  const tl=[...t.teachers];if(S.tTeacher&&!tl.some(x=>x.email===S.tTeacher))tl.push({email:S.tTeacher,name:S.tTeacher});
+  h+=`<div class="tctl"><select class="in" data-k="tTeacher" aria-label="哪位老師"><option value="">全部老師</option>${tl.map(x=>`<option value="${esc(x.email)}" ${x.email===S.tTeacher?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+  <select class="in" data-k="tOrder" aria-label="材料單的順序"><option value="date" ${S.tOrder!=='class'?'selected':''}>依日期排</option><option value="class" ${S.tOrder==='class'?'selected':''}>依課程、班級排</option></select>
+  <div class="seg" role="group" aria-label="看法"><button data-a="tmode" data-m="stats" class="${S.tMode==='stats'?'on':''}">統計</button><button data-a="tmode" data-m="sheets" class="${S.tMode==='sheets'?'on':''}">逐張材料單</button></div></div>`;
+  const f=S.tFilter,fx=t.facets||{courses:[],classes:[]},fOn=!!(f.id||f.course||f.cls||f.q);
+  h+=`<div class="tctl" style="flex-wrap:wrap"><select class="in" data-k="tfCourse" aria-label="哪一門課"><option value="">全部課程</option>${fx.courses.map(x=>`<option ${x===f.course?'selected':''}>${esc(x)}</option>`).join('')}</select><select class="in" data-k="tfCls" aria-label="哪一班"><option value="">全部班級</option>${fx.classes.map(x=>`<option ${x===f.cls?'selected':''}>${esc(x)}</option>`).join('')}</select><input class="in" data-k="tfQ" placeholder="產品名稱有…" aria-label="產品名稱" value="${esc(f.q)}" style="flex:1;min-width:8em"></div>`;
+  if(fOn)h+=`<div class="spill warn" style="flex-wrap:wrap"><span style="flex:1;min-width:10em">${f.id?'只看這一堂課':'只看：'+[f.course,f.cls,f.q?'「'+f.q+'」':''].filter(Boolean).join('・')}，統計和匯出也只算這些。</span><button class="btn ghost sm" data-a="tfClear">看全部</button></div>`;
+  if(!t.classes.length)return h+`<div class="card"><div class="cb" style="padding-top:12px">${fOn?'這樣篩選沒有課。':`這段日期${S.tTeacher?'這位老師':''}沒有排課。`}</div></div>`;
+  if(S.tMode==='sheets'){
+    h+=`<p class="sub">每一堂課一張，跟老師交出來的材料申請單一樣（A4）。點開看材料，老師開錯的課可以在裡面刪掉。</p>${t.lessons.map(lessonHTML).join('')}`;
+    return h+bar(`${t.lessons.length} 堂課`,`<button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出材料單'}</button>`);
+  }
+  h+=`<div>${t.classes.map(c=>`<span class="chip" ${c.id?`role="button" tabindex="0" data-a="tOne" data-id="${esc(c.id)}" title="只看這一堂" style="cursor:pointer"`:''}>${md0(c.date)}（${c.wd}）${esc(c.title)} <small>${esc(c.teacher)}・${esc(c.dept)}・${esc(c.course)}・${esc(c.cls)}・${fmt(c.sets)}組</small>${c.changed?` <span class="tg">已修改 ${esc(fmtT(c.updated))}</span>`:''}</span>`).join('')}</div>`;
+  const max=Math.max(...t.materials.filter(m=>m.unit==='g').map(m=>m.total),1);
+  h+=`<div class="card"><div class="cb" style="padding-top:12px">${t.materials.map(m=>`<div class="wr"><span>${esc(m.std)}</span><span class="b">${m.unit==='g'?`<i style="width:${(m.total/max*100).toFixed(1)}%"></i>`:''}</span><span class="g">${fmt(m.total)} ${esc(m.unit)}</span><span class="use">${m.uses.map(u=>md0(u.date)+' '+esc(u.teacher)+'・'+esc(u.title)+' '+fmt(u.qty)).join('；')}</span></div>`).join('')}
+  <div class="sum"><span>合計（公克類）</span><span>${fmt(t.totalG/1000)} 公斤</span></div>
+  ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.teacher)+'・'+esc(u.title)).join('、')+'）').join('；')}</div>`:''}</div></div>`;
+  if(t.tools.length)h+=`<div class="card"><div class="cb" style="padding-top:12px"><b>技士要備的器具</b>${t.tools.map(d=>`<div style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${md0(d.date)}（${d.wd}）</b> <span class="mut">${d.items.map(x=>esc(x.name)+' '+(x.n===null?esc(x.rest):x.n+esc(x.unit))).join('、')}</span></div>`).join('')}</div></div>`;
+  return h+bar(`${t.classes.length} 堂課`,`<button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
+}
+async function loadRange(){
+  S.tech=null;S.err='';S.tOpen=new Set();render();
+  try{const [t,sub,ss]=await Promise.all([run('apiTechRange',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder),run('apiSubmissions',S.rgFrom,S.rgTo),run('apiScheduleStatus',S.ssAll?'':S.rgFrom,S.ssAll?'':S.rgTo).catch(()=>null)]);S.tech=t;S.sub=sub;S.ss=ss;}catch(e){S.err=e.message;}
+  render();
+}
+const setRange=(a,b)=>{S.rgFrom=a;S.rgTo=b;return loadRange();};
+
+/* ---------- 下載 ---------- */
+function download(name,b64){
+  const bin=atob(b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const url=URL.createObjectURL(new Blob([u8],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  return {name,url};
+}
+function deliver(r){
+  if(r.previewHtml){S.preview=r.previewHtml;return {name:r.name,url:''};}
+  return download(r.name,r.base64);
+}
+const extraRows=e=>(e.extra||[]).map(x=>({id:x.id,raw:x.raw,mode:x.kind?'text':(x.per!==null&&x.per!==undefined?'per':'fixed'),per:x.per,total:x.total,text:x.kind==='適量'?'適量':(x.kind||'').replace(/^範圍 /,''),unit:x.unit,note:x.note}));
+const payload=()=>S.entries.map(e=>({id:e.id,pid:e.pid,course:e.course,tools:e.tools,extra:extraRows(e),omit:e.omit||[],title:e.title||'',conv:e.conv||{},date:e.date,dept:e.dept,cls:e.cls,sets:e.sets,scale:e.scale,yFrom:e.yFrom,yTo:e.yTo,yUnit:e.yUnit,ov:e.ov}));
+
+/* ---------- 事件 ---------- */
+function refreshCard(i,keepInput){
+  const c=$(`[data-c="${i}"]`);if(!c)return;const e=S.entries[i];
+  const rows=$('[data-rows]',c);if(rows&&!keepInput)rows.innerHTML=rowsHTML(e);
+  $('[data-kg]',c).textContent=fmt(kgOf(e))+' 公斤 ▴';
+  c.querySelector('.ch small').textContent=`${e.dept}・${e.course}・${e.cls}・${fmt(e.sets)} 組${k_(e)!==1?'・份量 ×'+fmt(k_(e)):''}`;
+}
+function setRatio(i){
+  const e=S.entries[i];
+  if(e.yFrom>0&&e.yTo>0)e.scale=r4(e.yTo/e.yFrom);
+  const c=$(`[data-c="${i}"]`);const s=$('[data-k="scale"]',c);if(s&&document.activeElement!==s)s.value=e.scale;
+  const u=$('[data-yu]',c);if(u)u.textContent=e.yUnit||(parseYield(P(e.pid).serving)||{}).unit||'';
+}
+document.addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;S.err='';S.info='';
+  if(a==='signout')return signOut();
+  if(locked()&&!['view','step','toggle','t4toggle','gtoggle','gall','dept','course','tab','dlSent','closePrev','hOpen','hClose','pOpen','pNo','pGo','scRefresh'].includes(a)){S.err=LOCK_MSG;return render();}
+  if(a==='view'){
+    const v=b.dataset.v;
+    if(S.view==='sched')S.sstep=S.step;else if(S.view==='extra')S.estep=S.step;
+    S.view=v;
+    if(v==='sched'){S.step=[0,3,4,5].includes(S.sstep)?S.sstep:0;return S.step===0?loadSched():render();}
+    if(v==='extra'){S.step=[1,2,3,4,5].includes(S.estep)?S.estep:1;return render();}
+    if(v==='tech')return loadRange();
+    return render();}
+    if(a==='dept'){S.dept=b.dataset.d;return render();}
+  if(a==='tab'){S.tab=b.dataset.g;return render();}
+  if(a==='pick'){                                   // 額外材料單：勾一個產品 = 多一堂（課程名稱、日期下一步填）；再按一次 = 拿掉
+    const p=b.dataset.p,has=S.entries.filter(e=>!e.sid&&e.pid===p&&e.dept===S.dept);
+    if(has.length)S.entries=S.entries.filter(e=>!(!e.sid&&e.pid===p&&e.dept===S.dept));
+    else S.entries.push(newEntry(p,S.dept,''));
+    return render();}
+  if(a==='step'){
+    const n=+b.dataset.n;
+    if(S.view==='sched'&&n!==0&&pendCount()){                                       // 「下一步」= 先儲存進度表，再往下
+      S.busy='儲存進度表…';render();
+      try{const r=await commitSched({n});if(r.conflicts){S.busy='';return render();}}catch(er){S.busy='';S.err=er.message;return render();}
+      S.busy='';
+    }
+    if(n===0){S.view='sched';S.step=0;S.sent=null;window.scrollTo(0,0);return loadSched();}
+    if(n>=3&&sc().length&&!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';S.view='extra';S.step=2;return render();}
+    if(n>=2&&S.view==='extra'&&!sc().length)return;
+    if(n!==5)S.sent=null;
+    S.step=n;window.scrollTo(0,0);return render();}
+  if(a==='xcls'){const e=S.entries[+b.dataset.i];e.cls=e.cls===b.dataset.cl?'':b.dataset.cl;return render();}
+  if(a==='xname'){S.entries[+b.dataset.i].course=b.dataset.n;return render();}
+  if(a==='addEntry'){const i=+b.dataset.i,e=S.entries[i],n=newEntry(e.pid,e.dept,e.course);n.cls=e.cls;n.sets=e.sets;if(pd(e.date))n.date=addDays(e.date,7);S.entries.splice(i+1,0,n);return render();}
+  if(a==='delEntry'){const e=S.entries[+b.dataset.i];if(!e)return;if(e.sid){S.err=SCHED_MSG;return render();}S.entries.splice(+b.dataset.i,1);return render();}
+  if(a==='toggle'){const i=+b.dataset.i;if(S.open.has(i))S.open.delete(i);else{S.open.add(i);S.seen.add(eKey(S.entries[i]));}return render();}
+  if(a==='okEntry'){const i=+b.dataset.i,k=eKey(S.entries[i]);if(S.seen.has(k))S.seen.delete(k);else{S.seen.add(k);S.open.delete(i);}return render();}
+  if(a==='okGroup'){const g=groups(true).find(x=>x.key===b.dataset.g);if(g)g.idx.forEach(i=>S.seen.add(eKey(S.entries[i])));return render();}
+  if(a==='applyAll'){
+    const src=S.entries[+b.dataset.i];let n=0;
+    S.entries.forEach((x,j)=>{if(j===+b.dataset.i||x.pid!==src.pid)return;
+      Object.assign(x,{scale:src.scale,yFrom:src.yFrom,yTo:src.yTo,yUnit:src.yUnit,ov:{...src.ov},omit:[...(src.omit||[])],conv:JSON.parse(JSON.stringify(src.conv||{})),extra:(src.extra||[]).map((r,q)=>({...r,id:'x-new'+(q+1)}))});
+      S.seen.add(eKey(x));n++;});
+    S.seen.add(eKey(src));S.info=`已把這堂改的量（倍率、改過的材料、新增和刪掉的材料）套到其他 ${n} 堂同產品的課。組數、日期、班級不會動。`;return render();}
+  if(a==='resetEntry'){const e=S.entries[+b.dataset.i];Object.assign(e,{scale:1,yFrom:null,yTo:null,yUnit:'',ov:{},extra:[],omit:[],conv:{},title:'',sets:P(e.pid).dsets});return render();}
+  if(a==='closePrev'){S.preview='';return render();}
+  if(a==='atab'){S.atab=b.dataset.g;return render();}
+  if(a==='gtoggle'){S.gOpen[b.dataset.g]=b.dataset.o!=='1';return render();}
+  if(a==='gall'){const st=b.dataset.st,on=b.dataset.o==='1',ks=groups(true).map(g=>g.key);ks.forEach(k=>{S.gOpen[st+':'+k]=on;});return render();}
+  if(a==='renStart'){const kind=b.dataset.kind,key=b.dataset.key;S.ren={kind,key,val:kind==='grade'?gname(key):key};return render();}
+  if(a==='renNo'){S.ren=null;return render();}
+  if(a==='renYes'){
+    const r=S.ren;
+    try{
+      if(r.kind==='grade'){const x=await run('apiRenameGrade',r.key,r.val);S.cat.gradeNames=x.gradeNames;S.info=`已改名，現在叫「${gname(r.key)}」。`;}
+      else{
+        const at=(S.cat.categories||[]).indexOf(r.key),x=await run('apiRenameCategory',r.key,r.val),nn=x.categories[at];
+        S.cat.categories=x.categories;S.cat.products.forEach(p=>{if(p.category===r.key)p.category=nn;});
+        if(S.tab==='c:'+r.key)S.tab='c:'+nn;if(S.atab==='c:'+r.key)S.atab='c:'+nn;S.info=`已改名，現在叫「${nn}」。`;}
+      S.ren=null;
+    }catch(e){S.err=e.message;}
+    return render();}
+  if(a==='rqOpen'){S.rq={form:null,delAsk:''};return render();}
+  if(a==='rqClose'){S.rq=null;return render();}
+  if(a==='rqNew'){const dp=S.dept;S.rq.form={id:'',dept:dp,course:(S.courses[dp]||[])[0]||'',classes:[],groups:'',half:'每',note:''};return render();}
+  if(a==='rqEdit'){const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.map(c=>({cls:c.cls,days:c.days.slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||''};return render();}
+  if(a==='rqBack'){S.rq.form=null;return render();}
+  if(a==='rqDept'){const f=S.rq.form;f.dept=b.dataset.d;f.course=(S.courses[f.dept]||[])[0]||'';f.classes=[];if(f.dept==='夜間部')f.groups='';return render();}
+  if(a==='rqCourse'){S.rq.form.course=b.dataset.c;return render();}
+  if(a==='rqClass'){
+    const f=S.rq.form,cl=b.dataset.cl;
+    f.classes=f.classes.some(x=>x.cls===cl)?f.classes.filter(x=>x.cls!==cl):f.classes.concat([{cls:cl,days:cl==='技藝競賽選手'?[1,2,3,4,5]:[1]}]);
+    if(f.classes.length>1)f.classes.forEach(c=>{if(c.days.length>1)c.days=[c.days[0]];});
+    return render();}
+  if(a==='rqDay'){
+    const f=S.rq.form,c=f.classes.find(x=>x.cls===b.dataset.cl),n=b.dataset.n;
+    if(n==='all')c.days=c.days.length===5?[1]:[1,2,3,4,5];
+    else if(f.classes.length>1)c.days=[+n];
+    else{const k=+n;c.days=c.days.includes(k)?c.days.filter(x=>x!==k):c.days.concat([k]).sort();if(!c.days.length)c.days=[k];}
+    return render();}
+  if(a==='rqHalf'){S.rq.form.half=b.dataset.h;return render();}
+  if(a==='rqClsAdd'){
+    const f=S.rq.form,name=(f.newCls||'').trim();
+    try{const r=await run('apiClassAdd',f.dept,name);S.classes=r.classes;f.classes.push({cls:name,days:[1]});if(f.classes.length>1)f.classes.forEach(c=>{if(c.days.length>1)c.days=[c.days[0]];});f.newCls='';S.info=`已加入「${name}」，也幫你選好了。`;}
+    catch(er){S.err=er.message;}
+    return render();}
+  if(a==='rqClsMode'){S.rq.form.clsDel=!S.rq.form.clsDel;return render();}
+  if(a==='rqClsDel'){
+    const f=S.rq.form;
+    try{const r=await run('apiClassRemove',f.dept,b.dataset.cl);S.classes=r.classes;f.classes=f.classes.filter(x=>x.cls!==b.dataset.cl);S.info='已刪掉。';}
+    catch(er){S.err=er.message;}
+    return render();}
+  if(a==='rqSave'){try{S.sc.data=await run('apiRequiredSave',S.rq.form);S.rq.form=null;await refreshEntries();S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。';}catch(e){S.err=e.message;}return render();}
+  if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
+  if(a==='rqDelNo'){S.rq.delAsk='';return render();}
+  if(a==='rqDelYes'){try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.rq.delAsk='';}catch(e){S.err=e.message;}return render();}
+  if(a==='rqSkip'){try{S.sc.data=await run('apiRequiredSkip',b.dataset.id,b.dataset.v==='1');S.info=b.dataset.v==='1'?'這學期不開這門課。下學期還是會在清單裡。':'已恢復。';}catch(e){S.err=e.message;}return render();}
+  if(a==='ssToggle'){S.ssOpen=!S.ssOpen;return render();}
+  if(a==='remindOpen'){S.remind=remindText(b.dataset.c);return render();}
+  if(a==='remindNo'){S.remind='';return render();}
+  if(a==='remindSel'){const t=$('#remindTxt');if(t){t.focus();t.select();}return;}
+  if(a==='repairSched'){try{S.ss=await run('apiScheduleRepair');S.info='已把沒人開單的課補回給開單的老師（待確認）。';}catch(e){S.err=e.message;}return render();}
+  if(a==='rqToggle'){S.sc.rqOpen=!S.sc.rqOpen;return render();}
+  if(a==='scSave'){
+    S.busy='儲存中…';render();
+    try{const r=await commitSched();if(!r.conflicts)S.info=`已儲存（${r.saved} 格）。排給老師的材料單，現在才會出現在他們的「確認重量」。`;}catch(er){S.err=er.message;}
+    S.busy='';return render();}
+  if(a==='scDiscard'){S.sc.pend={};S.info='已放棄還沒儲存的修改。';return render();}
+  if(a==='scRefresh'){await quietSched();S.info=pendCount()?'已更新。你還沒儲存的修改還在；如果別人改了同一格，儲存時會提醒你。':'已更新成最新的進度表。';return render();}
+  if(a==='scConfYes'||a==='scConfNo'){
+    const c=S.sc.conflict,m=pendMap();S.sc.conflict=null;S.busy='儲存中…';render();
+    try{
+      if(a==='scConfNo')c.list.forEach(x=>{delete m[pkey(c.tid,x.week,x.cls,x.day)];});                     // 別人的比較新：我這幾格不改了
+      const by=[];Object.values(m).forEach(p=>{if(p.tid===c.tid)by.push({week:p.week,cls:p.cls,day:p.day,cell:p.cell,base:p.base});});
+      if(by.length){const r=await run('apiScheduleSaveCells',c.tid,by,a==='scConfYes');if(r.conflicts&&r.conflicts.length){S.sc.conflict={tid:c.tid,list:r.conflicts,after:c.after};S.busy='';return render();}Object.keys(m).forEach(k=>{if(m[k].tid===c.tid)delete m[k];});}
+      const r2=pendCount()?await commitSched(c.after):{saved:0};if(r2.conflicts){S.busy='';return render();}
+      S.sc.data=await run('apiScheduleGet');await refreshEntries();S.info='已儲存。';
+      if(c.after&&c.after.n){S.busy='';S.view='sched';S.step=c.after.n;window.scrollTo(0,0);return render();}
+    }catch(er){S.err=er.message;}
+    S.busy='';return render();}
+  if(a==='pOpen'){S.sc.print={scope:'one',mine:false,blank:false};return render();}
+  if(a==='pNo'){S.sc.print=null;return render();}
+  if(a==='pGo'){
+    const p=S.sc.print,t=schedTable(S.sc.tab),ids=p.scope==='one'?[t.id]:[],ov={};
+    Object.values(pendMap()).forEach(x=>{if(p.scope==='one'&&x.tid!==t.id)return;(ov[x.tid]=ov[x.tid]||[]).push({week:x.week,cls:x.cls,day:x.day,cell:x.cell});});
+    S.sc.print=null;S.busy='製作中…';render();
+    try{const r=await run('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);deliver(r);}catch(er){S.err=er.message;}
+    S.busy='';return render();}
+  if(a==='scWf'){S.sc.wf=b.dataset.v;return render();}
+  if(a==='scTab'){S.sc.tab=b.dataset.id;S.sc.delAsk='';S.sc.clip=null;return render();}
+  if(a==='scDept'){const t=S.sc.data.tables.find(x=>x.dept===b.dataset.d);if(t)S.sc.tab=t.id;S.sc.delAsk='';S.sc.clip=null;return render();}
+  if(a==='hOpen'){
+    S.sc.hist={busy:true,terms:null,term:'',tid:'',data:null,a:0,b:0,c:0,over:false};render();
+    try{
+      const r=await run('apiScheduleHistory');const H=S.sc.hist;H.terms=r.terms;H.busy=false;
+      const t=schedTable(S.sc.tab);let pick=null;
+      r.terms.forEach(tm=>{if(!pick){const x=tm.tables.find(y=>y.dept===t.dept&&y.course===t.course);if(x)pick={tm,x};}});
+      if(!pick&&r.terms[0])pick={tm:r.terms[0],x:r.terms[0].tables[0]};
+      if(pick){H.term=pick.tm.term;render();await loadHistTable(pick.x.id);return;}
+    }catch(er){S.err=er.message;S.sc.hist=null;}
+    return render();}
+  if(a==='hClose'){S.sc.hist=null;return render();}
+  if(a==='hCopyCell'){
+    const V=histView(),t=schedTable(S.sc.tab),cl=b.dataset.cl,cell=V.cell(+b.dataset.w,cl,+b.dataset.d||0);if(!cell)return;
+    S.sc.clip={tid:t.id,cell:cellCopy(cell),desc:`${S.sc.hist.term}・${cellDesc(cell)}`,src:null};S.sc.hist=null;return render();}
+  if(a==='hCopyWeek'){
+    const V=histView(),t=schedTable(S.sc.tab),w=+b.dataset.w,wk=V.weeks.find(x=>x.n===w),cs=V.cells.filter(x=>x.week===w);
+    if(!cs.length){S.err='這一週沒有排內容。';return render();}
+    S.sc.clip={tid:t.id,kind:'week',srcTid:S.sc.hist.tid,srcTable:V.table,srcWeek:w,cells:cs.map(x=>({cls:x.cls,day:x.day||0})),desc:`${S.sc.hist.term} ${V.table.course} ${wk.vac?'假 '+wk.label:'第 '+w+' 週'}（全部班級）`,src:null};S.sc.hist=null;return render();}
+  if(a==='scPasteWeek'){
+    const t=schedTable(S.sc.tab),c=S.sc.clip,w=+b.dataset.w;if(!c||c.tid!==t.id||c.kind!=='week')return;
+    const pairs=[];c.cells.forEach(x=>{const tc=mapCls(c.srcTable,x.cls,t);if(!tc)return;pairs.push({fw:c.srcWeek,fc:x.cls,fd:x.day,tw:w,tc,td:mapDay(t.classes.find(y=>y.cls===tc),x.day)});});
+    if(!pairs.length){S.err='這一週的班級，這張進度表都沒有。';return render();}
+    return runImport(pairs,c.srcTid,false);}
+  if(a==='hRange'){
+    const H=S.sc.hist,V=histView(),t=schedTable(S.sc.tab),tw=tWeeks(t),pairs=[];
+    const a0=Math.min(H.a,H.b),b0=Math.max(H.a,H.b);
+    for(let i=a0;i<=b0;i++){const sw=V.weeks[i],tg=tw[H.c+(i-a0)];if(!tg)break;
+      V.cells.filter(x=>x.week===sw.n).forEach(x=>{const tc=mapCls(V.table,x.cls,t);if(!tc)return;pairs.push({fw:sw.n,fc:x.cls,fd:x.day||0,tw:tg.n,tc,td:mapDay(t.classes.find(y=>y.cls===tc),x.day||0)});});}
+    if(!pairs.length){S.err='這一段沒有可以複製的內容（或本學期沒有那些班）。';return render();}
+    S.sc.hist.keep=true;const src=H.tid;S.sc.hist=null;return runImport(pairs,src,!!H.over);}
+  if(a==='impOver'){const r=S.sc.importRes;S.sc.importRes=null;return runImport(r.pairs,r.srcTid,true);}
+  if(a==='impDone'){S.sc.importRes=null;return render();}
+  if(a==='scCopyClip'){
+    const t=schedTable(S.sc.tab),e=S.sc.cellEd,w=e?e.w:+b.dataset.w,cl=e?e.cl:b.dataset.cl,day=e?(e.day||0):(+b.dataset.d||0),cell=schedCell(t.id,w,cl,day);
+    if(!cell)return;S.sc.clip={tid:t.id,cell:cellCopy(cell),desc:cellDesc(cell),src:{w,cl,day}};S.sc.cellEd=null;return render();}
+  if(a==='scClipEnd'){S.sc.clip=null;return render();}
+  if(a==='scPaste'){
+    const t=schedTable(S.sc.tab),c=S.sc.clip,w=+b.dataset.w,cl=b.dataset.cl,day=+b.dataset.d||0;
+    if(!c||c.tid!==t.id)return;if(c.src&&c.src.w===w&&c.src.cl===cl&&c.src.day===day)return;
+    return pasteInto(t,w,cl,day,c.cell);}
+  if(a==='scCopyTo'){
+    const t=schedTable(S.sc.tab),e=S.sc.cellEd,cell=schedCell(t.id,e.w,e.cl,e.day||0);if(!cell)return;
+    const w=e.w,cl=b.dataset.cl;S.sc.cellEd=null;return pasteInto(t,w,cl,0,cellCopy(cell));}
+  if(a==='scPasteYes'){const t=schedTable(S.sc.tab),p=S.sc.pasteAsk;return pasteInto(t,p.w,p.cl,p.day,p.cell,true);}
+  if(a==='scPasteNo'){S.sc.pasteAsk=null;return render();}
+  if(a==='scDates'){const d=S.sc.data;S.sc.datesEd={start:d.start||'',end:d.end||''};return render();}
+  if(a==='scDatesNo'){S.sc.datesEd=null;return render();}
+  if(a==='scDatesSave'){
+    try{await run('apiScheduleSetDates',S.sc.datesEd.start,S.sc.datesEd.end);S.sc.datesEd=null;S.sc.data=await run('apiScheduleGet');await refreshEntries();S.info='已設定。每一週的日期都排好了，排給老師的課日期也一起更新。';}
+    catch(e){S.err=e.message;}
+    return render();}
+  if(a==='scEditTable'){const t=schedTable(S.sc.tab);S.sc.tableEd={id:t.id,classes:t.classes.map(c=>({cls:c.cls,days:clDays(c)})),groups:t.groups.join('、'),teachers:(t.teachers||[]).slice()};return render();}
+  if(a==='scTableNo'){S.sc.tableEd=null;return render();}
+  if(a==='scTTeach'){const e=S.sc.tableEd,em=b.dataset.em;e.teachers=e.teachers.includes(em)?e.teachers.filter(x=>x!==em):e.teachers.concat([em]);return render();}
+  if(a==='scTDay'){
+    const e=S.sc.tableEd,c=e.classes.find(x=>x.cls===b.dataset.cl),n=b.dataset.n;
+    if(n==='all')c.days=c.days.length===5?[1]:[1,2,3,4,5];
+    else if(e.classes.length>1)c.days=[+n];
+    else{const k=+n;c.days=c.days.includes(k)?c.days.filter(x=>x!==k):c.days.concat([k]).sort();if(!c.days.length)c.days=[k];}
+    return render();}
+  if(a==='scTableSave'){
+    const e=S.sc.tableEd;
+    try{const res=await run('apiScheduleSaveTable',S.sc.data.canConfig?{id:e.id,classes:e.classes,groups:e.groups,teachers:e.teachers}:{id:e.id,classes:e.classes,groups:e.groups});S.sc.data=res;S.sc.tableEd=null;await refreshEntries();S.info=res.notice||'存好了。排給老師的課，日期已經跟著改。';}
+    catch(er){S.err=er.message;}
+    return render();}
+  if(a==='scDelAsk'){S.sc.delAsk=S.sc.tab;return render();}
+  if(a==='scDelNo'){S.sc.delAsk='';return render();}
+  if(a==='scDelYes'){
+    try{S.sc.data=await run('apiScheduleDeleteTable',S.sc.tab);S.sc.delAsk='';S.sc.tab=(S.sc.data.tables[0]||{}).id||'';await refreshEntries();S.info='已刪除這張進度表和排給老師的課。清單裡還有這門課的話，會自動重新建一張空的。';}
+    catch(e){S.err=e.message;}
+    return render();}
+  if(a==='scExtra'){const t=schedTable(S.sc.tab);S.sc.extraEd={id:t.id,from:t.ext?t.ext.from:'',to:t.ext?t.ext.to:''};return render();}
+  if(a==='scExtraNo'){S.sc.extraEd=null;return render();}
+  if(a==='scExtraSave'||a==='scExtraClear'){
+    const e=S.sc.extraEd;
+    try{S.sc.data=await run('apiScheduleSetExtra',e.id,a==='scExtraClear'?'':e.from,a==='scExtraClear'?'':e.to);S.sc.extraEd=null;S.info=a==='scExtraClear'?'已拿掉寒暑假的週。':'已加上寒暑假的週，在進度表最後面（或最前面），用日期表示。';}
+    catch(er){S.err=er.message;}
+    return render();}
+  if(a==='scAddDay'){
+    const t=schedTable(S.sc.tab),w=+b.dataset.w,c=t.classes[0],reg=clDays(c);
+    S.sc.dayPick={w,days:[1,2,3,4,5,6,7].filter(x=>!reg.includes(x)&&!schedCell(t.id,w,c.cls,x))};return render();}
+  if(a==='scDayNo'){S.sc.dayPick=null;return render();}
+  if(a==='scDayGo'){
+    const t=schedTable(S.sc.tab),w=S.sc.dayPick.w,c=t.classes[0],day=+b.dataset.n;S.sc.dayPick=null;
+    S.sc.cellEd={kind:'lesson',note:'',mode:'joint',label:'',groups:mkGroups(t,'joint',S.user.email),tid:t.id,w,cl:c.cls,day,has:false};return render();}
+  if(a==='scEdit'){
+    const t=schedTable(S.sc.tab),w=+b.dataset.w,cl=b.dataset.cl,day=+b.dataset.d||0,cell=schedCell(t.id,w,cl,day),me=S.user.email;
+    let ed;
+    if(cell&&cell.kind==='note')ed={kind:'note',note:cell.note,mode:'joint',label:'',groups:mkGroups(t,'joint',me)};
+    else if(cell)ed={kind:'lesson',note:'',mode:cell.mode,label:cell.label||'',groups:cell.groups.map(g=>({label:g.label,teacher:g.teacher,pids:g.pids.slice(),q:''}))};
+    else ed={kind:'lesson',note:'',mode:'joint',label:'',groups:mkGroups(t,'joint',me)};
+    S.sc.cellEd=Object.assign(ed,{tid:t.id,w,cl,day,has:!!cell});return render();}
+  if(a==='scSwap'||a==='scSwapFill'){                   // 接上一次有實習的那週：單雙互換，老師跟著產品走
+    const t=schedTable(S.sc.tab),e=S.sc.cellEd,w=e?e.w:+b.dataset.w,cl=e?e.cl:b.dataset.cl,day=e?(e.day||0):(+b.dataset.d||0),pv=prevLesson(t,cl,w,day);
+    if(!pv)return;
+    const cell=swappedCell(pv);
+    if(a==='scSwapFill'){S.sc.cellEd=Object.assign(e,{kind:'lesson',mode:cell.mode,label:cell.label||'',groups:cell.groups.map((g,i)=>({label:cell.mode==='split'?t.groups[i]:'',teacher:g.teacher,pids:g.pids.slice(),q:''}))});return render();}
+    stageCell(t.id,w,cl,day,cell);S.info='已接上週，單雙互換（還沒儲存）。';return render();}
+  if(a==='scCellNo'){S.sc.cellEd=null;return render();}
+  if(a==='scKind'){S.sc.cellEd.kind=b.dataset.k;return render();}
+  if(a==='scMode'){
+    const e=S.sc.cellEd,t=schedTable(e.tid),m=b.dataset.m;
+    if(m!==e.mode){
+      if(m==='split'){const g0=e.groups[0]||{teacher:'',pids:[]};e.groups=mkGroups(t,'split','');e.groups[0].teacher=g0.teacher;e.groups[0].pids=g0.pids.slice();}
+      else{const all=[];e.groups.forEach(g=>g.pids.forEach(p=>{if(!all.includes(p))all.push(p);}));e.groups=[{label:'',teacher:(e.groups.find(g=>g.teacher)||{}).teacher||'',pids:all,q:''}];}
+      e.mode=m;}
+    return render();}
+  if(a==='scChip'){S.sc.cellEd.note=b.dataset.n;return render();}
+  if(a==='scPTab'){const g=S.sc.cellEd.groups[+b.dataset.g];g.tab=b.dataset.t;g.q='';return render();}
+  if(a==='scAddP'){const g=S.sc.cellEd.groups[+b.dataset.g];if(!g.pids.includes(b.dataset.p))g.pids.push(b.dataset.p);g.q='';return render();}
+  if(a==='scRemP'){const g=S.sc.cellEd.groups[+b.dataset.g];g.pids=g.pids.filter(p=>p!==b.dataset.p);return render();}
+  if(a==='scCellSave'||a==='scCellClear'){
+    const e=S.sc.cellEd;let cell=null;
+    if(a==='scCellSave'){cell=e.kind==='note'?{kind:'note',note:e.note}:{kind:'lesson',mode:e.mode,label:e.label,groups:e.groups.map(g=>({teacher:g.teacher,pids:g.pids}))};}
+    stageCell(e.tid,e.w,e.cl,e.day||0,cell);S.sc.cellEd=null;
+    S.info=a==='scCellClear'?'這格清除了，還沒儲存。按上面的「儲存進度表」才會生效。':'這格改好了，還沒儲存。按上面的「儲存進度表」才會生效，排給老師的材料單才會出現。';
+    return render();}
+  if(a==='histOpen'||a==='toolHist'){
+    const ix=+b.dataset.i;S.hu={i:ix,list:null,mode:a==='toolHist'?'tools':'weights'};render();
+    try{S.hu.list=await run('apiHistory',S.entries[ix].pid);}catch(e){S.err=e.message;S.hu=null;}
+    return render();}
+  if(a==='histNo'){S.hu=null;return render();}
+  if(a==='histApply'){
+    const x=S.hu.list[+b.dataset.k],e=S.entries[S.hu.i],ids=new Set((S.cat.items[e.pid]||[]).map(i=>i.id));
+    if(S.hu.mode==='tools'){e.tools=x.tools?x.tools.map(t=>({who:t.who,name:t.name,qty:t.qty})):null;S.hu=null;S.info='已把以前的器具套到這一堂。要再調整，直接改就好。';return render();}
+    Object.assign(e,{title:x.title||'',scale:x.scale||1,yFrom:x.yFrom||null,yTo:x.yTo||null,yUnit:x.yUnit||'',ov:Object.fromEntries(Object.entries(x.ov||{}).filter(([k])=>ids.has(k))),
+      extra:(x.extra||[]).map((r,n)=>({id:'x-new'+(n+1),raw:r.raw,per:r.per===undefined?null:r.per,total:r.total===undefined?null:r.total,unit:r.unit||'g',kind:r.kind||'',note:r.note||''})),
+      omit:(x.omit||[]).filter(id=>ids.has(id)),conv:Object.fromEntries(Object.entries(x.conv||{}).filter(([k])=>ids.has(k)))});
+    S.hu=null;S.info='已把以前的修改套到這一堂。要再調整，直接改就好。';return render();}
+  if(a==='umReload'){S.um.err='';S.um.list=null;return render();}
+  if(a==='umNew'){S.um.ed={old:'',email:'',name:'',role:'老師'};S.um.bulk=null;return render();}
+  if(a==='umEdit'){const u=S.um.list.find(x=>x.email===b.dataset.e);if(u){S.um.ed={old:u.email,email:u.email,name:u.name,role:u.role};S.um.bulk=null;}return render();}
+  if(a==='umCancel'){S.um.ed=null;return render();}
+  if(a==='umSave'){
+    const d=S.um.ed;try{S.um.list=await run('apiUserSave',{email:d.email,name:d.name,role:d.role},d.old);S.info=d.old?`已更新 ${d.name}。`:`已新增 ${d.name}（${d.role}），他用這個信箱的 Google 帳號就能登入。`;S.um.ed=null;}catch(e){S.err=e.message;}
+    return render();}
+  if(a==='umDelAsk'){S.um.del=b.dataset.e;return render();}
+  if(a==='umDelNo'){S.um.del='';return render();}
+  if(a==='umDelYes'){const em=S.um.del;try{S.um.list=await run('apiUserDelete',em);S.info='已從名單刪除。這個帳號之後就不能登入了。';}catch(e){S.err=e.message;}S.um.del='';return render();}
+  if(a==='umBulk'){S.um.bulk='';S.um.ed=null;return render();}
+  if(a==='umBulkNo'){S.um.bulk=null;return render();}
+  if(a==='umBulkYes'){
+    try{const r=await run('apiUsersBulkAdd',S.um.bulk||'');S.um.list=r.users;S.um.bulk=null;
+      S.info=`新增了 ${r.added} 位。`+(r.skipped.length?`已在名單裡、略過：${r.skipped.join('、')}。`:'')+(r.bad.length?`格式不對、沒加入：${r.bad.join('；')}。`:'');}
+    catch(e){S.err=e.message;}
+    return render();}
+  if(a==='catAdd'){S.catAdd='';return render();}
+  if(a==='catAddNo'){S.catAdd=null;return render();}
+  if(a==='catAddYes'){
+    try{const r=await run('apiAddCategory',S.catAdd||'');S.cat.categories=r.categories;const nm=r.categories[r.categories.length-1];if(S.view==='extra')S.tab='c:'+nm;S.info=`已新增分類「${nm}」。到材料單右邊的「修改」，選「分類」，就能把材料單放進來。`;S.catAdd=null;}
+    catch(e){S.err=e.message;}
+    return render();}
+  if(a==='catDelAsk'){S.catDel=b.dataset.n||S.tab.slice(2);return render();}
+  if(a==='catDelNo'){S.catDel='';return render();}
+  if(a==='catDelYes'){
+    const n=S.catDel;
+    try{const r=await run('apiRemoveCategory',n);S.cat.categories=r.categories;S.cat.products.forEach(p=>{if(p.category===n)p.category='';});if(S.tab==='c:'+n)S.tab='一';S.info=`已刪除分類「${n}」，裡面的材料單回到原本的位置。`;}
+    catch(e){S.err=e.message;}
+    S.catDel='';return render();}
+  if(a==='subAskClose'){S.confirmClose=true;return render();}
+  if(a==='subCancel'){S.confirmClose=false;return render();}
+  if(a==='subClose'||a==='subOpen'){
+    const on=a==='subOpen';
+    try{const r=await run('apiSetSubmissionOpen',on);S.accepting=r.open;S.openNote=r.note;S.info=on?'已重新開放，老師可以送材料單了。':'已關閉，老師不能再新增或修改材料單了。';}
+    catch(e){S.err=e.message;}
+    S.confirmClose=false;return render();}
+  if(a==='xoOpen'||a==='xoClose'){try{const r=await run('apiSetExtraOpen',a==='xoOpen');S.extraOpen=r.open;S.extraNote=r.note;S.info=r.open?'已開放額外材料單，老師可以送臨時活動的材料單了。送完記得關閉。':'已關閉額外材料單。';}catch(e){S.err=e.message;}return render();}
+  if(a==='subtoggle'){S.subOpen=!S.subOpen;return render();}
+  if(a==='tfilter'){S.tTeacher=b.dataset.e===S.tTeacher?'':b.dataset.e;return loadRange();}
+  if(a==='xopen'){S.xf={i:+b.dataset.i,raw:'',mode:'per',val:'',unit:'g'};return render();}
+  if(a==='xcancel'){S.xf=null;return render();}
+  if(a==='xadd'){
+    const f=S.xf,e=S.entries[f.i],raw=f.raw.trim();
+    if(!raw){S.err='請填材料名稱。';return render();}
+    const num=parseFloat(f.val);
+    if(f.mode!=='text'&&!(num>=0)){S.err=`「${raw}」的數量要填數字。`;return render();}
+    if(f.mode==='text'&&!f.val.trim()){S.err=`「${raw}」要填內容，例如適量。`;return render();}
+    const x={id:'',raw:raw,per:null,total:null,unit:f.mode==='text'?'g':f.unit,kind:'',note:''};
+    if(f.mode==='per')x.per=r4(num/k_(e));                      // 存成倍率 ×1 的數字，之後改倍率也會跟著
+    else if(f.mode==='fixed')x.total=r3(num);
+    else x.kind=f.val.trim()==='適量'?'適量':'範圍 '+f.val.trim();
+    e.extra=(e.extra||[]).concat([x]);
+    let n=0;e.extra.forEach(y=>{if(!y.id)y.id='x-new'+(++n);});   // 先給暫時編號，送出後由系統換成正式的
+    S.xf=null;S.info=`已加入「${raw}」。`;return render();}
+  if(a==='cvopen'){const ix=+b.dataset.i,id=b.dataset.r,l=lines(S.entries[ix]).find(x=>x.id===id);S.cv={i:ix,id,raw:l.raw,orig:l.origText||l.text,mode:'per',val:'',unit:'g'};return render();}
+  if(a==='cvcancel'){S.cv=null;return render();}
+  if(a==='cvreset'){const e=S.entries[+b.dataset.i];delete e.conv[b.dataset.r];return render();}
+  if(a==='cvapply'){
+    const f=S.cv,e=S.entries[f.i];
+    if(f.mode==='text'){const tx=f.val.trim();if(!tx){S.err='請填內容，例如：少許。';return render();}e.conv[f.id]={mode:'text',text:tx};S.info=`「${f.raw}」改成「${tx}」。`;}
+    else{
+      const num=parseFloat(f.val);if(!(num>=0)){S.err=`「${f.raw}」的數量要填數字。`;return render();}
+      e.conv[f.id]=f.mode==='per'?{mode:'per',per:r4(num/k_(e)),unit:f.unit}:{mode:'fixed',total:r3(num),unit:f.unit};   // 每組數量存成倍率 ×1，之後改倍率也會跟著
+      S.info=`「${f.raw}」已改成有數量的，會加總。`;
+    }
+    S.cv=null;return render();}
+  if(a==='titleReset'){S.entries[+b.dataset.i].title='';return render();}
+  if(a==='mrem'){const e=S.entries[+b.dataset.i];e.omit=(e.omit||[]).concat([b.dataset.r]);delete e.ov[b.dataset.r];S.info='已刪掉這項材料，要加回來就點下面的「＋」。';return render();}
+  if(a==='madd'){const e=S.entries[+b.dataset.i];e.omit=(e.omit||[]).filter(x=>x!==b.dataset.r);return render();}
+  if(a==='xrem'){const e=S.entries[+b.dataset.i];e.extra=(e.extra||[]).filter(x=>x.id!==b.dataset.r);delete e.ov[b.dataset.r];return render();}
+  if(a==='rgShift'){const len=rangeLen(),d=+b.dataset.d*len;return setRange(addDays(S.rgFrom,d),addDays(S.rgTo,d));}
+  if(a==='rgPreset'){
+    const p=b.dataset.p,t=today(),ws=weekStart(t),y=+t.slice(0,4),m=+t.slice(5,7);
+    const mo=(yy,mm)=>{const f=`${yy}-${String(mm).padStart(2,'0')}-01`,l=new Date(Date.UTC(yy,mm,0)).getUTCDate();return [f,`${yy}-${String(mm).padStart(2,'0')}-${String(l).padStart(2,'0')}`];};
+    if(p==='week')return setRange(ws,addDays(ws,6));
+    if(p==='next')return setRange(addDays(ws,7),addDays(ws,13));
+    if(p==='month')return setRange(...mo(y,m));
+    return setRange(...(m===12?mo(y+1,1):mo(y,m+1)));}
+  if(a==='ldel'){S.tDel=b.dataset.id;return render();}
+  if(a==='ldelNo'){S.tDel='';return render();}
+  if(a==='ldelYes'){
+    const l=S.tech.lessons.find(x=>x.id===b.dataset.id);S.tDel='';
+    try{await run('apiDeletePlanEntry',b.dataset.id);S.info=l?`已刪除 ${l.teacher} 的「${l.title}」（${md0(l.date)}）。系統有留刪除紀錄。`:'已刪除。';}
+    catch(e){S.err=e.message;}
+    return loadRange();}
+  if(a==='termAsk'){S.confirmTerm=$('#termSel').value;return render();}
+  if(a==='termCancel'){S.confirmTerm='';return render();}
+  if(a==='termGo'){
+    const to=S.confirmTerm;S.confirmTerm='';S.busy='term';render();
+    try{await run('apiSetTerm',to);S.step=1;S.sent=null;await boot();S.view='admin';S.info=`已切換到 ${to}。老師重新整理頁面就是新學期。`;}
+    catch(e){S.err=e.message;}
+    S.busy='';return render();}
+  if(a==='t4toggle'){const i=+b.dataset.i;S.open4.has(i)?S.open4.delete(i):S.open4.add(i);return render();}
+  if(a==='tmove'){const e=S.entries[+b.dataset.i],t=ensureTools(e)[+b.dataset.ti];t.who=t.who==='技士'?'實習股長':'技士';return render();}
+  if(a==='tdel'){ensureTools(S.entries[+b.dataset.i]).splice(+b.dataset.ti,1);return render();}
+  if(a==='tadd'){const i=+b.dataset.i;ensureTools(S.entries[i]).push({who:b.dataset.w,name:'',qty:''});render();const l=$$(`[data-t="${i}"] input[data-k="tname"]`);if(l.length)l[l.length-1].focus();return;}
+  if(a==='treset'){S.entries[+b.dataset.i].tools=null;return render();}
+  if(a==='tcopy'){const e=S.entries[+b.dataset.i],src=toolsOf(e).map(t=>({...t}));let n=0;S.entries.forEach(x=>{if(x!==e&&x.pid===e.pid){x.tools=src.map(t=>({...t}));n++;}});S.info=`已套用到同一個產品的其他 ${n} 堂。`;return render();}
+  if(a==='tOne'){S.tFilter={course:'',cls:'',q:'',id:b.dataset.id};S.tOpen=new Set([0]);return loadRange();}
+  if(a==='tfClear'){S.tFilter={course:'',cls:'',q:'',id:''};return loadRange();}
+  if(a==='tmode'){S.tMode=b.dataset.m;S.tOpen=new Set();return render();}
+  if(a==='tlesson'){const i=+b.dataset.i;S.tOpen.has(i)?S.tOpen.delete(i):S.tOpen.add(i);return render();}
+  if(a==='edNew'){S.ed={kind:'custom',pid:'',shared:!!b.dataset.sh,category:b.dataset.cat||'',origCategory:'',title:'',serving:'',dsets:4,rows:[blankRow(),blankRow(),blankRow()],tools:[],showTools:false,err:'',confirmDel:false,confirmRevert:false};return render();}
+  if(a==='scNewProd'){                                   // 預設材料單裡沒有的：自己建一張新的，做好自動加進這一格
+    const g=S.sc.cellEd.groups[+b.dataset.g];
+    S.ed={kind:'custom',pid:'',shared:false,category:'',origCategory:'',title:(g.q||'').trim(),serving:'',dsets:4,rows:[blankRow(),blankRow(),blankRow()],tools:[],showTools:false,err:'',confirmDel:false,confirmRevert:false,forCell:{g:+b.dataset.g}};return render();}
+  if(a==='edEdit'){const p=P(b.dataset.p);
+    S.ed={kind:p.custom?'custom':'template',pid:p.pid,shared:!!p.shared,category:p.category||'',origCategory:p.category||'',title:p.title,serving:p.serving,dsets:p.dsets,rows:S.cat.items[p.pid].map(rowOf),
+      tools:(S.cat.tools[p.pid]||[]).map(t=>({who:t.who,name:t.name,qty:t.qty})),showTools:(S.cat.tools[p.pid]||[]).length>0,err:'',confirmDel:false,confirmRevert:false};return render();}
+  if(a==='edClose'){S.ed=null;return render();}
+  if(a==='edAddRow'){S.ed.rows.push(blankRow());render();const l=$$('.er .nm');if(l.length)l[l.length-1].focus();return;}
+  if(a==='edDelRow'){S.ed.rows.splice(+b.dataset.ri,1);return render();}
+  if(a==='edTools'){S.ed.showTools=!S.ed.showTools;if(S.ed.showTools&&!S.ed.tools.length)S.ed.tools.push({who:'技士',name:'',qty:''});return render();}
+  if(a==='edAddTool'){S.ed.tools.push({who:'技士',name:'',qty:''});return render();}
+  if(a==='edDelTool'){S.ed.tools.splice(+b.dataset.ti,1);return render();}
+  if(a==='edSave'){
+    const d=S.ed;d.err='';
+    if(!d.title.trim()){d.err='請填材料單的名稱。';return render();}
+    const rows=d.rows.filter(r=>r.raw.trim()||r.per!==''||r.total!==''||r.text.trim());
+    if(!rows.length){d.err='至少要有一項材料。';return render();}
+    for(const r of rows){
+      if(!r.raw.trim()){d.err='有一項材料沒填名稱。';return render();}
+      if(r.mode==='per'&&(r.per===''||!(Number(r.per)>=0))){d.err=`「${r.raw}」的每組數量要填數字，不確定的話類型選「文字」填適量。`;return render();}
+      if(r.mode==='fixed'&&(r.total===''||!(Number(r.total)>=0))){d.err=`「${r.raw}」的固定總量要填數字。`;return render();}
+      if(r.mode==='text'&&!r.text.trim()&&r.kind!=='原表沒填數量'){d.err=`「${r.raw}」要填內容，例如適量。`;return render();}
+    }
+    const body={pid:d.pid,title:d.title,serving:d.serving,dsets:d.dsets,shared:d.shared,rows:rows,tools:d.tools.filter(t=>t.name.trim())};
+    S.busy='save';render();
+    let savedPid=d.pid;
+    try{
+      if(d.kind==='template'){const r=await run('apiSaveTemplate',d.pid,body);applyTemplate(r);S.info=`已儲存「${r.product.title}」，所有老師之後選到的就是新的。`;}
+      else{const r=await run('apiSaveCustom',body);applyCustom(r);savedPid=r.product.pid;
+        if(S.view==='extra'){S.tab=r.product.shared?'共':'自';S.info=`已儲存「${r.product.title}」，到它的分頁勾一下就能用。`;}
+        else S.info=`已儲存「${r.product.title}」。${r.product.shared?'所有老師都選得到。':''}`;
+        if(d.forCell&&S.sc.cellEd){const gr=S.sc.cellEd.groups[d.forCell.g];if(gr&&!gr.pids.includes(savedPid))gr.pids.push(savedPid);if(gr)gr.q='';S.info=`已做好「${r.product.title}」，也加進這一格了。`;}}
+      if(isAdmin()&&(d.kind==='template'||d.shared)&&(d.category||'')!==(d.origCategory||'')){await run('apiSetCategory',savedPid,d.category||'');const pp=P(savedPid);if(pp)pp.category=d.category||'';}
+      S.ed=null;}
+    catch(e){d.err=e.message;}
+    S.busy='';return render();}
+  if(a==='edDelete'){
+    const d=S.ed;if(!d.confirmDel){d.confirmDel=true;return render();}
+    try{await run('apiDeleteCustom',d.pid);const p=P(d.pid);if(p)p.deleted=true;[...S.sel].filter(k=>kp(k)===d.pid).forEach(k=>S.sel.delete(k));S.entries=S.entries.filter(e=>e.pid!==d.pid);S.ed=null;S.info='已刪除。';}
+    catch(e){d.err=e.message;d.confirmDel=false;}
+    return render();}
+  if(a==='edRevert'){
+    const d=S.ed;if(!d.confirmRevert){d.confirmRevert=true;return render();}
+    try{const r=await run('apiRevertTemplate',d.pid);applyTemplate(r);S.ed=null;S.info=`「${r.product.title}」已還原成原本的樣子。`;}
+    catch(e){d.err=e.message;d.confirmRevert=false;}
+    return render();}
+  if(a==='edHide'){
+    const d=S.ed,p=P(d.pid),to=!p.hidden;
+    try{await run('apiSetTemplateHidden',d.pid,to);p.hidden=to;S.ed=null;S.info=to?`「${p.title}」已隱藏，老師的選單看不到，之前排過的課不受影響。`:`「${p.title}」已恢復顯示。`;}
+    catch(e){d.err=e.message;}
+    return render();}
+  if(a==='export'){
+    if(!sc().length)return;
+    if(!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';S.view='extra';S.step=2;return render();}
+    S.confirmSend=a;return render();}                                // 先讓老師核對日期、產品，確定了才送出
+  if(a==='sendNo'){S.confirmSend='';return render();}
+  if(a==='dlSent'){S.busy='製作中…';render();try{const r=await run('apiExportRequisition',curScope());const f=deliver(r);S.info=`已下載「${f.name}」。`;}catch(e){S.err=e.message;}S.busy='';return render();}
+  if(a==='sendYes'){
+    const what=expWhat();S.confirmSend='';S.busy=what==='none'?'正在送出…':'正在送出並製作檔案…';S.sent=null;render();
+    try{
+      const rc=await run('apiSavePlan',payload(),curScope());
+      let file=null;if(what!=='none'){const r=await run('apiExportRequisition',curScope(),what,S.expOrder);file=deliver(r);}
+      const saved=await run('apiBootstrap');S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;
+      S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
+    }catch(e){S.err=e.message;}
+    S.busy='';return render();}
+  if(a==='exportWeek'||a==='exportSheets'){
+    S.busy='製作中…';render();
+    try{const r=await run(a==='exportWeek'?'apiExportRange':'apiExportRangeSheets',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder);deliver(r);}catch(e){S.err=e.message;}
+    S.busy='';return render();}
+});
+/* 電腦上：把排好的格子拖到別的格子 */
+document.addEventListener('dragstart',ev=>{
+  const td=ev.target.closest&&ev.target.closest('td.sc[draggable="true"]');if(!td||!S.sc)return;
+  S.sc.drag={w:+td.dataset.w,cl:td.dataset.cl,day:+td.dataset.d||0};
+  if(ev.dataTransfer){ev.dataTransfer.effectAllowed='copy';ev.dataTransfer.setData('text/plain','cell');}
+});
+document.addEventListener('dragover',ev=>{if(S.sc&&S.sc.drag&&ev.target.closest&&ev.target.closest('td.sc'))ev.preventDefault();});
+document.addEventListener('drop',ev=>{
+  const td=ev.target.closest&&ev.target.closest('td.sc');if(!td||!S.sc||!S.sc.drag)return;
+  ev.preventDefault();const d=S.sc.drag;S.sc.drag=null;
+  if(locked()){S.err=LOCK_MSG;return render();}
+  const t=schedTable(S.sc.tab),cell=t&&schedCell(t.id,d.w,d.cl,d.day),w=+td.dataset.w,cl=td.dataset.cl,day=+td.dataset.d||0;
+  if(!cell||(d.w===w&&d.cl===cl&&d.day===day))return;
+  pasteInto(t,w,cl,day,cellCopy(cell));
+});
+/* 額外材料單「課程名稱、日期」：打字時不整頁重畫，「下一步」要跟著能不能按更新 */
+function refreshBar2(){
+  if(S.view!=='extra'||S.step!==2)return;
+  const l=S.entries.filter(e=>!e.sid),ok=l.length>0&&entriesOk('extra'),btn=$('.bar button'),sp=$('.bar .mut');
+  if(btn)btn.disabled=!ok;if(sp)sp.textContent=ok?`共 ${l.length} 堂`:'每一堂都要填課程名稱和日期';
+}
+document.addEventListener('input',()=>{setTimeout(refreshPill,0);setTimeout(refreshBar2,0);});
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t.dataset.ed){const d=S.ed,k=t.dataset.ed;
+    if(t.dataset.ri!==undefined){if(k!=='mode')d.rows[+t.dataset.ri][k]=t.value;}
+    else if(t.dataset.ti!==undefined)d.tools[+t.dataset.ti][k]=t.value;
+    else d[k]=t.value;
+    return;}
+  const k=t.dataset.k;if(!k)return;const i=+t.dataset.i,e=S.entries[i];
+  if(k==='tname'||k==='tqty'){ensureTools(e)[+t.dataset.ti][k==='tname'?'name':'qty']=t.value;return;}
+  if(k==='catname'){S.catAdd=t.value;return;}
+  if(k==='umname'){S.um.ed.name=t.value;return;}
+  if(k==='umemail'){S.um.ed.email=t.value;return;}
+  if(k==='umbulk'){S.um.bulk=t.value;return;}
+  if(k==='xcourse'){e.course=t.value;return;}
+  if(k==='scStart'||k==='scEnd'){if(S.sc.datesEd)S.sc.datesEd[k==='scStart'?'start':'end']=t.value;return;}
+  if(k==='scnote'){S.sc.cellEd.note=t.value;return;}
+  if(k==='sclabel'){S.sc.cellEd.label=t.value;return;}
+  if(k==='sctgroups'){S.sc.tableEd.groups=t.value;return;}
+  if(k==='scttitle'){S.sc.tableEd.title=t.value;return;}
+  if(k==='scq'){const g=+t.dataset.g;S.sc.cellEd.groups[g].q=t.value;const r=$('#scres_'+g);if(r)r.innerHTML=resHTML(g);return;}
+  if(k==='cvval'||k==='cvunit'){if(S.cv)S.cv[k.slice(2)]=t.value;return;}
+  if(k==='renval'){if(S.ren)S.ren.val=t.value;return;}
+  if(k==='xraw'||k==='xmode'||k==='xval'||k==='xunit'){const f=S.xf;if(f){f[k.slice(1)]=t.value;}return;}
+  if(k==='cell'){
+    const id=t.dataset.r,kk=k_(e),v=parseFloat(t.value);
+    if(!isFinite(v)||v<0)return;
+    const ex=(e.extra||[]).find(x=>x.id===id),cvx=(e.conv||{})[id];
+    if(ex){if(ex.per!==null&&ex.per!==undefined)ex.per=r4(v/kk);else ex.total=r3(v);}
+    else if(cvx){if(cvx.mode==='per')cvx.per=r4(v/kk);else cvx.total=r3(v);}
+    else{
+      const it=S.cat.items[e.pid].find(x=>x.id===id);
+      if(!it.kind&&it.per!==null){const bs=r4(v/kk);if(Math.abs(bs-it.per)<1e-6)delete e.ov[id];else e.ov[id]=bs;}   // 存成 ×1 的數字，改倍率時這格也會跟著
+      else{if(r3(v)===r3(it.total))delete e.ov[id];else e.ov[id]=r3(v);}
+    }
+    const l=lines(e).find(x=>x.id===id),row=t.closest('.tr');
+    $('[data-tot]',row).textContent=fmt(l.total)+(l.unit||'g');t.classList.toggle('chg',l.changed);
+    const c=t.closest('[data-c]');const g=lines(e).filter(x=>x.mode!=='text'&&(x.unit||'g')==='g').reduce((s,x)=>s+x.total,0);
+    $('[data-sum]',c).textContent=fmt(g/1000)+' 公斤';refreshCard(i,true);
+  }else if(k==='etitle'){
+    const orig=P(e.pid).title,v=t.value.slice(0,40);e.title=(v.trim()===orig||!v.trim())?'':v;
+    const c=t.closest('[data-c]');if(c){$('.ch b',c).textContent=`${md(e.date)} ${titleOf(e)}`;}
+  }else if(k==='sets'){const v=parseFloat(t.value);if(v>0&&v<=200){e.sets=v;refreshCard(i);}}
+  else if(k==='yFrom'||k==='yTo'){
+    const v=parseFloat(t.value);e[k]=v>0?v:null;
+    if(k==='yTo'&&!e.yFrom){const b=parseYield(P(e.pid).serving);if(b){e.yFrom=b.n;e.yUnit=b.unit;const f=$('[data-k="yFrom"]',t.closest('[data-c]'));f.value=b.n;}}
+    if(e.yFrom>0&&e.yTo>0){setRatio(i);refreshCard(i);}
+    else if(!e.yFrom&&!e.yTo){e.scale=1;setRatio(i);refreshCard(i);}
+  }else if(k==='scale'){const v=parseFloat(t.value);if(v>=0.05&&v<=20){e.scale=v;e.yFrom=e.yTo=null;e.yUnit='';const c=t.closest('[data-c]');$('[data-k="yFrom"]',c).value='';$('[data-k="yTo"]',c).value='';refreshCard(i);}}
+});
+const k0=t=>t.dataset.k;
+document.addEventListener('change',ev=>{
+  const t=ev.target;
+  if(t.dataset.ed==='mode'){S.ed.rows[+t.dataset.ri].mode=t.value;return render();}
+  if(t.dataset.ed==='shared'){S.ed.shared=t.checked;return;}
+  if(k0(t)==='tTeacher'){S.tTeacher=t.value;return loadRange();}
+  if(k0(t)==='umrole'){S.um.ed.role=t.value;return;}
+  const k=t.dataset.k;if(!k)return;
+  if(k==='rgFrom'||k==='rgTo'){
+    if(!pd(t.value))return;
+    if(k==='rgFrom'){S.rgFrom=t.value;if(S.rgTo<S.rgFrom)S.rgTo=S.rgFrom;}else{S.rgTo=t.value;if(S.rgTo<S.rgFrom)S.rgFrom=S.rgTo;}
+    return loadRange();}
+  if(k==='expwhat'){S.expWhat=t.value;return render();}
+  if(k==='exporder'){S.expOrder=t.value;return;}
+  if(k==='tOrder'){S.tOrder=t.value;S.tOpen=new Set();return loadRange();}
+  if(k==='xmode'){S.xf.mode=t.value;S.xf.val='';return render();}
+  if(k==='scTFrom'||k==='scTTo'||k==='rqFrom'||k==='rqTo'){
+    const c=(k[0]==='s'?S.sc.tableEd:S.rq.form).classes[0];let f=Math.min(...c.days),to=Math.max(...c.days);
+    if(k.endsWith('From')){f=+t.value;if(to<f)to=f;}else{to=+t.value;if(to<f)f=to;}
+    c.days=[];for(let n=f;n<=to;n++)c.days.push(n);return render();}
+  if(k==='scXFrom'||k==='scXTo'){S.sc.extraEd[k==='scXFrom'?'from':'to']=t.value;return;}
+  if(k==='tfCourse'||k==='tfCls'||k==='tfQ'){S.tFilter={course:k==='tfCourse'?t.value:S.tFilter.course,cls:k==='tfCls'?t.value:S.tFilter.cls,q:k==='tfQ'?t.value.trim():S.tFilter.q,id:''};return loadRange();}
+  if(k==='hTerm'){const H=S.sc.hist,tm=H.terms.find(x=>x.term===t.value),t0=schedTable(S.sc.tab);H.term=t.value;const x=tm.tables.find(y=>y.dept===t0.dept&&y.course===t0.course)||tm.tables[0];return loadHistTable(x.id);}
+  if(k==='hTable'){return loadHistTable(t.value);}
+  if(k==='hFrom'){S.sc.hist.a=+t.value;if(S.sc.hist.b<S.sc.hist.a)S.sc.hist.b=S.sc.hist.a;return render();}
+  if(k==='hTo'){S.sc.hist.b=+t.value;if(S.sc.hist.b<S.sc.hist.a)S.sc.hist.a=S.sc.hist.b;return render();}
+  if(k==='hAt'){S.sc.hist.c=+t.value;return;}
+  if(k==='hOver'){S.sc.hist.over=t.checked;return;}
+  if(k==='pContent'){S.sc.print.blank=t.value==='blank';return render();}
+  if(k==='pScope'){S.sc.print.scope=t.value;return;}
+  if(k==='pMine'){S.sc.print.mine=t.checked;return;}
+  if(k==='scTabSel'){S.sc.tab=t.value;S.sc.delAsk='';S.sc.clip=null;return render();}
+  if(k==='rqnote'){S.rq.form.note=t.value;return;}
+  if(k==='rqNewCls'){S.rq.form.newCls=t.value;return;}
+  if(k==='rqgroups'){S.rq.form.groups=t.value;return;}
+  if(k==='ssRange'){S.ssAll=!t.checked;return loadRange();}
+  if(k==='scteacher'){S.sc.cellEd.groups[+t.dataset.g].teacher=t.value;return;}
+  if(k==='sctwd'){const x=S.sc.tableEd.cls.find(c=>c.cls===t.dataset.cl);if(x)x.wd=+t.value;return;}
+  if(k==='cvmode'){S.cv.mode=t.value;S.cv.val='';return render();}
+  const i=+t.dataset.i,e=S.entries[i];
+  if(k==='date'){e.date=t.value;}
+  else if(k==='clsradio'){
+    e.cls=t.dataset.c;
+    $$(`input[name="cls-${i}"]`).forEach(r=>r.closest('.cc').classList.toggle('on',r.checked));}
+});
+
+
+/* ---------- 教學進度表 ---------- */
+const WDN=['日','一','二','三','四','五','六'];
+const SC_NOTES=['放假','考前複習','期初打掃','期末打掃','定期評量','運動會','補假'];
+const schedTable=id=>(S.sc.data&&S.sc.data.tables.find(t=>t.id===id))||null;
+/* 進度表改的時候，先只留在畫面上（還沒儲存）；按「儲存進度表」或「下一步」才真的生效，材料單才會排給老師。 */
+const pkey=(tid,w,cl,day)=>tid+'|'+w+'|'+cl+'|'+(day||0);
+const pendMap=()=>S.sc.pend||(S.sc.pend={});
+const pendCount=()=>Object.keys(pendMap()).length;
+const serverCell=(tid,w,cl,day)=>S.sc.data.cells.find(c=>c.tableId===tid&&c.week===w&&c.cls===cl&&(c.day||0)===(day||0))||null;
+const schedCell=(tid,w,cl,day)=>{const p=pendMap()[pkey(tid,w,cl,day)];if(p)return p.cell;const x=serverCell(tid,w,cl,day);return x?x.cell:null;};
+function stageCell(tid,w,cl,day,cell){
+  const k=pkey(tid,w,cl,day),m=pendMap(),sv=serverCell(tid,w,cl,day);
+  if(!cell&&!sv){delete m[k];return;}                                   // 本來就是空的，清除不用記
+  m[k]={tid,week:w,cls:cl,day:day||0,cell,base:m[k]?m[k].base:(sv?sv.at:'')};
+}
+async function commitSched(after){
+  const m=pendMap(),by={};
+  Object.values(m).forEach(p=>{(by[p.tid]=by[p.tid]||[]).push({week:p.week,cls:p.cls,day:p.day,cell:p.cell,base:p.base});});
+  let saved=0;
+  for(const tid of Object.keys(by)){
+    const r=await run('apiScheduleSaveCells',tid,by[tid],false);
+    if(r.conflicts&&r.conflicts.length){S.sc.conflict={tid,list:r.conflicts,after:after||null};return {conflicts:true};}
+    saved+=r.saved;Object.keys(m).forEach(k=>{if(m[k].tid===tid)delete m[k];});
+  }
+  S.sc.data=await run('apiScheduleGet');await refreshEntries();
+  return {saved};
+}
+async function quietSched(){try{S.sc.data=await run('apiScheduleGet');render();}catch(e){}}
+
+const uName=em=>{const u=((S.sc.data&&S.sc.data.users)||[]).find(x=>x.email===em);return u?u.name:(em||'').split('@')[0];};
+const pTitle=pid=>{const p=S.cat.pmap[pid];if(p)return p.title;const c=S.sc&&S.sc.data&&S.sc.data.cellProducts&&S.sc.data.cellProducts[pid];return c?c.title:'（找不到的材料單）';};
+const usableProducts=()=>S.cat.products.filter(p=>!p.deleted&&!p.hidden&&!(p.custom&&!p.shared&&p.owner!==S.user.email));      // 自己自創的（還沒分享的）也可以排進進度表
+const fullDate=s=>String(s||'').replace(/-/g,'/');
+const tWeeks=t=>t.weeks||S.sc.data.weeks;
+const wLabel=w=>w.vac?`寒暑假 ${w.label}`:`第 ${w.n} 週`;
+const clDays=c=>{const d=(c.days&&c.days.length?c.days:[c.wd||1]).slice().sort();return d;};
+const daysText=(d,short)=>{d=d.slice().sort();if(d.length===1)return (short?'W':'週')+WDN[d[0]%7];if(d.length===5)return short?'每天':'每天（週一到週五）';const seq=d.every((x,i)=>i===0||x===d[i-1]+1);if(seq)return short?`W${WDN[d[0]%7]}~${WDN[d[d.length-1]%7]}`:`週${WDN[d[0]%7]}到週${WDN[d[d.length-1]%7]}`;return d.map(x=>(short?'W':'週')+WDN[x%7]).join('、');};
+async function loadSched(){
+  S.sc.busy=true;S.err='';render();
+  try{const d=await run('apiScheduleGet');S.sc.data=d;if(!S.sc.tab||!d.tables.some(t=>t.id===S.sc.tab))S.sc.tab=(d.tables[0]||{}).id||'';}catch(e){S.err=e.message;}
+  S.sc.busy=false;render();
+}
+/* 進度表改了，自己的排課（待確認的課）也會跟著變：沒有未儲存的修改就直接更新 */
+async function refreshEntries(){
+  if(dirty()){S.info='進度表已更新。你目前的修改還沒送出，送出後重新整理網頁，就會看到進度表排給你的新課。';return;}
+  try{const d=await run('apiBootstrap');S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));S.savedSig=sigOf(S.entries);}catch(e){}
+}
+/* 複製格子：把排好的一格（例如甲班）貼到別的格子（乙班同一週、或別的週） */
+const cellCopy=c=>c.kind==='note'?{kind:'note',note:c.note}:{kind:'lesson',mode:c.mode,label:c.label||'',groups:c.groups.map(g=>({teacher:g.teacher,pids:g.pids.slice()}))};
+const cellDesc=c=>c.kind==='note'?c.note:(c.label||c.groups.map(g=>g.pids.map(pTitle).join('、')).filter(Boolean).join(' / '));
+function pasteInto(t,w,cl,day,cell,force){
+  const cur=schedCell(t.id,w,cl,day);
+  if(cur&&!force){S.sc.pasteAsk={w,cl,day,cell,had:cellDesc(cur)};return render();}
+  stageCell(t.id,w,cl,day,cell);
+  const wk=tWeeks(schedTable(t.id)).find(x=>x.n===w);S.info=`已貼到「${cl}」${wk?wLabel(wk):''}（還沒儲存）。`;
+  S.sc.pasteAsk=null;return render();
+}
+/* 歷年的進度表：叫出以前的，複製過來（不一定放在同一週） */
+const mapCls=(src,cls,tgt)=>tgt.classes.some(c=>c.cls===cls)?cls:(src.classes.length===1&&tgt.classes.length===1?tgt.classes[0].cls:null);
+const mapDay=(tc,day)=>{const rd=clDays(tc);return rd.length>1&&!day?rd[0]:day;};
+function histView(){
+  const H=S.sc.hist;if(!H||!H.data)return null;
+  const cells=H.data.cells,map={};cells.forEach(x=>{map[x.week+'|'+x.cls+'|'+(x.day||0)]=x.cell;});
+  return {table:H.data.table,weeks:H.data.weeks,cell:(w,cl,day)=>map[w+'|'+cl+'|'+(day||0)]||null,cells};
+}
+async function runImport(pairs,srcTid,over){
+  const t=schedTable(S.sc.tab),skip0=[],use=[];
+  pairs.forEach(p=>{
+    const tc=t.classes.find(x=>x.cls===p.tc);let d=+p.td||0;if(tc&&clDays(tc).length===1&&d===clDays(tc)[0])d=0;
+    const wk=tWeeks(t).find(x=>x.n===p.tw);
+    if(tc&&wk&&!over&&schedCell(t.id,p.tw,p.tc,d))skip0.push(`${p.tc} ${wk.label}：已經有內容，沒有換掉`);else use.push(p);
+  });
+  try{
+    let staged=[],skipped=skip0;
+    if(use.length){const r=await run('apiScheduleImport',t.id,srcTid,use,true,true);staged=r.staged;skipped=skip0.concat(r.skipped);}
+    staged.forEach(x=>stageCell(t.id,x.week,x.cls,x.day,x.cell));
+    S.sc.importRes={copied:staged.length,skipped,pairs,srcTid};
+  }catch(er){S.err=er.message;}
+  return render();
+}
+async function loadHistTable(id){
+  const H=S.sc.hist;H.busy=true;H.data=null;render();
+  try{H.data=await run('apiScheduleHistoryTable',id);H.tid=id;H.a=0;H.b=Math.max(0,H.data.weeks.length-1);H.c=0;}catch(er){S.err=er.message;}
+  H.busy=false;render();
+}
+function histSchedModal(){
+  const H=S.sc.hist,t=schedTable(S.sc.tab);
+  if(!H.terms)return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">以前的進度表</h2><p class="load">${H.busy?'找以前的進度表中…':'沒有資料'}</p><div style="text-align:right"><button class="btn ghost" data-a="hClose">關閉</button></div></div></div>`;
+  if(!H.terms.length)return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">以前的進度表</h2><p class="mut">還沒有以前的進度表（以前的學期沒有排過內容）。</p><div style="text-align:right"><button class="btn ghost" data-a="hClose">關閉</button></div></div></div>`;
+  const tm=H.terms.find(x=>x.term===H.term)||H.terms[0],V=histView();
+  let body='';
+  if(V){
+    const sw=V.weeks,tw=tWeeks(t),wl=w=>w.vac?`假 ${w.label}`:`第 ${w.n} 週　${w.label}`;
+    body=`<p class="mut" style="margin:6px 0">點一格＝複製這一格；點週次旁的「⧉整週」＝複製這一週（全部班級）。複製之後，回到本學期的進度表，點要貼的地方（不一定同一週）。</p>${gridHTML(V.table,V)}
+    <div class="card" style="margin:10px 0 0"><div class="cb" style="padding-top:10px"><b>整段複製</b><span class="mut" style="display:block;font-size:13px">從以前的第 <b>${H.a+1}</b> 到 <b>${H.b+1}</b> 週（${esc(sw[H.a]?wl(sw[H.a]):'')} ～ ${esc(sw[H.b]?wl(sw[H.b]):'')}），貼到本學期的哪一週開始？</span>
+      <div class="rgrow" style="margin-top:6px"><label>來源從 <select class="in" data-k="hFrom">${sw.map((w,i)=>`<option value="${i}" ${i===H.a?'selected':''}>${esc(wl(w))}</option>`).join('')}</select></label><label>到 <select class="in" data-k="hTo">${sw.map((w,i)=>`<option value="${i}" ${i===H.b?'selected':''}>${esc(wl(w))}</option>`).join('')}</select></label></div>
+      <div class="rgrow"><label>貼到本學期 <select class="in" data-k="hAt">${tw.map((w,i)=>`<option value="${i}" ${i===H.c?'selected':''}>${esc(wl(w))}</option>`).join('')}</select> 開始</label></div>
+      <label style="display:flex;gap:6px;align-items:center;margin:6px 0"><input type="checkbox" data-k="hOver" ${H.over?'checked':''}> 本學期已經有內容的格子也換掉</label>
+      <button class="btn sm" data-a="hRange">整段複製過來</button></div></div>`;
+  }
+  return `<div class="modal"><div class="mb" style="max-width:min(96vw,760px)"><h2 style="margin:0 0 6px">以前的進度表</h2>
+    <p class="mut" style="margin:0 0 6px">貼進這張：${esc(t.dept)}・${esc(t.course)}（${t.classes.map(c=>esc(c.cls)).join('、')}）</p>
+    <div class="rgrow"><label>學期 <select class="in" data-k="hTerm">${H.terms.map(x=>`<option ${x.term===tm.term?'selected':''}>${esc(x.term)}</option>`).join('')}</select></label></div>
+    <select class="in" style="width:100%;margin:6px 0" data-k="hTable" aria-label="哪一張進度表">${tm.tables.map(x=>`<option value="${esc(x.id)}" ${x.id===H.tid?'selected':''}>${esc(x.dept)}・${esc(x.course)}（${x.classes.map(c=>esc(c.cls)).join('、')}）</option>`).join('')}</select>
+    ${H.busy?'<p class="load">載入中…</p>':body}
+    <div style="text-align:right;margin-top:10px"><button class="btn ghost" data-a="hClose">關閉</button></div></div></div>`;
+}
+function importResModal(){
+  const r=S.sc.importRes,ex=r.skipped.filter(s=>/已經有內容/.test(s)).length;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">${r.copied?`已複製 ${r.copied} 格`:'沒有複製任何格子'}</h2>
+    ${r.skipped.length?`<p class="mut" style="margin:0 0 6px">有 ${r.skipped.length} 格沒有複製：</p><ul style="margin:0 0 8px;padding-left:1.2em;font-size:14px">${r.skipped.slice(0,20).map(s=>`<li>${esc(s)}</li>`).join('')}${r.skipped.length>20?`<li>…還有 ${r.skipped.length-20} 格</li>`:''}</ul>`:'<p class="mut">複製好了，但<b>還沒儲存</b>。按「儲存進度表」才會生效，開單老師才會在「確認重量」看到。</p>'}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">${ex?`<button class="btn ghost" data-a="impOver">把已經有內容的 ${ex} 格也換掉</button>`:''}<button class="btn" data-a="impDone">好</button></div></div></div>`;
+}
+/* 接上一次有實習的那週：單數組、雙數組互換，老師跟著產品走 */
+function prevLesson(t,cl,w,day){for(let k=w-1;k>=1;k--){const c=schedCell(t.id,k,cl,day);if(c&&c.kind==='lesson')return c;}return null;}
+function swappedCell(prev){
+  const n=prev.groups.length;
+  if(prev.mode!=='split'||n<2)return {kind:'lesson',mode:prev.mode,label:prev.label||'',groups:prev.groups.map(g=>({teacher:g.teacher,pids:g.pids.slice()}))};
+  return {kind:'lesson',mode:'split',label:'',groups:prev.groups.map((g,i)=>{const s=prev.groups[(i+1)%n];return {teacher:s.teacher,pids:s.pids.slice()};})};
+}
+/* 進度表的格子：照原本紙本進度表的樣子，一週一列，每個班（分組的話再分單數組、雙數組）一欄，點格子來排 */
+function gridHTML(t,H){
+  const cellAt=(w,cl,day)=>H?H.cell(w,cl,day):schedCell(t.id,w,cl,day);
+  const d=S.sc.data,gl=t.groups||[],gN=Math.max(1,gl.length),me=S.user.email,single=t.classes.length===1,reg=single?clDays(t.classes[0]):[0];
+  const dayKey=(c,x)=>{const rd=clDays(c);return rd.length===1&&x===rd[0]?0:x;};             // 只有一天上課的班，平常那一天的格子存成 0
+  const rowDays=w=>{                                                                          // 這一週要列哪幾天：平常上課日 + 這週加練的日子
+    if(!single)return [0];const c=t.classes[0],out=reg.slice();
+    for(let x=1;x<=7;x++)if(!reg.includes(x)&&cellAt(w.n,c.cls,x))out.push(x);
+    return out.sort((a,b)=>a-b);};
+  const td=(w,c,x)=>{
+    const day=single?dayKey(c,x):0,cell=cellAt(w.n,c.cls,day),cls='sc'+((!H&&pendMap()[pkey(t.id,w.n,c.cls,day)])?' pd':'');
+    const pm=!H&&S.sc.clip&&S.sc.clip.tid===t.id,wkClip=pm&&S.sc.clip.kind==='week';
+    const at=`data-a="${H?'hCopyCell':wkClip?'scPasteWeek':pm?'scPaste':'scEdit'}" data-w="${w.n}" data-cl="${esc(c.cls)}" data-d="${day}"`;
+    const cp=(pm||H)?'':`<button class="cp" data-a="scCopyClip" data-w="${w.n}" data-cl="${esc(c.cls)}" data-d="${day}" title="複製這一格，再點別的格子貼上">⧉</button>`;
+    const dr=H?'':` draggable="true"`;
+    if(!cell){
+      if(H)return `<td class="sc empty" colspan="${gN}"></td>`;
+      const pv=!pm&&gl.length>=2&&prevLesson(t,c.cls,w.n,day);
+      return `<td class="${cls} empty" colspan="${gN}" ${at}>${pv?`<button class="sw" data-a="scSwap" data-w="${w.n}" data-cl="${esc(c.cls)}" data-d="${day}" title="接上一次有實習的那週，單雙互換">⇄ 接上週互換</button>`:(pm?'貼上':'＋')}</td>`;
+    }
+    if(cell.kind==='note')return `<td class="${cls} note" colspan="${gN}" ${at}${dr}>${esc(cell.note)}${cp}</td>`;
+    const one=g=>`${esc(cell.label||g.pids.map(pTitle).join('、'))}<small>${esc(uName(g.teacher))}</small>`;
+    if(cell.mode==='joint'||gN===1){const g=cell.groups[0];return `<td class="${cls}${g.teacher===me?' me':''}" colspan="${gN}" ${at}${dr}>${one(g)}${cp}</td>`;}
+    return cell.groups.map((g,gi)=>`<td class="${cls}${g.teacher===me?' me':''}" ${at}${dr}>${g.pids.length?one(g):''}${gi===0?cp:''}</td>`).join('');
+  };
+  const perDay=single;
+  let rows='';
+  const wf=S.sc.wf||'all';
+  (H?H.weeks:tWeeks(t)).filter(w=>H||wf==='all'||(wf==='vac'?w.vac:!w.vac)).forEach(w=>{
+    const dr=perDay?rowDays(w):[0];
+    dr.forEach((x,di)=>{
+      const ex=perDay&&!reg.includes(x);
+      rows+=`<tr>${di===0?`<th class="wkc ${w.vac?'vac':''}" rowspan="${dr.length}" ${!H&&S.sc.clip&&S.sc.clip.tid===t.id&&S.sc.clip.kind==='week'?`data-a="scPasteWeek" data-w="${w.n}" style="cursor:pointer"`:''}>${w.vac?'假':w.n}${H?`<button class="ad" data-a="hCopyWeek" data-w="${w.n}" title="複製這一週（全部班級）">⧉整週</button>`:(perDay&&d.canEditCells!==false?`<button class="ad" data-a="scAddDay" data-w="${w.n}" title="這一週額外加一天">＋日</button>`:'')}${perDay?'<small>'+md(w.mon)+'起</small>':`<small>${w.label.replace('~','<br>~')}</small>`}</th>`:''}${perDay?`<th class="dtc">${md(addDays(w.mon,x-1))}${ex?'<small>加練</small>':''}</th>`:''}${t.classes.map(c=>td(w,c,x)).join('')}</tr>`;
+    });
+  });
+  const many=!H&&t.classes.length*gN>4,ncol=t.classes.length*gN;
+  return `<div class="sgw"><table class="sgrid ${S.sc.clip&&S.sc.clip.tid===t.id?'pm':''}" ${many?`style="width:${Math.round(62+(perDay?74:0)+ncol*(gN>1?72:92))}px;max-width:none"`:''}><colgroup><col style="width:3.9em">${perDay?'<col style="width:4.6em">':''}${many?Array(ncol).fill(`<col style="width:${gN>1?72:92}px">`).join(''):''}</colgroup><thead><tr><th rowspan="${gN>1?2:1}">週</th>${perDay?`<th rowspan="${gN>1?2:1}">日</th>`:''}${t.classes.map(c=>`<th colspan="${gN}">${esc(c.cls)}<small>${daysText(clDays(c),true)}</small></th>`).join('')}</tr>${gN>1?`<tr>${t.classes.map(()=>gl.map(l=>`<th class="g">${esc(l)}</th>`).join('')).join('')}</tr>`:''}</thead><tbody>${rows}</tbody></table></div>`;
+}
+function schedHTML(){
+  const d=S.sc.data;
+  if(!d)return `<p class="load">${S.sc.busy?'載入中…':'還沒載入'}</p>`;
+  const de=S.sc.datesEd;
+  let h=`<div style="margin:0 0 8px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span>${d.canConfig&&!de?'<button class="btn sm ghost" data-a="scDates">設定日期</button>':''}</div>
+    ${de?`<div class="rgrow" style="margin-top:8px"><label>開學日 <input class="in" type="date" data-k="scStart" value="${esc(de.start)}"></label><label>結業式 <input class="in" type="date" data-k="scEnd" value="${esc(de.end)}"></label></div><p class="mut" style="margin:4px 0 8px">開學日選那一週的任何一天都可以，從那一週的週一開始排。</p><button class="btn sm" data-a="scDatesSave">儲存</button> <button class="btn sm ghost" data-a="scDatesNo">取消</button>`:(!d.start&&!d.canConfig?'<p class="mut" style="margin:6px 0 0">請技士、科主任或管理者先設定開學日和結業式。</p>':'')}</div>`;
+  const pc=pendCount();
+  if(pc)h+=`<div class="spill warn" style="flex-wrap:wrap;position:sticky;top:0;z-index:6"><span style="flex:1;min-width:11em">✎ 有 <b>${pc}</b> 格改了還沒儲存。<b>按「儲存進度表」才會生效</b>，排給老師的材料單才會出現。</span><button class="btn sm" data-a="scSave" ${S.busy?'disabled':''}>${S.busy||'儲存進度表'}</button><button class="btn ghost sm" data-a="scDiscard">放棄修改</button></div>`;
+  h+=reqCardHTML(d);
+  if(!d.weeks.length&&!d.tables.some(x=>x.weeks&&x.weeks.length))return h;
+  if(!d.tables.length)return h+`<p class="sub">這學期還沒有進度表。${d.canConfig?'請到上面「設定每學期要有哪些進度表」設定。':'請技士、科主任、管理者先設定這學期要有哪些進度表。'}</p>`;
+  let t=schedTable(S.sc.tab)||d.tables[0];S.sc.tab=t.id;
+  const dept=t.dept,list=d.tables.filter(x=>x.dept===dept);
+  h+=`<div class="seg" role="group" aria-label="部別" style="margin-bottom:8px">${DEPTS.map(x=>`<button data-a="scDept" data-d="${x}" class="${dept===x?'on':''}">${x}</button>`).join('')}</div>
+  <select class="in" style="width:100%;margin-bottom:8px;font-weight:700" data-k="scTabSel" aria-label="哪一門課的進度表">${list.map(x=>`<option value="${esc(x.id)}" ${x.id===t.id?'selected':''}>${esc(x.title||x.course)}（${x.classes.map(c=>esc(c.cls)).join('、')}）</option>`).join('')}</select>
+  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><span class="mut" style="font-size:13px">${t.classes.map(c=>`${esc(c.cls)}：${daysText(clDays(c))}`).join('　')}${t.groups.length?`　分組：${esc(t.groups.join('、'))}`:''}</span>${d.canConfig?(S.sc.delAsk===t.id?`<span><button class="btn sm danger" data-a="scDelYes">確定刪除這張</button> <button class="btn sm ghost" data-a="scDelNo">取消</button></span>`:`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日、分組、授課老師</button> <button class="btn sm ghost" data-a="scDelAsk">刪除</button></span>`):(t.classes.length===1?`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日</button></span>`:'')}</div>
+  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${t.ext?`寒暑假加課：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}`:'寒暑假也要上課？'}</span><span><button class="btn sm ghost" data-a="hOpen">叫出以前的進度表</button> <button class="btn sm ghost" data-a="scExtra">${t.ext?'修改寒暑假的週':'＋ 加寒暑假的週'}</button></span></div>
+  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${(t.teachers&&t.teachers.length)?`授課老師：${t.teachers.map(uName).map(esc).join('、')}`:(d.canConfig?'還沒指定授課老師：現在所有老師都看得到、都能排。':'')}</span><span><button class="btn sm ghost" data-a="scRefresh">重新整理</button> <button class="btn sm" data-a="pOpen">匯出列印進度表</button></span></div>
+  <p class="sub" style="margin:0 0 6px">點格子來排。<span class="tg" style="background:#FFF6D0">黃色</span>是你開單的，灰色是放假、考前複習等不排實習的。</p>`;
+  const tw=tWeeks(t),hasVac=tw.some(w=>w.vac),wf=S.sc.wf||'all';
+  const filt=hasVac?`<div class="seg" role="group" aria-label="看哪些週" style="margin:0 0 8px">${[['all','全部'],['sem','只看學期'],['vac','只看寒暑假']].map(([v,n])=>`<button data-a="scWf" data-v="${v}" class="${wf===v?'on':''}">${n}</button>`).join('')}</div>`:'';
+  if(!tw.length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>這張進度表還沒有週</b><p class="mut" style="margin:6px 0 0">${d.weeks.length?'':'這學期的開學日和結業式還沒設定。'}只想開寒暑假的單，按上面的「＋ 加寒暑假的週」，選寒暑假要上課的那一段日期就可以了，不用設定學期日期。</p></div></div>`;
+  const clip=S.sc.clip&&S.sc.clip.tid===t.id?S.sc.clip:null;
+  const cb=clip?`<div class="spill warn" style="flex-wrap:wrap;position:sticky;top:0;z-index:5"><span style="flex:1;min-width:10em">已複製「${esc(clip.desc)}」。${clip.kind==='week'?'點要貼上的那一週（左邊的週次，或那一週的任何一格），可以連續貼好幾週。':'點要貼上的格子，可以連續貼好幾格。'}</span><button class="btn ghost sm" data-a="scClipEnd">結束複製</button></div>`:`<p class="mut" style="margin:0 0 6px;font-size:12.5px">複製格子：點格子右上角的「⧉」再點要貼的格子；電腦上也可以直接把格子拖到別的格子。</p>`;
+  return h+filt+cb+gridHTML(t)+`<p class="mut" style="font-size:12.5px;margin:8px 0 0">排好之後可以先按「匯出列印進度表」拿去跟老師們討論，不用送給技士。</p>`;
+}
+function mkGroups(t,mode,me0){
+  const me=(!(t.teachers&&t.teachers.length)||t.teachers.includes(me0))?me0:'';
+  return mode==='split'?(t.groups||[]).map((l,i)=>({label:l,teacher:i===0?(me||''):'',pids:[],q:''})):[{label:'',teacher:me||'',pids:[],q:''}];
+}
+/* 找產品的兩個方法：打字搜尋（找得到全部），或按一、二、三年級、分類、共用的分頁一張一張挑 */
+function pickTabs(){return [...GRADES.map(g=>[g,gname(g)]),...(S.cat.categories||[]).map(n=>['c:'+n,n]),['共','共用'],['自','我自創的']];}
+function browseList(tab){
+  const half=S.term.endsWith('-2')?'下':'上',all=usableProducts();
+  if(tab==='共')return {flat:all.filter(p=>p.custom&&p.shared&&!p.category)};
+  if(tab==='自')return {flat:all.filter(p=>p.custom&&p.owner===S.user.email)};
+  if(tab.startsWith('c:'))return {flat:all.filter(p=>p.category===tab.slice(2))};
+  const l=all.filter(p=>gradeOf(p)===tab);
+  return {sems:[half,half==='上'?'下':'上'].map(hh=>[hh,l.filter(p=>!p.custom&&p.sem&&p.sem[1]===hh)]).concat([['新增的',l.filter(p=>p.custom||!p.sem)]])};
+}
+function resHTML(g){
+  const e=S.sc.cellEd,gr=e.groups[g],q=(gr.q||'').trim().toLowerCase(),chosen=new Set(gr.pids);
+  const btn=p=>`<button data-a="scAddP" data-g="${g}" data-p="${esc(p.pid)}">＋ ${esc(p.title)} <small>${esc(p.serving||'')}</small></button>`;
+  const newBtn=`<button class="btn sm ghost" style="margin-top:6px" data-a="scNewProd" data-g="${g}">找不到？自己建一張新的材料單${q?`「${esc(gr.q.trim())}」`:''}</button>`;
+  if(q){
+    const list=usableProducts().filter(p=>!chosen.has(p.pid)&&p.title.toLowerCase().includes(q)).slice(0,20);
+    return (list.length?`<div class="sres">${list.map(btn).join('')}</div>`:'<p class="mut" style="margin:4px 0">找不到。</p>')+newBtn;
+  }
+  const tab=gr.tab||'一',bl=browseList(tab);
+  const body=bl.flat?bl.flat.filter(p=>!chosen.has(p.pid)).map(btn).join(''):bl.sems.map(([nm,l])=>{const x=l.filter(p=>!chosen.has(p.pid));return x.length?`<div class="mut" style="padding:4px 9px;font-size:12px;background:#F3F7F5">${nm==='新增的'?'新增的材料單':nm+'學期'}</div>${x.map(btn).join('')}`:'';}).join('');
+  return `<div class="tabs" style="flex-wrap:wrap;margin:6px 0 4px">${pickTabs().map(([k,n])=>`<button class="gt ${tab===k?'on':''}" data-a="scPTab" data-g="${g}" data-t="${esc(k)}">${esc(n)}</button>`).join('')}</div>${body?`<div class="sres" style="max-height:16em">${body}</div>`:'<p class="mut" style="margin:4px 0">這個分頁的產品都選了，或還沒有材料單。</p>'}${newBtn}`;
+}
+function extraModal(){
+  const e=S.sc.extraEd,t=schedTable(e.id);
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">寒暑假的週</h2><p class="mut" style="margin:0 0 8px">${esc(t.dept)}・${esc(t.course)}。寒暑假也要上課（例如技藝競賽選手）的話，選那一段日期，那幾週會接在學期後面（或前面）出現在進度表，用日期表示，不影響學期的週次。</p>
+    <div class="rgrow"><label>從 <input class="in" type="date" data-k="scXFrom" value="${esc(e.from)}"></label><label>到 <input class="in" type="date" data-k="scXTo" value="${esc(e.to)}"></label></div>
+    <p class="mut" style="margin:6px 0 0">例如寒假：學期結束後的第一個週一，到開學前的週五。已經排了課的週，不能縮掉。</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px">${t.ext?'<button class="btn ghost" data-a="scExtraClear">不要寒暑假的週了</button>':''}<button class="btn ghost" data-a="scExtraNo">取消</button><button class="btn" data-a="scExtraSave">儲存</button></div></div></div>`;
+}
+function conflictModal(){
+  const c=S.sc.conflict;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">有 ${c.list.length} 格，別人剛改過了</h2><p class="mut" style="margin:0 0 8px">你打開之後，別的老師先改了這幾格，還沒有蓋掉。要用哪一個？</p>
+    <ul style="margin:0 0 10px;padding-left:1.2em;font-size:14px">${c.list.slice(0,12).map(x=>`<li><b>${esc(x.where)}</b>：現在是「${esc(x.now)}」${x.by?`（${esc(x.by)} 改的）`:''}</li>`).join('')}${c.list.length>12?`<li>…還有 ${c.list.length-12} 格</li>`:''}</ul>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn ghost" data-a="scConfNo">用別人的（我這幾格不改了）</button><button class="btn" data-a="scConfYes">用我的（換掉別人改的）</button></div></div></div>`;
+}
+function printModal(){
+  const p=S.sc.print,t=schedTable(S.sc.tab),pc=pendCount();
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">匯出列印教學進度表</h2><p class="mut" style="margin:0 0 8px">拿去跟老師們討論用。<b>不會送給技士</b>，也不會產生材料單。A4，一張進度表一頁。${pc&&!p.blank?`<b>包含你還沒儲存的 ${pc} 格修改。</b>`:''}</p>
+    <b style="display:block;margin-top:4px">要印什麼</b>
+    <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pcontent" data-k="pContent" value="cur" ${!p.blank?'checked':''}> <span>目前的進度表（有排好的內容）</span></label>
+    <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pcontent" data-k="pContent" value="blank" ${p.blank?'checked':''}> <span>空白格式（週次、日期、班級、分組都在，格子是空的，可以手寫）</span></label>
+    <b style="display:block;margin-top:8px">哪幾張</b>
+    <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="one" ${p.scope==='one'?'checked':''}> <span>只有這一張（${esc(t.dept)}・${esc(t.course)}）</span></label>
+    <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="all" ${p.scope==='all'?'checked':''}> <span>全部進度表（你看得到的每一張，每張一頁）</span></label>
+    ${p.blank?'':`<label style="display:flex;gap:8px;align-items:center;padding:8px 0 0"><input type="checkbox" data-k="pMine" ${p.mine?'checked':''}> <span>把我開單的格子標黃色</span></label>`}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="pNo">取消</button><button class="btn" data-a="pGo">匯出</button></div></div></div>`;
+}
+function pasteAskModal(){
+  const a=S.sc.pasteAsk;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">這一格已經有內容了</h2><p style="margin:0 0 8px">「${esc(a.cl)}」這一格現在是<b>${esc(a.had)}</b>，要換成複製的<b>${esc(cellDesc(a.cell))}</b>嗎？</p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-a="scPasteNo">不要換</button><button class="btn" data-a="scPasteYes">換成複製的</button></div></div></div>`;
+}
+function dayPickModal(){
+  const p=S.sc.dayPick,t=schedTable(S.sc.tab),w=tWeeks(t).find(x=>x.n===p.w);
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${wLabel(w)}　加一天</h2><p class="mut" style="margin:0 0 8px">平常是${esc(daysText(clDays(t.classes[0])))}。這一週想額外加哪一天？（例如禮拜六也要練）</p>
+    ${p.days.length?`<div class="ccs">${p.days.map(x=>`<button class="cc" data-a="scDayGo" data-n="${x}">週${WDN[x%7]}　${md(addDays(w.mon,x-1))}</button>`).join('')}</div>`:'<p class="mut">這一週每一天都排過了。</p>'}
+    <div style="text-align:right;margin-top:12px"><button class="btn ghost" data-a="scDayNo">取消</button></div></div></div>`;
+}
+function scCellModal(){
+  const e=S.sc.cellEd,t=schedTable(e.tid),c=t.classes.find(x=>x.cls===e.cl),w=tWeeks(t).find(x=>x.n===e.w);
+  const dayN=e.day||clDays(c)[0],date=w?addDays(w.mon,dayN-1):'';
+  const users=S.sc.data.users.filter(u=>!(t.teachers&&t.teachers.length)||t.teachers.includes(u.email)),pv=(t.groups||[]).length>=2?prevLesson(t,e.cl,e.w,e.day):null;
+  const gBox=(g,i)=>`<div class="card" style="margin:8px 0"><div class="cb" style="padding-top:10px">${g.label?`<b>${esc(g.label)}</b>`:''}
+    <label class="lbl">開材料單的老師</label><select class="in" data-k="scteacher" data-g="${i}"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===g.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
+    <label class="lbl" style="margin-top:8px">上什麼產品（可以選好幾個）</label>
+    <div>${g.pids.map(p=>`<span class="pchip2">${esc(pTitle(p))}<button data-a="scRemP" data-g="${i}" data-p="${esc(p)}" aria-label="拿掉">×</button></span>`).join('')||'<span class="mut">還沒選</span>'}</div>
+    <input class="in" style="margin-top:6px" data-k="scq" data-g="${i}" placeholder="打字搜尋產品，或用下面的年級分頁挑…" value="${esc(g.q||'')}"><div id="scres_${i}">${resHTML(i)}</div></div></div>`;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${wLabel(w)}　${esc(e.cl)}</h2><p class="mut" style="margin:0 0 8px">${esc(t.course)}・${daysText([dayN])} ${md(date)}${clDays(c).includes(dayN)?'':'　<span class="tg">加練</span>'}</p>
+    <div class="seg" style="margin-bottom:8px"><button data-a="scKind" data-k="lesson" class="${e.kind==='lesson'?'on':''}">上實習</button><button data-a="scKind" data-k="note" class="${e.kind==='note'?'on':''}">不排實習（放假…）</button></div>
+    ${e.kind==='note'?`<label class="lbl">寫什麼？</label><input class="in" style="width:100%" data-k="scnote" maxlength="40" value="${esc(e.note)}" placeholder="例如：教師節放假">
+      <div style="margin-top:6px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="scChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`
+    :`${pv?`<button class="btn sm" style="margin-bottom:8px" data-a="scSwapFill">⇄ 接上一次有實習的那週（單雙互換，老師跟著產品走）</button>`:''}
+      ${(t.groups||[]).length>=2?`<div class="seg" style="margin-bottom:6px"><button data-a="scMode" data-m="joint" class="${e.mode==='joint'?'on':''}">全班一起上（一位老師開單）</button><button data-a="scMode" data-m="split" class="${e.mode==='split'?'on':''}">分組上課（${esc(t.groups.join('、'))}）</button></div>`:''}
+      ${e.mode==='split'?'<p class="mut" style="margin:0 0 4px">分組教學：每一組各有自己的老師和產品。</p>':'<p class="mut" style="margin:0 0 4px">全班一起上：一位老師開所有產品的材料單。</p>'}
+      ${e.groups.map(gBox).join('')}
+      <label class="lbl">進度表上顯示的文字（不填就顯示產品名稱，例如「月餅週」）</label><input class="in" style="width:100%" data-k="sclabel" maxlength="30" value="${esc(e.label)}">`}
+    ${e.has?`<div class="card" style="margin:12px 0 0"><div class="cb" style="padding-top:10px"><b>複製這一格（用已儲存的內容）</b><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${t.classes.filter(x=>x.cls!==e.cl).map(x=>`<button class="btn sm ghost" data-a="scCopyTo" data-cl="${esc(x.cls)}">→ ${esc(x.cls)}（同一週）</button>`).join('')}<button class="btn sm ghost" data-a="scCopyClip">複製，再點別的格子貼上</button></div></div></div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px">${e.has?'<button class="btn ghost" data-a="scCellClear">清除這格</button>':''}<button class="btn ghost" data-a="scCellNo">取消</button><button class="btn" data-a="scCellSave">儲存</button></div></div></div>`;
+}
+/* 修改一張進度表的上課日（每週幾）和分組（技士、科主任、管理者） */
+function scTableModal(){
+  const e=S.sc.tableEd,t=schedTable(e.id),one=e.classes.length===1;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${S.sc.data.canConfig?'修改上課日、分組、授課老師':'修改每週上課日'}</h2><p class="mut" style="margin:0 0 8px">${esc(t.dept)}・${esc(t.course)}</p>
+    ${e.classes.map(c=>`<div class="prow"><b>${esc(c.cls)}</b> <span class="mut">每週上課日：${esc(daysText(c.days))}</span><div class="ccs" style="margin-top:4px">${[1,2,3,4,5].map(n=>`<button class="cc ${c.days.includes(n)?'on':''}" data-a="scTDay" data-cl="${esc(c.cls)}" data-n="${n}">週${WDN[n]}</button>`).join('')}${one?`<button class="cc ${c.days.length===5?'on':''}" data-a="scTDay" data-cl="${esc(c.cls)}" data-n="all">每天</button>`:''}</div>${one?`<div class="rgrow" style="margin-top:6px"><label>從 <select class="in" data-k="scTFrom">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.min(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label><label>到 <select class="in" data-k="scTTo">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.max(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label></div>`:''}</div>`).join('')}
+    ${one?'<p class="mut" style="margin:4px 0 0">只有這一個班的話，可以選好幾天，或用「從…到…」選週幾到週幾（不一定要週一到週五）。某一週想額外加一天，到進度表按那一週的「＋日」。</p>':''}
+    ${!S.sc.data.canConfig?'':t.dept==='夜間部'?'<p class="mut" style="margin:8px 0 0">夜間部的實習課只有一位老師，不分組。</p>':`<label class="lbl" style="margin-top:8px">分組上課？（填組別，用「、」隔開，例如：單數組、雙數組。不分組就留空）</label><input class="in" style="width:100%" data-k="sctgroups" maxlength="20" value="${esc(e.groups)}">`}
+    ${S.sc.data.canConfig?`<label class="lbl" style="margin-top:10px">這學期的授課老師（進度表只能排這幾位，也只會出現在這幾位老師的教學進度表；都不選 = 所有老師）</label><div class="ccs">${S.sc.data.users.map(u=>`<button class="cc ${e.teachers.includes(u.email)?'on':''}" data-a="scTTeach" data-em="${esc(u.email)}" aria-pressed="${e.teachers.includes(u.email)}">${esc(u.name)}</button>`).join('')}</div>`:''}
+    <p class="mut" style="margin:8px 0 0">改了上課日，排給老師的課日期會一起改。</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="scTableNo">取消</button><button class="btn" data-a="scTableSave">儲存</button></div></div></div>`;
+}
+
+/* ---------- 叫出以前的紀錄 ---------- */
+function histSummary(pid,x){
+  const its=S.cat.items[pid]||[],by=id=>its.find(i=>i.id===id),out=[];
+  if(x.title)out.push('產品名稱：'+x.title);
+  if(x.scale&&x.scale!==1)out.push(`份量 ×${fmt(x.scale)}${x.yFrom&&x.yTo?`（每組 ${fmt(x.yFrom)} → ${fmt(x.yTo)}${x.yUnit||''}）`:''}`);
+  Object.keys(x.ov||{}).forEach(id=>{const it=by(id);if(it)out.push(`${it.raw} 改成 ${fmt(x.ov[id])}${it.unit||''}`);});
+  Object.keys(x.conv||{}).forEach(id=>{const it=by(id),c=x.conv[id];if(it)out.push(`${it.raw} 改成 ${c.mode==='text'?c.text:fmt(c.mode==='per'?c.per:c.total)+(c.unit||'')}`);});
+  (x.extra||[]).forEach(r=>out.push('另加：'+r.raw));
+  (x.omit||[]).forEach(id=>{const it=by(id);if(it)out.push('刪掉：'+it.raw);});
+  return out;
+}
+function toolsSummary(tools){
+  return [['技士','技士備'],['小老師','小老師備']].map(([w,l])=>{const t=(tools||[]).filter(x=>x.who===w&&x.name);return t.length?`${l}：${t.map(x=>x.name+(x.qty?' '+x.qty:'')).join('、')}`:'';}).filter(Boolean);
+}
+function histModal(){
+  const u=S.hu,e=S.entries[u.i],tl=u.mode==='tools';
+  const list=u.list===null?null:(tl?u.list.filter(x=>x.tools&&x.tools.length):u.list.filter(x=>histSummary(e.pid,x).length||!x.tools));
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${tl?'以前的器具':'以前的紀錄'}</h2><p class="mut" style="margin:0 0 8px">「${esc(titleOf(e))}」以前${tl?'調整過的器具':'改過的樣子'}。選一筆，會套到這一堂（${tl?'只換器具，材料不會動':'日期、班級、組數、器具不會動'}）。</p>
+    ${list===null?'<p class="load">找紀錄中…</p>':(list.length?list.map(x=>{const k=u.list.indexOf(x);return `<div class="card" style="margin:6px 0"><div class="cb" style="padding-top:10px"><b>${esc(x.term)}　${esc(x.date)}（${WDN[new Date(x.date+'T00:00:00Z').getUTCDay()]}）</b><small class="mut" style="display:block">${esc(x.course)}・${esc(x.cls)}${x.group?'（'+esc(x.group)+'）':''}</small>
+      <ul style="margin:6px 0;padding-left:1.2em;font-size:14px">${(tl?toolsSummary(x.tools):histSummary(e.pid,x)).map(s=>`<li>${esc(s)}</li>`).join('')||'<li class="mut">（改過，但都是預設材料單已經沒有的項目）</li>'}</ul><button class="btn sm" data-a="histApply" data-k="${k}">套用到這一堂</button></div></div>`;}).join(''):`<p class="mut">這個產品，你以前沒有${tl?'調整過器具':'改過'}的紀錄。</p>`)}
+    <div style="text-align:right;margin-top:10px"><button class="btn ghost" data-a="histNo">關閉</button></div></div></div>`;
+}
+
+
+/* 教學進度表送單狀況：進度表每一堂課，開單的老師送出了沒（同一門課哪些老師還沒送） */
+const SS_TXT={sent:'已匯出',draft:'老師還沒匯出',missing:'沒人開單'};
+function ssUnsent(courseKey){return S.ss.items.filter(i=>i.status!=='sent'&&(!courseKey||i.dept+'||'+i.course===courseKey));}
+function remindText(courseKey){
+  const its=ssUnsent(courseKey),cs=[...new Set(its.map(i=>i.dept+'||'+i.course))];
+  return cs.map(ck=>{
+    const l=its.filter(i=>i.dept+'||'+i.course===ck),ts=[...new Set(l.map(i=>i.teacherName))];
+    return `【材料單提醒】${S.term} ${l[0].dept}・${l[0].course}\n還沒送出的課：\n`+ts.map(n=>`${n}：`+l.filter(i=>i.teacherName===n).map(i=>`${md(i.date)}${i.cls}${i.group?'（'+i.group+'）':''} ${i.title}`).join('；')).join('\n')+'\n請到「員林農工材料單系統」的「教學進度表」→「確認重量」確認後，再到「匯出」送出。';
+  }).join('\n\n');
+}
+function ssReqLines(){
+  const rq=(S.ss&&S.ss.required||[]).filter(x=>!x.skip),no=rq.filter(x=>x.state==='no-table'),part=rq.filter(x=>x.state==='partial'||x.state==='empty');
+  const nm=x=>`${esc(x.dept)}・${esc(x.course)}（${x.classes.filter(k=>x.state==='no-table'?!k.hasTable:k.state==='partial'||k.state==='empty').map(k=>esc(k.cls)).join('、')}）`;
+  return (no.length?`<div style="margin-bottom:6px"><b style="color:var(--err)">還沒建進度表：</b>${no.map(nm).join('、')}</div>`:'')+(part.length?`<div style="margin-bottom:6px"><b style="color:#6B4E00">進度表還沒排完：</b>${part.map(nm).join('、')}</div>`:'');
+}
+function ssHTML(){
+  const d=S.ss;if(!d)return '';
+  const all=d.items,un=ssUnsent(),scope=S.ssAll?'整個學期':'這段日期';
+  if(!all.length)return `<div class="card"><div class="cb" style="padding-top:12px"><b>教學進度表送單狀況</b>${ssReqLines()}<p class="mut" style="margin:6px 0 0">${scope}進度表沒有排實習的課。</p><label class="rgrow" style="margin-top:6px"><span><input type="checkbox" data-k="ssRange" ${!S.ssAll?'checked':''}> 只看上面選的日期</span></label></div></div>`;
+  const nSent=all.length-un.length,miss=all.filter(i=>i.status==='missing').length,cs=[...new Set(all.map(i=>i.dept+'||'+i.course))];
+  const block=ck=>{
+    const l=all.filter(i=>i.dept+'||'+i.course===ck),u=l.filter(i=>i.status!=='sent'),sent=l.length-u.length,ts=[...new Set(u.map(i=>i.teacherName))];
+    return `<div class="prow"><b>${esc(l[0].dept)}・${esc(l[0].course)}</b> <span class="mut">已送 ${sent} / 共 ${l.length} 堂</span>${u.length?'':' <span class="tg">全部送出 ✓</span>'}
+      <div class="pbar3"><i style="width:${Math.round(sent/l.length*100)}%"></i></div>
+      ${u.length?`<div style="margin-bottom:4px"><b style="color:var(--err)">還沒送出的老師：</b>${ts.map(n=>`${esc(n)} ${u.filter(i=>i.teacherName===n).length} 堂`).join('、')}</div>
+        ${u.map(i=>`<div class="parow"><span>${md(i.date)} ${esc(i.cls)}${i.group?'（'+esc(i.group)+'）':''} ${esc(i.title)}<small>${esc(i.teacherName)}</small></span><span class="tg" style="${i.status==='missing'?'background:#F8D7D3;color:#8C1D18':''}">${SS_TXT[i.status]}</span></div>`).join('')}
+        <div style="margin-top:6px"><button class="btn sm ghost" data-a="remindOpen" data-c="${esc(ck)}">複製催單文字</button></div>`:''}</div>`;
+  };
+  return `<div class="card"><button class="ch" data-a="ssToggle"><span><b>教學進度表送單狀況</b><small>${scope}排了 ${all.length} 堂：已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}${miss?`（其中 ${miss} 堂沒人開單）`:''}</small></span><span>${S.ssOpen?'▴':'▾'}</span></button>
+    ${S.ssOpen?`<div class="cb"><p class="mut" style="margin:0 0 6px">進度表排的每一堂課，都要有老師確認送出。這裡依課程列出還沒送的（預設看整個學期，也可以只看上面選的日期）。</p>${ssReqLines()}${cs.map(block).join('')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}<label><input type="checkbox" data-k="ssRange" ${!S.ssAll?'checked':''}> 只看上面選的日期</label></div></div>`:''}</div>`;
+}
+function remindModal(){
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">催單文字</h2><p class="mut" style="margin:0 0 6px">按住文字全選、複製，貼到 LINE 群組就好。</p><textarea class="in" id="remindTxt" style="width:100%;height:14em" readonly>${esc(S.remind)}</textarea><div style="text-align:right;margin-top:8px"><button class="btn ghost" data-a="remindSel">全選文字</button> <button class="btn" data-a="remindNo">關閉</button></div></div></div>`;
+}
+
+
+/* ---------- 每學期應該有哪些進度表（常態清單） ---------- */
+const RQ_TXT={'no-table':'還沒建進度表',empty:'進度表還沒排',partial:'還沒排完',pending:'有課還沒送出',done:'全部送出 ✓',skip:'本學期不開'};
+const RQ_BG={'no-table':'#F8D7D3',empty:'#F8D7D3',partial:'#FFF1C7',pending:'#FFF1C7',done:'#E3F2EC',skip:'#E9EEEC'};
+const rqClassText=c=>!c.hasTable?'還沒建':c.state==='empty'?'還沒排':c.state==='partial'?`排了 ${c.weeksFilled}/${c.weeksTotal} 週`:c.state==='pending'?`已送 ${c.sent}/${c.lessons} 堂`:'✓';
+function rqCounts(rq){const l=rq.filter(x=>!x.skip);return {n:l.length,done:l.filter(x=>x.state==='done').length,pending:l.filter(x=>x.state==='pending').length,partial:l.filter(x=>x.state==='partial'||x.state==='empty').length,none:l.filter(x=>x.state==='no-table').length};}
+function reqCardHTML(d){
+  if(!d.canConfig)return '';                                   // 有沒有建進度表，只有技士、科主任、管理者看得到，一般老師不用看
+  const rq=d.required||[];
+  const c=rqCounts(rq);
+  let h=`<div class="card"><div class="cb" style="padding-top:12px"><b>${esc(d.term)} 學期，應該要有的進度表</b>${rq.length?`<small class="mut" style="display:block">共 ${c.n} 門：全部送出 ${c.done}${c.pending?`・<b style="color:#6B4E00">有課還沒送 ${c.pending}</b>`:''}${c.partial?`・<b style="color:#6B4E00">進度表還沒排完 ${c.partial}</b>`:''}${c.none?`・<b style="color:var(--err)">還沒開始排 ${c.none}</b>`:''}</small>`:'<p class="mut" style="margin:6px 0 0">還沒設定。技士、科主任、管理者可以設定「每學期應該要有哪些課程和班級的進度表」，設定一次，以後每學期都照這份清單。</p>'}`;
+  h+=`<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ghost" data-a="rqToggle">${S.sc.rqOpen?'收起清單':'看每門課排到哪'}</button><button class="btn sm ghost" data-a="rqOpen">設定每學期要有哪些進度表</button></div>`;
+  if(!S.sc.rqOpen)return h+'</div></div>';
+  h+=rq.map(x=>`<div class="prow"><b>${esc(x.dept)}・${esc(x.course)}</b> <span class="tg" style="background:${RQ_BG[x.state]}">${RQ_TXT[x.state]}</span>${x.note?` <small class="mut">${esc(x.note)}</small>`:''}
+    <div style="margin-top:4px">${x.classes.map(k=>`<span class="pchip2" style="background:${x.skip?'#E9EEEC':RQ_BG[k.state]}">${esc(k.cls)}　${x.skip?'－':rqClassText(k)}</span>`).join('')}</div>
+    <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">${d.canConfig?`<button class="btn sm ghost" data-a="rqSkip" data-id="${esc(x.id)}" data-v="${x.skip?'0':'1'}">${x.skip?'恢復（這學期要開）':'這學期不開'}</button>`:''}</div></div>`).join('');
+  return h+'</div></div>';
+}
+function rqModal(){
+  const q=S.rq,d=S.sc.data,f=q.form;
+  const clText=c=>`${esc(c.cls)}（${daysText(c.days,true)}）`;
+  if(!f)return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">每學期要有哪些進度表</h2><p class="mut" style="margin:0 0 8px">設定一次，每學期都照這份清單自動建好進度表。同一門課、同一班只會有一張，老師只能在裡面共同編輯，不能自己新增。</p>
+    ${(d.requiredAll||[]).map(x=>`<div class="parow"><span>${esc(x.dept)}・${esc(x.course)} <span class="tg gr">${{'每':'每學期','上':'上學期','下':'下學期','假':'只有寒暑假'}[x.half]||x.half}</span><small>${x.classes.map(clText).join('、')}${x.groups&&x.groups.length?'　分組：'+esc(x.groups.join('、')):''}${x.note?'　'+esc(x.note):''}</small></span><span>${q.delAsk===x.id?`<button class="btn danger sm" data-a="rqDelYes" data-id="${esc(x.id)}">確定刪除</button> <button class="btn ghost sm" data-a="rqDelNo">取消</button>`:`<button class="btn sm ghost" data-a="rqEdit" data-id="${esc(x.id)}">修改</button> <button class="btn sm ghost" data-a="rqDelAsk" data-id="${esc(x.id)}">刪除</button>`}</span></div>`).join('')||'<p class="mut">還沒有。</p>'}
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:10px"><button class="btn" data-a="rqNew">＋ 新增一門</button><button class="btn ghost" data-a="rqClose">關閉</button></div></div></div>`;
+  const cls=S.classes[f.dept]||[],courses=S.courses[f.dept]||[],one=f.classes.length===1;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 8px">${f.id?'修改':'新增'}：要有進度表的課</h2>
+    <div class="seg" style="margin-bottom:8px">${DEPTS.map(x=>`<button data-a="rqDept" data-d="${x}" class="${f.dept===x?'on':''}">${x}</button>`).join('')}</div>
+    <label class="lbl">課程</label><div class="tabs" style="flex-wrap:wrap">${courses.map(c=>`<button class="gt ${f.course===c?'on':''}" data-a="rqCourse" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <label class="lbl" style="margin-top:6px">哪些班（同一門課、同一班只能有一張）</label><div class="ccs">${cls.map(c=>f.clsDel?`<button class="cc" data-a="rqClsDel" data-cl="${esc(c)}" title="刪掉這個班級">✕ ${esc(c)}</button>`:`<button class="cc ${f.classes.some(x=>x.cls===c)?'on':''}" data-a="rqClass" data-cl="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div style="display:flex;gap:6px;margin-top:6px;align-items:center"><input class="in" data-k="rqNewCls" maxlength="10" placeholder="新增班級（例如國中技藝班的學校：大村國中）" value="${esc(f.newCls||'')}" style="flex:1"><button class="btn sm" data-a="rqClsAdd">加入</button></div>
+    <button class="linkb" data-a="rqClsMode">${f.clsDel?'完成（回去選班）':'刪掉用不到的班級'}</button>
+    ${f.classes.map(c=>`<div class="prow"><b>${esc(c.cls)}</b> 每週上課日：<span class="mut">${esc(daysText(c.days))}</span><div class="ccs" style="margin-top:4px">${[1,2,3,4,5].map(n=>`<button class="cc ${c.days.includes(n)?'on':''}" data-a="rqDay" data-cl="${esc(c.cls)}" data-n="${n}">週${WDN[n]}</button>`).join('')}${one?`<button class="cc ${c.days.length===5?'on':''}" data-a="rqDay" data-cl="${esc(c.cls)}" data-n="all">每天</button>`:''}</div>${one?`<div class="rgrow" style="margin-top:6px"><label>從 <select class="in" data-k="rqFrom">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.min(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label><label>到 <select class="in" data-k="rqTo">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.max(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label></div>`:''}</div>`).join('')}
+    ${f.classes.length?`<p class="mut" style="margin:4px 0 0">${one?'只有一個班的話可以選好幾天，或用「從…到…」選週幾到週幾（不一定要週一到週五）。某一週想額外加一天（例如週六也要練），到進度表按那一週的「＋日」。':'一個班一天。每學期上課日不一樣的話，之後到進度表按「修改上課日、分組」改。'}</p>`:''}
+    ${f.dept==='夜間部'?'<p class="mut" style="margin:8px 0 0">夜間部的實習課只有一位老師，不分組。</p>':`<label class="lbl" style="margin-top:8px">分組上課？（填組別，用「、」隔開，例如：單數組、雙數組。不分組就留空）</label><input class="in" style="width:100%" data-k="rqgroups" maxlength="20" value="${esc(f.groups)}">`}
+    <label class="lbl" style="margin-top:8px">哪個學期要有</label>${f.half==='假'?'<p class="mut" style="margin:0 0 4px">只有寒暑假：每學期都建一張進度表，但清單只看寒暑假加的那幾週，學期內沒排也不會顯示還沒排完。</p>':''}<div class="seg">${[['每','每學期'],['上','只有上學期'],['下','只有下學期'],['假','只有寒暑假']].map(([v,n])=>`<button data-a="rqHalf" data-h="${v}" class="${f.half===v?'on':''}">${n}</button>`).join('')}</div>
+    <label class="lbl" style="margin-top:8px">備註（可以不填）</label><input class="in" style="width:100%" data-k="rqnote" maxlength="30" value="${esc(f.note)}">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="rqBack">取消</button><button class="btn" data-a="rqSave">儲存</button></div></div></div>`;
+}
+
+/* ---------- 開始 ---------- */
+function denyScreen(msg){
+  $('#app').innerHTML=`<div class="deny"><h2>員林農工材料單系統</h2><p>${msg}</p><button class="btn" data-a="signout">切換帳號</button><button class="btn ghost" onclick="location.reload()">重新整理</button><p class="mut" style="margin:14px 0 0">換帳號後還是進不來的話，請管理者到「後台 → 使用者」把你的信箱加進名單。</p></div>`;
+}
+async function boot(){
+  if(!TOKEN)return loginScreen();
+  try{
+    const h=await run('apiHello');S.appUrl=h.appUrl||'';
+    if(!h.email)return denyScreen('沒有抓到你的帳號，請重新登入。');
+    if(!h.listed)return denyScreen(`你目前登入的帳號是 <b>${esc(h.email)}</b>，這個帳號<b>還沒有被加入系統</b>，不能使用。<br>請切換成學校帳號，或請管理者把這個信箱加進來。`);
+    const d=await run('apiBootstrap');
+    S.user=d.user;S.term=d.term;S.cat=d.catalog;S.classes=d.catalog.classes||S.classes;S.courses=d.catalog.courses||{'日間部':[],'夜間部':[]};S.cat.pmap={};S.cat.products.forEach(p=>S.cat.pmap[p.pid]=p);
+    refreshStd();S.adminUrl=d.adminUrl||'';S.accepting=d.open!==false;S.openNote=d.openNote||'';
+    S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));
+    S.dept=(S.entries[0]&&S.entries[0].dept)||'日間部';S.course=(S.entries[0]&&S.entries[0].course)||(S.courses[S.dept]||[])[0]||'';
+    S.savedSig=sigOf(S.entries);S.sentAt=S.entries.map(e=>e.updated).filter(Boolean).sort().pop()||'';
+    const t0=today(),w0=weekStart(t0);S.rgFrom=w0;S.rgTo=addDays(w0,6);
+    S.extraOpen=d.extraOpen===true;S.extraNote=d.extraNote||'';
+    S.view=S.user.role==='技士'?'tech':'sched';S.step=S.entries.some(e=>e.sid)?3:0;S.sstep=S.step;S.estep=1;
+    if(S.entries.some(e=>e.sid))S.info=`已載入你的 ${S.entries.filter(e=>e.sid).length} 堂進度表的課。要改別的地方，直接點上面的步驟。`;
+    render();
+    if(S.view==='tech')loadRange();else if(S.step===0)loadSched();
+  }catch(e){if(e.auth)return;denyScreen(esc(e.message));}
+}
+boot();
+
+})();
+</script>
+</body>
+</html>
