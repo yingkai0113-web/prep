@@ -70,20 +70,44 @@ function curEmail_() {
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 
 var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1, '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1 };   // 這幾個分頁：同一次請求讀過就不再重讀，跨請求也用快取（最多 5 分鐘；系統自己寫入時會立刻作廢）
-var RT_VER_ = null, RT_TTL_ = 300;
+var RT_VER_ = null, RT_TTL_ = 300, RT_SV_ = null;
+var RT_CATSHEETS_ = { '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1 };   // 材料單目錄是由這幾張分頁算出來的
 function rtVer_() {
   if (RT_VER_ === null) { try { RT_VER_ = CacheService.getScriptCache().get('rtver') || '0'; } catch (e) { RT_VER_ = 'x' + Date.now(); } }
   return RT_VER_;
 }
-function rtClear_() {
-  RT_ = {}; CAT_ = null; PL_ = null;
+/* 每張分頁各有自己的版本號：只改到哪一張，就只讓那一張的快取作廢，其餘照用 */
+function rtSV_(name) {
+  if (RT_SV_ === null) {
+    RT_SV_ = {};
+    try {
+      var keys = Object.keys(RT_OK_).map(function (n) { return 'rtv|' + n; }), got = CacheService.getScriptCache().getAll(keys);
+      Object.keys(RT_OK_).forEach(function (n) { RT_SV_[n] = got['rtv|' + n] || '0'; });
+    } catch (e) { RT_SV_ = {}; Object.keys(RT_OK_).forEach(function (n) { RT_SV_[n] = 'x' + Date.now(); }); }
+  }
+  return RT_SV_[name] || '0';
+}
+/* rtClear_()＝全部作廢；rtClear_(['排課', …])＝只作廢列出的這幾張分頁 */
+function rtClear_(names) {
+  if (names && names.length) {
+    var put = {}, hitCat = false;
+    names.forEach(function (n) { delete RT_[n]; if (RT_CATSHEETS_[n]) hitCat = true; });
+    if (hitCat) { CAT_ = null; PL_ = null; }
+    try {
+      rtSV_('設定');
+      names.forEach(function (n) { var v = String(Date.now()) + Math.floor(Math.random() * 1000); RT_SV_[n] = v; put['rtv|' + n] = v; });
+      CacheService.getScriptCache().putAll(put, 21600);
+    } catch (e) { rtClear_(); }
+    return;
+  }
+  RT_ = {}; CAT_ = null; PL_ = null; RT_SV_ = null;
   try { RT_VER_ = String(Date.now()) + Math.floor(Math.random() * 1000); CacheService.getScriptCache().put('rtver', RT_VER_, 21600); } catch (e) { RT_VER_ = 'x' + Date.now(); }
 }
 function rtJson_(rows) { return JSON.stringify(rows, function (k, v) { return (this[k] instanceof Date) ? { __d: this[k].getTime() } : v; }); }
 function rtParse_(txt) { return JSON.parse(txt, function (k, v) { return (v && typeof v === 'object' && v.__d !== undefined && Object.keys(v).length === 1) ? new Date(v.__d) : v; }); }
 function rtCacheGet_(name) {
   try {
-    var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + name, n = Number(c.get(base + '|n'));
+    var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + rtSV_(name) + '|' + name, n = Number(c.get(base + '|n'));
     if (!n) return null;
     var keys = []; for (var i = 0; i < n; i++) keys.push(base + '|' + i);
     var got = c.getAll(keys), txt = '';
@@ -93,7 +117,7 @@ function rtCacheGet_(name) {
 }
 function rtCachePut_(name, rows) {
   try {
-    var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + name, txt = rtJson_(rows), size = 25000, put = {}, n = Math.ceil(txt.length / size) || 1;
+    var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + rtSV_(name) + '|' + name, txt = rtJson_(rows), size = 25000, put = {}, n = Math.ceil(txt.length / size) || 1;
     if (n > 40) return;
     for (var i = 0; i < n; i++) put[base + '|' + i] = txt.slice(i * size, (i + 1) * size);
     put[base + '|n'] = String(n);
@@ -395,7 +419,7 @@ function flushPlanRows_(sh, rows) {
     sh.getRange(2, 5, rows.length, 1).setNumberFormat('@');          // 日期當文字存，避免被轉成日期格式
     sh.getRange(2, 1, rows.length, PLAN_HEAD.length).setValues(rows);
   }
-  rtClear_();
+  rtClear_(['排課']);
 }
 
 
@@ -503,7 +527,7 @@ function apiSavePlan(entries, mode) {
       out.push(Object.assign({}, o, { pending: { del: true } }));                           // 匯出過的：匯出之前，技士還是看得到
     });
     writePlans_(me.email, term, out);
-  } finally { rtClear_(); lock.releaseLock(); }
+  } finally { rtClear_(['排課']); lock.releaseLock(); }
   var dates = committed.map(function (e) { return e.date; }).sort();
   return { saved: committed.length, at: Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), first: dates[0] || '', last: dates[dates.length - 1] || '', unexported: out.filter(function (e) { return e.draft || e.pending; }).length,
            ids: clean.slice(0, entries.length).map(function (e) { return e.id; }),                                      // 新增的課，系統給的編號（跟送來的順序一樣）
@@ -697,7 +721,7 @@ function writeSched_(name, head, rows) {
   var sh = ensureSheet_(name, head), last = sh.getLastRow();
   if (last > 1) sh.getRange(2, 1, last - 1, head.length).clearContent();
   if (rows.length) sh.getRange(2, 1, rows.length, head.length).setValues(rows);
-  rtClear_();
+  rtClear_([name]);
 }
 function tableRow_(t, created) { return [t.id, t.term, t.dept, t.course, JSON.stringify(t.classes), t.groups.join('、'), t.title || '', t.creator, created || nowStr_(), nowStr_(), t.ext ? JSON.stringify(t.ext) : '', (t.teachers || []).join('、')]; }
 function allTableRows_() {
@@ -806,7 +830,7 @@ function apiRequiredSave(rec) {
     var sameShape = oldE && JSON.stringify(oldE.classes) === JSON.stringify(e.classes) && oldE.groups.join('、') === e.groups.join('、');
     if (oldE && !sameShape) reconcileTables_(oldE, e);
     applyReqTeachers_(e);
-  } finally { rtClear_(); lock.releaseLock(); }
+  } finally { rtClear_(['應有進度表', '教學進度表', '教學進度內容', '排課']); lock.releaseLock(); }
   return apiScheduleGet();
 }
 function apiRequiredDelete(id) {
@@ -942,7 +966,7 @@ function apiScheduleSaveTable(rec) {
     writeSched_('教學進度內容', SCHED_CELL_HEAD, keep.map(cellRow_));
     syncSchedule_(id, undefined, undefined, undefined, true);                                   // 上課日改了，日期跟著改
     var stray = 0; if (teachers.length) schedCells_().forEach(function (x) { if (x.tableId === id && x.cell.kind === 'lesson' && x.cell.groups.some(function (g) { return g.teacher && teachers.indexOf(g.teacher) < 0; })) stray++; });
-  } finally { rtClear_(); lock.releaseLock(); }
+  } finally { rtClear_(['應有進度表', '教學進度表', '教學進度內容', '排課']); lock.releaseLock(); }
   var res = apiScheduleGet();
   if (stray) res.notice = '有 ' + stray + ' 格還排給不在授課名單裡的老師，請改掉。他們已經有的材料單還在，但這張進度表不會再出現在他們那裡。';
   return res;
@@ -1076,7 +1100,7 @@ function apiScheduleSaveCells(tableId, changes, force) {
     norm.forEach(function (n) { if (n.clean) rows.push(cellRow_({ tableId: t.id, week: n.w, cls: n.cls, day: n.day, cell: n.clean, by: me.email, at: nowStr_() })); });
     writeSched_('教學進度內容', SCHED_CELL_HEAD, rows);
     syncSchedule_(t.id);
-  } finally { rtClear_(); lock.releaseLock(); }
+  } finally { rtClear_(['教學進度內容', '排課']); lock.releaseLock(); }
   return { saved: norm.length };
 }
 /* 存一格（cell 給 null = 清掉這格）。存好之後，這格的課會出現在開單老師的「排課備料」裡（待確認） */
@@ -1101,7 +1125,7 @@ function apiScheduleSaveCell(tableId, week, cls, cell, day) {
     if (clean) rows.push(cellRow_({ tableId: t.id, week: w, cls: cls, day: day, cell: clean, by: me.email, at: nowStr_() }));
     writeSched_('教學進度內容', SCHED_CELL_HEAD, rows);
     syncSchedule_(t.id, w, cls, day);
-  } finally { rtClear_(); lock.releaseLock(); }
+  } finally { rtClear_(['教學進度內容', '排課']); lock.releaseLock(); }
   return { saved: true };
 }
 /* 把進度表排的課，同步成每位老師的排課（待確認）。tableId／weekN／cls 給了就只處理那一部分。呼叫的人要先拿到鎖。 */
