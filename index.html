@@ -1732,6 +1732,16 @@ function applyBoot(d,first){
   S.view=S.user.role==='技士'?'tech':'sched';S.step=S.entries.some(e=>e.sid)?3:0;S.sstep=S.step;S.estep=1;
   if(S.entries.some(e=>e.sid))S.info=`已載入你的 ${S.entries.filter(e=>e.sid).length} 堂進度表的課。要改別的地方，直接點上面的步驟。`;
 }
+async function runDiag(){
+  const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;color:#000;overflow:auto;padding:16px;font:13px/1.5 monospace;white-space:pre-wrap';
+  o.textContent='測速中，請等約 1 分鐘…';document.body.appendChild(o);
+  const L=[];const t=async(fn,...a)=>{const t0=Date.now();try{const d=await run(fn,...a);const w=window.__last||{};L.push(fn+'：總共 '+(Date.now()-t0)+' ms，伺服器 '+w.server+' ms');return d;}catch(e){L.push(fn+' 失敗：'+e.message);}};
+  await t('apiHello');await t('apiBootstrap');await t('apiBootstrap');await t('apiScheduleGet','');await t('apiScheduleGet','');
+  const p=await t('apiProfile');
+  if(p){L.push('--- 每張分頁讀取（ms）');p.sheets.forEach(x=>L.push(x.name+'：'+x.ms+' ms（'+x.rows+' 列 × '+x.cols+' 欄）'));L.push('--- 各階段（ms）');p.phases.forEach(x=>L.push(x.name+'：'+x.ms));}
+  o.textContent=L.join('\n');
+  const b=document.createElement('button');b.textContent='關閉';b.style.cssText='display:block;margin:12px 0;padding:8px 16px';b.onclick=()=>o.remove();o.appendChild(b);
+}
 async function boot(){
   if(!TOKEN)return loginScreen();
   const em=jwtEmail(TOKEN);let cache=null;
@@ -1755,6 +1765,7 @@ async function boot(){
       if(S.step===0||!shown)render();
     }
     try{localStorage.setItem('prep_cache',JSON.stringify({em,boot:d,sched:S.sc.data||null}));}catch(e){}
+    if(/[?&]diag\b/.test(location.search))runDiag();
   }catch(e){if(e.auth)return;if(shown){S.err=e.message;return render();}denyScreen(esc(e.message));}
 }
 boot();
