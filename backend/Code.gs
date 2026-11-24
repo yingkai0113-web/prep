@@ -50,6 +50,7 @@ function doPost(e) {
     var fn = globalThis[name];
     if (typeof fn !== 'function') throw new Error('不明的呼叫：' + name);
     REQ_EMAIL_ = verifyToken_(req.token);
+    try { var sp = SpreadsheetApp.getActiveSpreadsheet(); if (sp.getSpreadsheetTimeZone() !== TZ) sp.setSpreadsheetTimeZone(TZ); } catch (tzErr) {}   // 複製到別的帳號時，試算表時區會變成預設的美國時區，日期會差一天
     var out = fn.apply(null, Array.isArray(req.args) ? req.args : []);
     return json_({ ok: true, data: out === undefined ? null : out });
   } catch (err) {
@@ -124,7 +125,7 @@ function loadCatalog_() {
 
 function setting_(key, fallback) {
   var rows = readTable_('設定');
-  for (var i = 0; i < rows.length; i++) if (rows[i]['項目'] === key && rows[i]['值'] !== null) return str_(rows[i]['值']);
+  for (var i = 0; i < rows.length; i++) if (rows[i]['項目'] === key && rows[i]['值'] !== null) return rows[i]['值'] instanceof Date ? Utilities.formatDate(rows[i]['值'], TZ, 'yyyy-MM-dd') : str_(rows[i]['值']);
   return fallback;
 }
 
