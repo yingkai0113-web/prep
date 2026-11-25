@@ -631,7 +631,7 @@ function apiExportRequisition(scope, what, order, fmt) {
     if (!docs.length) throw new Error('沒有教學進度表可以下載（額外材料單沒有進度表，或學期的開學日還沒設定）。');
     return buildXlsx_('教學進度表_' + me.name + '_' + term, docs, fmt);
   }
-  return buildXlsx_((scope === 'extra' ? '額外材料單_' : '材料申請單_') + me.name + '_' + term, docs.concat(L_docRequisition(mine, cat, { teacherName: me.name, order: order === 'class' ? 'class' : 'date' })), fmt);
+  return buildXlsx_((scope === 'extra' ? '額外材料單_' : '材料申請單_') + me.name + '_' + term, docs.concat(L_docRequisition(mine, cat, { teacherName: me.name, order: order === 'class' ? 'class' : 'date' })),fmt, order === 'class' ? 'class' : 'date');
 }
 
 function teacherNames_() {
@@ -1405,7 +1405,7 @@ function apiExportRangeSheets(start, end, teacherEmail, filter, order, fmt) {
   if (!list.length) throw new Error('這段日期沒有排課。');
   var ids = {};
   list.forEach(function (e) { if (e.sid) ids[e.sid.split('|')[0]] = 1; });
-  return buildXlsx_((L_hasFilter(f) ? '材料申請單（部分）_' : '材料申請單_') + start + '_' + end, (L_hasFilter(f) ? [] : schedDocs_(Object.keys(ids), '')).concat(L_docRequisition(list, cat, { order: order === 'class' ? 'class' : 'date' })), fmt);      // 只匯出某一部分的時候，不放教學進度表那一頁
+  return buildXlsx_((L_hasFilter(f) ? '材料申請單（部分）_' : '材料申請單_') + start + '_' + end, (L_hasFilter(f) ? [] : schedDocs_(Object.keys(ids), '')).concat(L_docRequisition(list, cat, { order: order === 'class' ? 'class' : 'date' })),fmt, order === 'class' ? 'class' : 'date');      // 只匯出某一部分的時候，不放教學進度表那一頁
 }
 function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_weekStart(anyDateInWeek); return apiExportRangeSheets(ws, L_addDays(ws, 6), teacherEmail, null, order); }
 
@@ -1426,8 +1426,8 @@ function apiDeletePlanEntry(id) {
 }
 
 /* ---------------- 做出 xlsx 檔（自己組，A4 直印，跟原本的申請單一樣） ---------------- */
-function buildXlsx_(name, docs, fmt) {
-  if (fmt === 'pdf') return buildPdf_(name, docs);
+function buildXlsx_(name, docs, fmt, order) {
+  if (fmt === 'pdf') return buildPdf_(name, docs, order);
   var files = L_xlsxFiles(docs);
   var blobs = files.map(function (f) { return Utilities.newBlob(f.xml, 'application/xml', f.name); });
   var zip = Utilities.zip(blobs, name + '.xlsx');
@@ -1435,10 +1435,14 @@ function buildXlsx_(name, docs, fmt) {
 }
 
 
-/* PDF：全部放在同一個 PDF（一堂課一頁 A4）。用 HTML 轉 PDF，不需要額外授權 */
-function buildPdf_(name, docs) {
-  var pdf = Utilities.newBlob(L_docsToHtml(docs), 'text/html', name + '.html').getAs('application/pdf');
-  return { name: name + '.pdf', base64: Utilities.base64Encode(pdf.getBytes()) };
+/* PDF：伺服器只排好 HTML（一堂課一頁 A4），由使用者的瀏覽器轉成 PDF——這樣才能用他電腦上的標楷體（Google 的伺服器沒有標楷體）。
+ * 依課程排序時，每一門課輸出一個 PDF；依日期排序就是全部一個 PDF。 */
+function buildPdf_(name, docs, order) {
+  if (order !== 'class') return { name: name + '.pdf', html: L_docsToHtml(docs) };
+  var keys = [], by = {};
+  docs.forEach(function (d) { var k = d.group || ''; if (!by[k]) { by[k] = []; keys.push(k); } by[k].push(d); });
+  if (keys.length <= 1) return { name: name + '.pdf', html: L_docsToHtml(docs) };
+  return { files: keys.map(function (k) { return { name: name + '_' + String(k).replace(/[\\\/:*?"<>|]/g, '') + '.pdf', html: L_docsToHtml(by[k]) }; }) };
 }
 
 

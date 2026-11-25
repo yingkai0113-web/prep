@@ -460,7 +460,7 @@ function L_docRequisition(entries, cat, ctx) {
     var sg = R([T('實習股長：'), null, null, null, T('任課老師簽名：' + (e.teacherName || (ctx && ctx.teacherName) || ''))]);
     merges.push([sg, 0, sg, 1], [sg, 4, sg, 7]);
     docs.push({ name: L_safeSheetName(L_pad(p.m) + '-' + L_pad(p.d) + ' ' + e.cls + (e.group ? e.group : '') + ' ' + ttl, used),
-                cw: [17.9, 8.4, 17.9, 15.4, 10.6, 8.9, 13.1, 20.1], rows: rows, merges: merges, heights: heights, defH: 21, page: L_PAGE, stack: true });
+                cw: [17.9, 8.4, 17.9, 15.4, 10.6, 8.9, 13.1, 20.1], rows: rows, merges: merges, heights: heights, defH: 21, page: L_PAGE, stack: true, group: (e.dept || '') + '・' + (e.course || '') });
   });
   return docs;
 }
@@ -540,6 +540,10 @@ function L_fontDocs(docs) {
  * PDF：把同一批 docs（跟 xlsx 一樣的內容）排成 HTML，一份 docs 一頁（或多頁）A4 直印，全部放在同一個 PDF。
  * 欄寬、字級、列高都直接照比例縮好（不靠 CSS zoom，Apps Script 轉 PDF 時比較穩）。
  * ===================================================================== */
+/* PDF 用的字體順序：電腦有標楷體就用標楷體；沒有（例如手機）就用楷體系的網頁字型。英數字 Times New Roman */
+function L_cssFont(ff) {
+  return ff === 'Times New Roman' ? "'Times New Roman','Liberation Serif',serif" : "'標楷體','DFKai-SB','BiauKai','Kaiti TC','LXGW WenKai TC',serif";
+}
 function L_docsToHtml(docs) {
   docs = L_fontDocs(docs);
   var W_IN = 7.0, H_IN = 10.3, PX = 96;                                                   // A4 扣掉邊界後可用的寬、高
@@ -574,7 +578,7 @@ function L_docsToHtml(docs) {
     if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / totalH);
     var ws = widths.map(function (w) { return Math.round(w * k * 10) / 10; });
     var tw = ws.reduce(function (a, b) { return a + b; }, 0);
-    var h = '<div style="' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:\'標楷體\',\'DFKai-SB\',\'Noto Serif TC\',serif"><colgroup>' +
+    var h = '<div style="' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:' + L_cssFont('') + '"><colgroup>' +
       ws.map(function (w) { return '<col width="' + w + '" style="width:' + w + 'px">'; }).join('') + '</colgroup>';
     for (var r = 0; r < nR; r++) {
       h += '<tr style="height:' + Math.round(hts[r] * k * 10) / 10 + 'px">';
@@ -583,7 +587,7 @@ function L_docsToHtml(docs) {
         var cell = (doc.rows[r] || [])[c], sp = span[r + ',' + c];
         var st = 'padding:0 2px;overflow:hidden;white-space:' + (cell && cell.wrap ? 'normal' : 'nowrap') + ';';
         if (cell) {
-          st += 'font-size:' + Math.round((cell.sz || 11) * k * 10) / 10 + 'pt;' + (cell.ff ? 'font-family:\'' + cell.ff + '\',serif;' : '');
+          st += 'font-size:' + Math.round((cell.sz || 11) * k * 10) / 10 + 'pt;' + (cell.ff ? 'font-family:' + L_cssFont(cell.ff) + ';' : '');
           if (cell.b) st += 'font-weight:bold;';
           st += 'text-align:' + ({ c: 'center', r: 'right', l: 'left' }[cell.al] || 'left') + ';vertical-align:' + ({ top: 'top', bottom: 'bottom' }[cell.va] || 'middle') + ';';
           if (cell.bg) st += 'background-color:' + cell.bg + ';';
@@ -597,7 +601,7 @@ function L_docsToHtml(docs) {
         } else st += 'font-size:' + Math.round(11 * k * 10) / 10 + 'pt;';
         var v = val(r, c); if (typeof v === 'number') v = Math.round(v * 1000) / 1000;
         var inner = (cell && cell.runs) ? cell.runs.map(function (rn) {
-          var rst = (rn.ff ? 'font-family:\'' + rn.ff + '\',serif;' : '') + (rn.b ? 'font-weight:bold;' : '') + (rn.sz ? 'font-size:' + Math.round(rn.sz * k * 10) / 10 + 'pt;' : '') + (rn.color ? 'color:#' + rn.color + ';' : '');
+          var rst = (rn.ff ? 'font-family:' + L_cssFont(rn.ff) + ';' : '') + (rn.b ? 'font-weight:bold;' : '') + (rn.sz ? 'font-size:' + Math.round(rn.sz * k * 10) / 10 + 'pt;' : '') + (rn.color ? 'color:#' + rn.color + ';' : '');
           return '<span style="' + rst + '">' + esc(rn.v).replace(/\n/g, '<br>') + '</span>';
         }).join('') : (esc(v).replace(/\n/g, '<br>') || '&nbsp;');
         h += '<td' + (sp ? ' rowspan="' + sp[0] + '" colspan="' + sp[1] + '"' : '') + ' style="' + st + '">' + inner + '</td>';
@@ -908,7 +912,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
     });
   });
   var nm = '進度表' + (ctx.n ? ctx.n : '');
-  return { name: nm, cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: (!multi || rows.length <= 30) ? 'page' : 'width', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
+  return { name: nm, group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: (!multi || rows.length <= 30) ? 'page' : 'width', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
 }
 
 

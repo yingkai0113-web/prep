@@ -734,7 +734,30 @@ function download(name,b64){
 }
 /* 下載格式：Excel／PDF／兩個都要（PDF 是全部合成同一個檔，一堂課一頁） */
 const fmtPick=()=>`<b style="display:block;margin-top:8px">檔案格式</b><div style="display:flex;gap:14px;flex-wrap:wrap">${[['xlsx','Excel'],['pdf','PDF（全部合成一個檔）'],['both','兩個都要']].map(([v,n])=>`<label style="display:flex;gap:6px;align-items:center;padding:6px 0"><input type="radio" name="dlfmt" data-k="dlfmt" value="${v}" ${(S.dlfmt||'xlsx')===v?'checked':''}> <span>${n}</span></label>`).join('')}</div>`;
-async function runFmt(fn,...args){const f=S.dlfmt||'xlsx';let last=null;for(const x of (f==='both'?['xlsx','pdf']:[f])){last=deliver(await run(fn,...args,x));}return last;}
+const loadJs=(src)=>new Promise((ok,no)=>{if(document.querySelector(`script[data-lib="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.dataset.lib=src;e.onload=ok;e.onerror=()=>no(new Error('載入 PDF 工具失敗，請確認網路後再試。'));document.head.appendChild(e);});
+/* 伺服器給排好的 HTML，在這個瀏覽器裡轉成 PDF（用這台電腦的標楷體；沒有的話用楷體系網頁字型） */
+async function htmlToPdf(html){
+  if(!document.getElementById('kaiFont')){const l=document.createElement('link');l.id='kaiFont';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap';document.head.appendChild(l);}
+  await Promise.all([loadJs('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'),loadJs('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js')]);
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-99999px;top:0;background:#fff';
+  host.innerHTML=new DOMParser().parseFromString(html,'text/html').body.innerHTML;document.body.appendChild(host);
+  try{
+    try{await Promise.race([document.fonts.load('16px "LXGW WenKai TC"','標楷體實習材料單'),new Promise(r=>setTimeout(r,6000))]);}catch(e){}
+    try{await document.fonts.ready;}catch(e){}
+    const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:'pt',format:'a4'}),M=43.2,availH=841.89-M*2;let first=true;
+    for(const el of [...host.children]){
+      const cv=await html2canvas(el,{scale:2,backgroundColor:'#fff'}),w=cv.width/2*0.75,h=cv.height/2*0.75,sliceH=Math.floor(availH/0.75*2);
+      for(let y=0;y<cv.height;y+=sliceH){
+        const hh=Math.min(sliceH,cv.height-y),c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;
+        const g=c2.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c2.width,hh);g.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);
+        if(!first)pdf.addPage();first=false;
+        pdf.addImage(c2.toDataURL('image/jpeg',0.92),'JPEG',M,M,w,hh/2*0.75);
+      }
+    }
+    return pdf.output('datauristring').split(',')[1];
+  }finally{host.remove();}
+}
+async function runFmt(fn,...args){const f=S.dlfmt||'xlsx';let last=null;for(const x of (f==='both'?['xlsx','pdf']:[f])){const r=await run(fn,...args,x);for(const q of (r.files||[r])){last=deliver(q.html?{name:q.name,base64:await htmlToPdf(q.html)}:q);}}return last;}
 function deliver(r){
   if(r.previewHtml){S.preview=r.previewHtml;return {name:r.name,url:''};}
   return download(r.name,r.base64);
