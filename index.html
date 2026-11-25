@@ -1716,6 +1716,7 @@ function reqCardHTML(d){
   if(!S.sc.rqOpen)return h+'</div></div>';
   h+=rq.map(x=>`<div class="prow"><b>${esc(x.dept)}・${esc(x.course)}</b> <span class="tg" style="background:${RQ_BG[x.state]}">${RQ_TXT[x.state]}</span>${x.note?` <small class="mut">${esc(x.note)}</small>`:''}
     <div style="margin-top:4px">${x.classes.map(k=>`<span class="pchip2" style="background:${x.skip?'#E9EEEC':RQ_BG[k.state]}">${esc(k.cls)}　${x.skip?'－':rqClassText(k)}</span>`).join('')}</div>
+    <div class="mut" style="margin-top:4px;font-size:13px">授課老師（要提醒的人）：${(()=>{const ra=(d.requiredAll||[]).find(y=>y.id===x.id);return ra?reqTeachNames(ra):'<span class="mut">－</span>';})()}</div>
     <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">${d.canConfig?`<button class="btn sm ghost" data-a="rqSkip" data-id="${esc(x.id)}" data-v="${x.skip?'0':'1'}">${x.skip?'恢復（這學期要開）':'這學期不開'}</button>`:''}</div></div>`).join('');
   return h+'</div></div>';
 }
