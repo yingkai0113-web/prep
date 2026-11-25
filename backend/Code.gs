@@ -67,9 +67,10 @@ function curEmail_() {
 }
 
 /* ---------------- 讀寫試算表 ---------------- */
-function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
+var SS_ = null;
+function ss_() { return SS_ || (SS_ = SpreadsheetApp.getActiveSpreadsheet()); }
 
-var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1, '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1 };   // 這幾個分頁：同一次請求讀過就不再重讀，跨請求也用快取（最多 5 分鐘；系統自己寫入時會立刻作廢）
+var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1, '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1, '名稱對照': 1 };   // 這幾個分頁：同一次請求讀過就不再重讀，跨請求也用快取（最多 5 分鐘；系統自己寫入時會立刻作廢）
 var RT_VER_ = null, RT_TTL_ = 300, RT_SV_ = null;
 var RT_CATSHEETS_ = { '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1 };   // 材料單目錄是由這幾張分頁算出來的
 function rtVer_() {
@@ -297,9 +298,9 @@ function customSheet_() {
   return sh;
 }
 function readCustom_() {
-  if (!ss_().getSheetByName('自創材料單')) return [];
+  var rows0; try { rows0 = readTable_('自創材料單'); } catch (e) { return []; }                // 分頁不存在就當沒有（有快取時完全不碰試算表）
   var names = teacherNames_();
-  return readTable_('自創材料單').map(function (r) {
+  return rows0.map(function (r) {
     var items = [], tools = [];
     try { items = JSON.parse(r['材料'] || '[]'); } catch (e) {}
     try { tools = JSON.parse(r['器具'] || '[]'); } catch (e) {}
@@ -318,8 +319,8 @@ function ovrSheet_() {
   return sh;
 }
 function readOverrides_() {
-  if (!ss_().getSheetByName('預設材料單修改')) return [];
-  return readTable_('預設材料單修改').map(function (r) {
+  var rows0; try { rows0 = readTable_('預設材料單修改'); } catch (e) { return []; }
+  return rows0.map(function (r) {
     var items = [], tools = [];
     try { items = JSON.parse(r['材料'] || '[]'); } catch (e) {}
     try { tools = JSON.parse(r['器具'] || '[]'); } catch (e) {}
@@ -655,6 +656,20 @@ function logDelete_(byLabel, e) {
  * 系統就把那些課放進那位老師的「排課備料」（待確認），老師確認重量、送出後技士才看得到。 */
 var SCHED_TABLE_HEAD = ['表ID', '學年學期', '部別', '課程', '班級', '組別', '標題', '建立者', '建立時間', '最後修改', '額外日期', '授課老師'];
 var SCHED_CELL_HEAD = ['表ID', '週次', '班級', '內容', '更新者', '更新時間', '星期'];
+/* 讀取用：這張分頁「確定有、標題也是最新的」記在快取裡（1 小時），不用每次都去試算表檢查 */
+var ENS_ = {};
+function ensKnown_(name, head) {
+  var key = 'ens|' + name + '|' + head.join(',');
+  if (ENS_[key]) return true;
+  try { if (CacheService.getScriptCache().get(key)) { ENS_[key] = 1; return true; } } catch (e) {}
+  return false;
+}
+function ensureSheetFast_(name, head) {
+  if (ensKnown_(name, head)) return;
+  ensureSheet_(name, head);
+  var key = 'ens|' + name + '|' + head.join(',');
+  ENS_[key] = 1; try { CacheService.getScriptCache().put(key, '1', 3600); } catch (e) {}
+}
 function ensureSheet_(name, head) {
   var sh = ss_().getSheetByName(name);
   if (!sh) { sh = ss_().insertSheet(name); sh.getRange(1, 1, 1, head.length).setValues([head]); return sh; }
@@ -665,7 +680,7 @@ function ensureSheet_(name, head) {
 function nowStr_() { return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'); }
 function jparse_(v, d) { try { var x = JSON.parse(v); return x === null || x === undefined ? d : x; } catch (e) { return d; } }
 function schedTables_(term) {
-  ensureSheet_('教學進度表', SCHED_TABLE_HEAD);
+  ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   return readTable_('教學進度表').filter(function (r) { return str_(r['學年學期']) === term; }).map(function (r) {
     var cl = L_sortClasses(jparse_(r['班級'], []).map(function (x) { var d = L_classDays(x); return { cls: x.cls, wd: d[0], days: d }; }));      // 班級依星期排，星期一的放前面
     return { id: str_(r['表ID']), term: str_(r['學年學期']), dept: str_(r['部別']), course: str_(r['課程']), classes: cl, groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [],
@@ -680,7 +695,7 @@ function tableFromRow_(r) {
 }
 function tableWeeksOf_(t) { var s = setting_('開學日 ' + t.term, ''), e = setting_('結業式 ' + t.term, ''); return L_weeksExt(s, e, t.ext); }     // 那個學期自己的開學日、結業式
 function apiScheduleHistory() {
-  whoami_(); ensureSheet_('教學進度表', SCHED_TABLE_HEAD);
+  whoami_(); ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   var cur = setting_('目前學年學期', ''), byTerm = {};
   readTable_('教學進度表').forEach(function (r) {
     var t = tableFromRow_(r); if (!t.id || t.term === cur) return;
@@ -693,7 +708,7 @@ function apiScheduleHistory() {
   return { current: cur, terms: terms };
 }
 function apiScheduleHistoryTable(id) {
-  whoami_(); ensureSheet_('教學進度表', SCHED_TABLE_HEAD);
+  whoami_(); ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   var row = readTable_('教學進度表').filter(function (r) { return str_(r['表ID']) === String(id); })[0];
   if (!row) throw new Error('找不到這張進度表。');
   var t = tableFromRow_(row);
@@ -713,7 +728,7 @@ function extOf_(v) { return v && L_parseDate(v.from) && L_parseDate(v.to) && v.t
 function semDates_() { var term = setting_('目前學年學期', ''); return { start: setting_('開學日 ' + term, ''), end: setting_('結業式 ' + term, '') }; }
 function tableWeeks_(t) { var d = semDates_(); return L_weeksExt(d.start, d.end, t.ext); }        // 這張進度表的每一週：學期的週 + 寒暑假加課的週
 function schedCells_() {
-  ensureSheet_('教學進度內容', SCHED_CELL_HEAD);
+  ensureSheetFast_('教學進度內容', SCHED_CELL_HEAD);
   return readTable_('教學進度內容').map(function (r) { return { tableId: str_(r['表ID']), week: num_(r['週次']), cls: str_(r['班級']), day: num_(r['星期']) || 0, cell: jparse_(r['內容'], {}), by: str_(r['更新者']), at: str_(r['更新時間']) }; });
 }
 function cellRow_(x) { return [x.tableId, x.week, x.cls, JSON.stringify(x.cell), x.by, x.at, x.day || 0]; }
@@ -725,7 +740,7 @@ function writeSched_(name, head, rows) {
 }
 function tableRow_(t, created) { return [t.id, t.term, t.dept, t.course, JSON.stringify(t.classes), t.groups.join('、'), t.title || '', t.creator, created || nowStr_(), nowStr_(), t.ext ? JSON.stringify(t.ext) : '', (t.teachers || []).join('、')]; }
 function allTableRows_() {
-  ensureSheet_('教學進度表', SCHED_TABLE_HEAD);
+  ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   return readTable_('教學進度表').map(function (r) { return [str_(r['表ID']), str_(r['學年學期']), str_(r['部別']), str_(r['課程']), str_(r['班級']), str_(r['組別']), str_(r['標題']), str_(r['建立者']), str_(r['建立時間']), str_(r['最後修改']), str_(r['額外日期']), str_(r['授課老師'])]; });
 }
 function schedEmails_() { return readTable_('使用者').map(function (u) { return str_(u['信箱']).toLowerCase().trim(); }).filter(Boolean); }
@@ -738,8 +753,8 @@ function reqClasses_(v) {                                  // 班級欄：舊的
   return L_sortClasses((Array.isArray(v) ? v : []).map(function (x) { var cls = typeof x === 'string' ? x : x && x.cls; return cls ? { cls: cls, days: L_classDays(typeof x === 'string' ? {} : x) } : null; }).filter(Boolean));
 }
 function requiredAll_() {
-  var fresh = !ss_().getSheetByName('應有進度表');
-  ensureSheet_('應有進度表', REQ_HEAD);
+  var fresh = !ensKnown_('應有進度表', REQ_HEAD) && !ss_().getSheetByName('應有進度表');
+  ensureSheetFast_('應有進度表', REQ_HEAD);
   if (fresh) writeRequired_(L_REQUIRED_DEFAULTS.map(function (e) { return { id: e.id, dept: e.dept, course: e.course, classes: e.classes.map(function (c) { return { cls: c.cls, days: c.days.slice() }; }), groups: e.groups.slice(), half: e.half, note: e.note }; }), '系統預設');   // 第一次用：放進預設的清單
   return readTable_('應有進度表').map(function (r) {
     return { id: str_(r['編號']), dept: str_(r['部別']), course: str_(r['課程']), classes: reqClasses_(jparse_(r['班級'], [])), groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [], half: str_(r['學期別']) || '每', note: str_(r['備註']), teachers: teachersOf_(r['授課老師']) };
@@ -1273,8 +1288,8 @@ function catSheet_() {
 }
 function readCatMap_() {
   var out = {};
-  if (!ss_().getSheetByName('材料單分類指定')) return out;
-  readTable_('材料單分類指定').forEach(function (r) { if (str_(r['產品編號'])) out[str_(r['產品編號'])] = str_(r['分類']); });
+  var rows0; try { rows0 = readTable_('材料單分類指定'); } catch (e) { return out; }
+  rows0.forEach(function (r) { if (str_(r['產品編號'])) out[str_(r['產品編號'])] = str_(r['分類']); });
   return out;
 }
 function writeCatMap_(map) {
@@ -1578,5 +1593,8 @@ function apiProfile() {
   ph('requiredStatus_', function () { var tb = schedTables_(term), ce = schedCells_(); requiredStatus_(term, tb, ce, L_weeks(setting_('開學日 ' + term, ''), setting_('結業式 ' + term, ''))); });
   ph('cellProducts_', function () { cellProducts_(schedCells_()); });
   ph('apiScheduleGet', function () { rtClear_(); apiScheduleGet(); });
+  apiBootstrap(); apiScheduleGet();                                                       // 先各跑一次把快取填滿，再量「有快取」的時間
+  ph('【有快取】apiBootstrap', function () { RT_ = {}; SS_ = null; ENS_ = {}; CAT_ = null; PL_ = null; apiBootstrap(); });
+  ph('【有快取】apiScheduleGet', function () { RT_ = {}; SS_ = null; ENS_ = {}; CAT_ = null; PL_ = null; apiScheduleGet(); });
   return out;
 }
