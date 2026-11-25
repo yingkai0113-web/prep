@@ -460,7 +460,7 @@ function L_docRequisition(entries, cat, ctx) {
     var sg = R([T('實習股長：'), null, null, null, T('任課老師簽名：' + (e.teacherName || (ctx && ctx.teacherName) || ''))]);
     merges.push([sg, 0, sg, 1], [sg, 4, sg, 7]);
     docs.push({ name: L_safeSheetName(L_pad(p.m) + '-' + L_pad(p.d) + ' ' + e.cls + (e.group ? e.group : '') + ' ' + ttl, used),
-                cw: [17.9, 8.4, 17.9, 15.4, 10.6, 8.9, 13.1, 20.1], rows: rows, merges: merges, heights: heights, defH: 21, page: L_PAGE });
+                cw: [17.9, 8.4, 17.9, 15.4, 10.6, 8.9, 13.1, 20.1], rows: rows, merges: merges, heights: heights, defH: 21, page: L_PAGE, stack: true });
   });
   return docs;
 }
@@ -616,7 +616,36 @@ function L_docsToHtml(docs) {
 function L_xmlEsc(s) { return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function L_colName(i) { var s = ''; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
 
+/* Excel：連續的材料申請單（stack）疊在同一張工作表裡，每一堂課之間插一個手動分頁線，列印時剛好一堂課一張 A4 */
+function L_stackDocs(docs) {
+  var out = [], i = 0;
+  while (i < docs.length) {
+    if (!docs[i].stack) { out.push(docs[i]); i++; continue; }
+    var rows = [], merges = [], heights = {}, breaks = [], cw = docs[i].cw;
+    while (i < docs.length && docs[i].stack) {
+      var d = docs[i], off = rows.length;
+      d.rows.forEach(function (r) {
+        rows.push(r.map(function (c) {                                                   // 公式裡的列號跟著往下平移（不改到原本的格子）
+          if (!c || !c.f || !off) return c;
+          var n = {}; for (var k in c) n[k] = c[k];
+          n.f = c.f.replace(/([A-Z])(\d+)/g, function (m0, col, num) { return col + (Number(num) + off); });
+          return n;
+        }));
+      });
+      (d.merges || []).forEach(function (m) { merges.push([m[0] + off, m[1], m[2] + off, m[3]]); });
+      Object.keys(d.heights || {}).forEach(function (k) { heights[Number(k) + off] = d.heights[k]; });
+      breaks.push(rows.length);                                                           // 這一堂課最後一列的列號（1 開始）：它後面分頁
+      i++;
+    }
+    breaks.pop();                                                                        // 最後一堂後面不用分頁
+    out.push({ name: '材料申請單', cw: cw, rows: rows, merges: merges, heights: heights, defH: 21, breaks: breaks,
+               page: Object.assign({}, L_PAGE, { fit: 'width' }) });
+  }
+  return out;
+}
+
 function L_xlsxFiles(docs) {
+  docs = L_stackDocs(docs);
   docs = L_fontDocs(docs);
   var fonts = ['<font><sz val="11"/><name val="新細明體"/></font>'], fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
   var borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>'], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
@@ -665,7 +694,8 @@ function L_xlsxFiles(docs) {
       '<sheetData>' + out.join('') + '</sheetData>' +
       (d.merges && d.merges.length ? '<mergeCells count="' + d.merges.length + '">' + d.merges.map(function (g) { return '<mergeCell ref="' + L_colName(g[1]) + (g[0] + 1) + ':' + L_colName(g[3]) + (g[2] + 1) + '"/>'; }).join('') + '</mergeCells>' : '') +
       '<pageMargins left="' + m.l + '" right="' + m.r + '" top="' + m.t + '" bottom="' + m.b + '" header="' + m.h + '" footer="' + m.f + '"/>' +
-      '<pageSetup paperSize="' + pg.paper + '"' + (pg.fit ? ' fitToWidth="1" fitToHeight="' + (pg.fit === 'page' ? 1 : 0) + '"' : ' scale="' + pg.scale + '"') + ' orientation="' + pg.orient + '"/></worksheet>';
+      '<pageSetup paperSize="' + pg.paper + '"' + (pg.fit ? ' fitToWidth="1" fitToHeight="' + (pg.fit === 'page' ? 1 : 0) + '"' : ' scale="' + pg.scale + '"') + ' orientation="' + pg.orient + '"/>' +
+      (d.breaks && d.breaks.length ? '<rowBreaks count="' + d.breaks.length + '" manualBreakCount="' + d.breaks.length + '">' + d.breaks.map(function (n) { return '<brk id="' + n + '" max="16383" man="1"/>'; }).join('') + '</rowBreaks>' : '') + '</worksheet>';
   });
   var files = [];
   files.push({ name: '[Content_Types].xml', xml: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
