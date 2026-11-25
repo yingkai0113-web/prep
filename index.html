@@ -407,7 +407,7 @@ function confirmHTML(){
   ${dup.length?`<div class="err">⚠ 有重複的課（同一天、同班、同一個產品排了兩次），請確認是不是多按了。</div>`:''}
   ${gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span class="${dup.includes(i)?'dup':''}">${md(e.date)}</span><span>${esc(titleOf(e))}</span><span class="mut">${fmt(e.sets)} 組</span></div>`;}).join('')}</div>`).join('')}
   <div class="card" style="margin:12px 0 0"><div class="cb" style="padding-top:10px"><b>匯出之後要下載什麼？</b><span class="mut" style="display:block;font-size:13px">不管選哪一個，都會送給技士。</span>
-    ${(curScope()==='extra'?[['none','只匯出（不下載檔案）'],['all','匯出 ＋ 下載材料單']]:[['none','只匯出（不下載檔案）'],['schedule','匯出 ＋ 下載教學進度表'],['all','匯出 ＋ 下載教學進度表 ＋ 材料單']]).map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="expwhat" data-k="expwhat" value="${v}" ${expWhat()===v?'checked':''}> <span>${n}</span></label>`).join('')}${expWhat()==='all'?`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['class','依課程、班級排（同一個班再依日期）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="exporder" data-k="exporder" value="${v}" ${S.expOrder===v?'checked':''}> <span>${n}</span></label>`).join('')}`:''}${expWhat()!=='none'?fmtPick():''}</div></div>
+    ${(curScope()==='extra'?[['none','只匯出（不下載檔案）'],['all','匯出 ＋ 下載材料單']]:[['none','只匯出（不下載檔案）'],['schedule','匯出 ＋ 下載教學進度表'],['all','匯出 ＋ 下載教學進度表 ＋ 材料單']]).map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="expwhat" data-k="expwhat" value="${v}" ${expWhat()===v?'checked':''}> <span>${n}</span></label>`).join('')}${expWhat()==='all'?`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['course','依課程、再依日期排'],['class','依課程、班級排（同一個班再依日期）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="exporder" data-k="exporder" value="${v}" ${S.expOrder===v?'checked':''}> <span>${n}</span></label>`).join('')}`:''}${expWhat()!=='none'?fmtPick():''}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px"><button class="btn ghost" data-a="sendNo">不對，回去改</button><button class="btn" data-a="sendYes">正確，送出</button></div>
   </div></div>`;
 }
@@ -703,7 +703,7 @@ function techHTML(){
   h+=ssHTML();
   const tl=[...t.teachers];if(S.tTeacher&&!tl.some(x=>x.email===S.tTeacher))tl.push({email:S.tTeacher,name:S.tTeacher});
   h+=`<div class="tctl"><select class="in" data-k="tTeacher" aria-label="哪位老師"><option value="">全部老師</option>${tl.map(x=>`<option value="${esc(x.email)}" ${x.email===S.tTeacher?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
-  <select class="in" data-k="tOrder" aria-label="材料單的順序"><option value="date" ${S.tOrder!=='class'?'selected':''}>依日期排</option><option value="class" ${S.tOrder==='class'?'selected':''}>依課程、班級排</option></select>
+  <select class="in" data-k="tOrder" aria-label="材料單的順序"><option value="date" ${S.tOrder!=='class'&&S.tOrder!=='course'?'selected':''}>依日期排</option><option value="course" ${S.tOrder==='course'?'selected':''}>依課程、再依日期排</option><option value="class" ${S.tOrder==='class'?'selected':''}>依課程、班級排</option></select>
   <div class="seg" role="group" aria-label="看法"><button data-a="tmode" data-m="stats" class="${S.tMode==='stats'?'on':''}">統計</button><button data-a="tmode" data-m="sheets" class="${S.tMode==='sheets'?'on':''}">逐張材料單</button></div></div>`;
   const f=S.tFilter,fx=t.facets||{courses:[],classes:[]},fOn=!!(f.id||f.course||f.cls||f.q);
   h+=`<div class="tctl" style="flex-wrap:wrap"><select class="in" data-k="tfCourse" aria-label="哪一門課"><option value="">全部課程</option>${fx.courses.map(x=>`<option ${x===f.course?'selected':''}>${esc(x)}</option>`).join('')}</select><select class="in" data-k="tfCls" aria-label="哪一班"><option value="">全部班級</option>${fx.classes.map(x=>`<option ${x===f.cls?'selected':''}>${esc(x)}</option>`).join('')}</select><input class="in" data-k="tfQ" placeholder="產品名稱有…" aria-label="產品名稱" value="${esc(f.q)}" style="flex:1;min-width:8em"></div>`;
@@ -736,7 +736,7 @@ function download(name,b64,auto=true){
   return {name,url};
 }
 /* 下載格式：Excel／PDF／兩個都要（PDF 是全部合成同一個檔，一堂課一頁） */
-const orderPick=()=>`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['class','依課程、班級排（同一個班再依日期；每一門課輸出一個檔）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="tordr" data-k="tOrder" value="${v}" ${(S.tOrder==='class'?'class':'date')===v?'checked':''}> <span>${n}</span></label>`).join('')}`;
+const orderPick=()=>`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['course','依課程、再依日期排（全部放在一個檔）'],['class','依課程、班級排（同一個班再依日期；每一門課輸出一個檔）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="tordr" data-k="tOrder" value="${v}" ${(S.tOrder==='class'||S.tOrder==='course'?S.tOrder:'date')===v?'checked':''}> <span>${n}</span></label>`).join('')}`;
 const fmtPick=()=>`<b style="display:block;margin-top:8px">檔案格式</b><div style="display:flex;gap:14px;flex-wrap:wrap">${[['xlsx','Excel'],['pdf','PDF（全部合成一個檔）'],['both','兩個都要']].map(([v,n])=>`<label style="display:flex;gap:6px;align-items:center;padding:6px 0"><input type="radio" name="dlfmt" data-k="dlfmt" value="${v}" ${(S.dlfmt||'xlsx')===v?'checked':''}> <span>${n}</span></label>`).join('')}</div>`;
 const loadJs=(src)=>new Promise((ok,no)=>{if(document.querySelector(`script[data-lib="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.dataset.lib=src;e.onload=ok;e.onerror=()=>no(new Error('載入 PDF 工具失敗，請確認網路後再試。'));document.head.appendChild(e);});
 /* 伺服器給排好的 HTML，在這個瀏覽器裡轉成 PDF（用這台電腦的標楷體；沒有的話用楷體系網頁字型） */
@@ -1249,7 +1249,7 @@ document.addEventListener('click',async ev=>{
     S.termDlg=false;S.busy='製作整個學期（全部老師）的檔案…';S.busyA='exportTerm';render();
     try{await runFmt('apiExportTerm',S.termOrder||'date');}catch(e){S.err=e.message;}
     S.busy='';S.busyA='';return render();}
-  if(a==='exportWeek'||a==='exportSheets'){S.exDlg=a;S.exOrder=S.tOrder==='class'?'class':'date';return render();}
+  if(a==='exportWeek'||a==='exportSheets'){S.exDlg=a;S.exOrder=S.tOrder==='class'||S.tOrder==='course'?S.tOrder:'date';return render();}
   if(a==='exNo'){S.exDlg=null;return render();}
   if(a==='exGo'){
     const act=S.exDlg;S.exDlg=null;S.busy='製作中…';S.busyA=act;render();
@@ -1737,7 +1737,7 @@ function exModal(){
   const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
   const sheets=S.exDlg==='exportSheets';
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">${sheets?'匯出材料單':'匯出總表'}</h2>
-    ${sheets?`<b>材料單要怎麼分？</b>${rad('exo','exorder',[['date','依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.exOrder||'date')}`:''}
+    ${sheets?`<b>材料單要怎麼分？</b>${rad('exo','exorder',[['date','依日期排（全部放在一個檔）'],['course','依課程、再依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.exOrder||'date')}`:''}
     <b style="display:block;margin-top:8px">檔案格式</b>${rad('exf','dlfmt',[['xlsx','Excel'],['pdf','PDF'],['both','Excel 和 PDF 都要']],S.dlfmt||'xlsx')}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="exNo">取消</button><button class="btn" data-a="exGo">匯出</button></div></div></div>`;
 }
@@ -1745,7 +1745,7 @@ function termModal(){
   const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">匯出整個學期（全部老師）</h2>
     <p class="mut" style="margin:0 0 8px">整個學期、所有老師已經送出的進度表加材料單，格式跟老師匯出的一樣（一堂課一張 A4）。</p>
-    <b>材料單要怎麼分？</b>${rad('tdorder','tdorder',[['date','依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.termOrder||'date')}
+    <b>材料單要怎麼分？</b>${rad('tdorder','tdorder',[['date','依日期排（全部放在一個檔）'],['course','依課程、再依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.termOrder||'date')}
     <b style="display:block;margin-top:8px">檔案格式</b>${rad('tdfmt','dlfmt',[['xlsx','Excel'],['pdf','PDF'],['both','Excel 和 PDF 都要']],S.dlfmt||'xlsx')}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="expTermNo">取消</button><button class="btn" data-a="expTermGo">匯出</button></div></div></div>`;
 }

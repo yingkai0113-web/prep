@@ -328,7 +328,7 @@ function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, f
   var facets = { courses: Object.keys(fCourses).sort(), classes: Object.keys(fClasses).sort() };
   filter = L_cleanFilter(filter);
   if (L_hasFilter(filter)) list = list.filter(function (e) { return L_entryMatches(e, filter, cat); });
-  if (order === 'class') list = L_orderEntries(list, cat, 'class');                    // 逐張材料單、匯出的順序：依課程、班級
+  if (order === 'class' || order === 'course') list = L_orderEntries(list, cat, order);                    // 逐張材料單、匯出的順序：依課程、班級
   var mats = {}, others = {}, classes = [], lessons = [], byDate = {};
   list.forEach(function (e) {
     var prod = cat.products[e.pid], tname = nameOf(e.teacher), lines = L_lines(e, cat); var ttl = e.title || prod.title;
@@ -397,13 +397,18 @@ function L_safeSheetName(s, used) {
 }
 
 /* 一堂課一張申請單 */
-/* 材料單的順序：'date' = 依日期（同一天再依產品）；'class' = 依課程、班級（日間部在前，課程和班級照設定的順序），同一個班再依日期 */
+/* 材料單的順序：'date' = 依日期（同一天再依產品）；'course' = 依課程、再依日期（不分班）；'class' = 依課程、班級（日間部在前，課程和班級照設定的順序），同一個班再依日期 */
 function L_orderEntries(list, cat, order) {
   var cmp = function (x, y) { return x < y ? -1 : x > y ? 1 : 0; };
   var byDate = function (a, b) { return cmp(a.date, b.date) || cmp(a.pid, b.pid) || cmp(a.id || '', b.id || ''); };
-  if (order !== 'class') return list.slice().sort(byDate);
+  if (order !== 'class' && order !== 'course') return list.slice().sort(byDate);
   var deptRank = function (d) { return d === '日間部' ? 0 : d === '夜間部' ? 1 : 2; };
   var idx = function (arr, v) { var i = (arr || []).indexOf(v); return i < 0 ? 9999 : i; };
+  if (order === 'course') return list.slice().sort(function (a, b) {                                    // 依課程、再依日期（不分班；全部放一個檔）
+    return deptRank(a.dept) - deptRank(b.dept)
+      || idx(cat && cat.courses && cat.courses[a.dept], a.course || '') - idx(cat && cat.courses && cat.courses[b.dept], b.course || '') || cmp(a.course || '', b.course || '')
+      || byDate(a, b);
+  });
   return list.slice().sort(function (a, b) {
     return deptRank(a.dept) - deptRank(b.dept)
       || idx(cat && cat.courses && cat.courses[a.dept], a.course || '') - idx(cat && cat.courses && cat.courses[b.dept], b.course || '') || cmp(a.course || '', b.course || '')
