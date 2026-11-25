@@ -508,11 +508,40 @@ function L_docWeek(agg) {
   return [d1, d2, d3];
 }
 
+/* 字體：中文用標楷體、英文和數字用 Times New Roman。
+ * 同一格裡中英文混在一起的，拆成好幾段（xlsx 的「多種字體」格 / PDF 的 span），每一段各用各的字體。 */
+var L_FONT_EN = 'Times New Roman';
+function L_fontSplit(text, base) {                                                   // 一段文字 → 依英數字、中文切成幾段
+  var out = [], re = /[\x21-\x7E]+/g, last = 0, m, t = String(text);
+  var push = function (v, en) { if (v) out.push({ v: v, ff: en ? L_FONT_EN : L_FONT, sz: base.sz, b: base.b, color: base.color }); };
+  while ((m = re.exec(t))) { push(t.slice(last, m.index), false); push(m[0], true); last = m.index + m[0].length; }
+  push(t.slice(last), false);
+  return out;
+}
+function L_fontDocs(docs) {
+  return docs.map(function (d) {
+    var rows = d.rows.map(function (row) {
+      return row.map(function (c) {
+        if (!c || c.ff !== L_FONT) return c;
+        var n = {}; for (var k in c) n[k] = c[k];
+        if (c.f || typeof c.v === 'number') { n.ff = L_FONT_EN; return n; }                // 公式、數字：Times New Roman
+        if (c.runs) { var rr = []; c.runs.forEach(function (rn) { L_fontSplit(rn.v, { sz: rn.sz, b: rn.b, color: rn.color }).forEach(function (x) { rr.push(x); }); }); n.runs = rr; return n; }
+        var t = c.v === null || c.v === undefined ? '' : String(c.v);
+        if (!/[\x21-\x7E]/.test(t)) return n;                                            // 沒有英數字：全部標楷體
+        if (!/[^\x00-\x7F]/.test(t)) { n.ff = L_FONT_EN; return n; }                     // 全是英數字：Times New Roman
+        n.runs = L_fontSplit(t, { sz: c.sz, b: c.b }); return n;                         // 中英混合：分段
+      });
+    });
+    var o = {}; for (var k in d) o[k] = d[k]; o.rows = rows; return o;
+  });
+}
+
 /* =====================================================================
  * PDF：把同一批 docs（跟 xlsx 一樣的內容）排成 HTML，一份 docs 一頁（或多頁）A4 直印，全部放在同一個 PDF。
  * 欄寬、字級、列高都直接照比例縮好（不靠 CSS zoom，Apps Script 轉 PDF 時比較穩）。
  * ===================================================================== */
 function L_docsToHtml(docs) {
+  docs = L_fontDocs(docs);
   var W_IN = 7.0, H_IN = 10.3, PX = 96;                                                   // A4 扣掉邊界後可用的寬、高
   var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
   var col = function (s) { return s.charCodeAt(0) - 65; };
@@ -554,7 +583,7 @@ function L_docsToHtml(docs) {
         var cell = (doc.rows[r] || [])[c], sp = span[r + ',' + c];
         var st = 'padding:0 2px;overflow:hidden;white-space:' + (cell && cell.wrap ? 'normal' : 'nowrap') + ';';
         if (cell) {
-          st += 'font-size:' + Math.round((cell.sz || 11) * k * 10) / 10 + 'pt;';
+          st += 'font-size:' + Math.round((cell.sz || 11) * k * 10) / 10 + 'pt;' + (cell.ff ? 'font-family:\'' + cell.ff + '\',serif;' : '');
           if (cell.b) st += 'font-weight:bold;';
           st += 'text-align:' + ({ c: 'center', r: 'right', l: 'left' }[cell.al] || 'left') + ';vertical-align:' + ({ top: 'top', bottom: 'bottom' }[cell.va] || 'middle') + ';';
           if (cell.bg) st += 'background-color:' + cell.bg + ';';
@@ -563,7 +592,7 @@ function L_docsToHtml(docs) {
         } else st += 'font-size:' + Math.round(11 * k * 10) / 10 + 'pt;';
         var v = val(r, c); if (typeof v === 'number') v = Math.round(v * 1000) / 1000;
         var inner = (cell && cell.runs) ? cell.runs.map(function (rn) {
-          var rst = (rn.b ? 'font-weight:bold;' : '') + (rn.sz ? 'font-size:' + Math.round(rn.sz * k * 10) / 10 + 'pt;' : '') + (rn.color ? 'color:#' + rn.color + ';' : '');
+          var rst = (rn.ff ? 'font-family:\'' + rn.ff + '\',serif;' : '') + (rn.b ? 'font-weight:bold;' : '') + (rn.sz ? 'font-size:' + Math.round(rn.sz * k * 10) / 10 + 'pt;' : '') + (rn.color ? 'color:#' + rn.color + ';' : '');
           return '<span style="' + rst + '">' + esc(rn.v).replace(/\n/g, '<br>') + '</span>';
         }).join('') : (esc(v).replace(/\n/g, '<br>') || '&nbsp;');
         h += '<td' + (sp ? ' rowspan="' + sp[0] + '" colspan="' + sp[1] + '"' : '') + ' style="' + st + '">' + inner + '</td>';
@@ -583,6 +612,7 @@ function L_xmlEsc(s) { return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000
 function L_colName(i) { var s = ''; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
 
 function L_xlsxFiles(docs) {
+  docs = L_fontDocs(docs);
   var fonts = ['<font><sz val="11"/><name val="新細明體"/></font>'], fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
   var borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>'], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
   var fm = {}, fl = {}, bm = {}, xm = {};
@@ -819,7 +849,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
     dr.forEach(function (d, di) {
       var row = [T(di === 0 ? w.n : '', { al: 'c', bd: BD }), T(multi ? L_md2(L_addDays(w.mon, d - 1)) + '（' + WDN.charAt(d % 7) + '）' + (regD.indexOf(d) < 0 ? ' 加練' : '') : w.label, { al: 'c', bd: BD, sz: 10 })], ri = rows.length;
       for (var k = 2; k < nCols; k++) row[k] = T('', { bd: BD });
-      rows.push(row); heights[ri] = ctx.rowH || (multi ? 30 : 36);
+      rows.push(row); heights[ri] = ctx.rowH || (multi ? 30 : 32);
       if (di === dr.length - 1 && dr.length > 1) merges.push([ri - di, 0, ri, 0]);
       classes.forEach(function (c, ci) {
         var cell = cells[L_cellKey(w.n, c.cls, multi ? dayKey(c, d) : 0)], col = 2 + ci * gN;
@@ -843,7 +873,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
     });
   });
   var nm = '進度表' + (ctx.n ? ctx.n : '');
-  return { name: nm, cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: multi ? 'width' : 'page', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
+  return { name: nm, cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: (!multi || rows.length <= 30) ? 'page' : 'width', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
 }
 
 
