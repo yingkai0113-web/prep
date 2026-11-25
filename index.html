@@ -1226,8 +1226,8 @@ document.addEventListener('click',async ev=>{
     }catch(e){S.err=e.message;}
     S.busy='';return render();}
   if(a==='exportTerm'){S.termDlg=true;return render();}
-  if(a==='termNo'){S.termDlg=false;return render();}
-  if(a==='termGo'){
+  if(a==='expTermNo'){S.termDlg=false;return render();}
+  if(a==='expTermGo'){
     S.termDlg=false;S.busy='製作整個學期（全部老師）的檔案…';render();
     try{await runFmt('apiExportTerm',S.termOrder||'date');}catch(e){S.err=e.message;}
     S.busy='';return render();}
@@ -1712,7 +1712,7 @@ function termModal(){
     <p class="mut" style="margin:0 0 8px">整個學期、所有老師已經送出的進度表加材料單，格式跟老師匯出的一樣（一堂課一張 A4）。</p>
     <b>材料單要怎麼分？</b>${rad('tdorder','tdorder',[['date','依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.termOrder||'date')}
     <b style="display:block;margin-top:8px">檔案格式</b>${rad('tdfmt','dlfmt',[['xlsx','Excel'],['pdf','PDF'],['both','Excel 和 PDF 都要']],S.dlfmt||'xlsx')}
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="termNo">取消</button><button class="btn" data-a="termGo">匯出</button></div></div></div>`;
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="expTermNo">取消</button><button class="btn" data-a="expTermGo">匯出</button></div></div></div>`;
 }
 function remindModal(){
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">催單文字</h2><p class="mut" style="margin:0 0 6px">按住文字全選、複製，貼到 LINE 群組就好。</p><textarea class="in" id="remindTxt" style="width:100%;height:14em" readonly>${esc(S.remind)}</textarea><div style="text-align:right;margin-top:8px"><button class="btn ghost" data-a="remindSel">全選文字</button> <button class="btn" data-a="remindNo">關閉</button></div></div></div>`;
