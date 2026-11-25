@@ -323,6 +323,7 @@ function render(){
   if(S.hu)h+=histModal();
   if(S.remind)h+=remindModal();
   if(S.termDlg)h+=termModal();
+  if(S.exDlg)h+=exModal();
   if(S.dlFiles&&S.dlFiles.length)h+=dlFilesModal();
   if(S.rq)h+=rqModal();
   if(S.ed)h+=editorHTML();
@@ -710,7 +711,7 @@ function techHTML(){
   if(!t.classes.length)return h+`<div class="card"><div class="cb" style="padding-top:12px">${fOn?'這樣篩選沒有課。':`這段日期${S.tTeacher?'這位老師':''}沒有排課。`}</div></div>`;
   if(S.tMode==='sheets'){
     h+=`<p class="sub">每一堂課一張，跟老師交出來的材料申請單一樣（A4）。點開看材料，老師開錯的課可以在裡面刪掉。</p>${t.lessons.map(lessonHTML).join('')}`;
-    return h+orderPick()+fmtPick()+bar(`${t.lessons.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">匯出整個學期（全部老師）</button> <button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出材料單'}</button>`);
+    return h+bar(`${t.lessons.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">${S.busyA==='exportTerm'?'處理中…':'匯出整個學期（全部老師）'}</button> <button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busyA==='exportSheets'?'處理中…':'匯出材料單'}</button>`);
   }
   h+=`<div>${t.classes.map(c=>`<span class="chip" ${c.id?`role="button" tabindex="0" data-a="tOne" data-id="${esc(c.id)}" title="只看這一堂" style="cursor:pointer"`:''}>${md0(c.date)}（${c.wd}）${esc(c.title)} <small>${esc(c.teacher)}・${esc(c.dept)}・${esc(c.course)}・${esc(c.cls)}・${fmt(c.sets)}組</small>${c.changed?` <span class="tg">已修改 ${esc(fmtT(c.updated))}</span>`:''}</span>`).join('')}</div>`;
   const max=Math.max(...t.materials.filter(m=>m.unit==='g').map(m=>m.total),1);
@@ -718,7 +719,7 @@ function techHTML(){
   <div class="sum"><span>合計（公克類）</span><span>${fmt(t.totalG/1000)} 公斤</span></div>
   ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.course)).join('、')+'）').join('；')}</div>`:''}</div></div>`;
   if(t.tools.length)h+=`<div class="card"><div class="cb" style="padding-top:12px"><b>技士要備的器具</b>${t.tools.map(d=>`<div style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${md0(d.date)}（${d.wd}）</b> <span class="mut">${d.items.map(x=>esc(x.name)+' '+(x.n===null?esc(x.rest):x.n+esc(x.unit))).join('、')}</span></div>`).join('')}</div></div>`;
-  return h+fmtPick()+bar(`${t.classes.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">匯出整個學期（全部老師）</button> <button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
+  return h+bar(`${t.classes.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">${S.busyA==='exportTerm'?'處理中…':'匯出整個學期（全部老師）'}</button> <button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busyA==='exportWeek'?'處理中…':'匯出總表'}</button>`);
 }
 async function loadRange(){
   S.tech=null;S.err='';S.tOpen=new Set();render();
@@ -1245,13 +1246,15 @@ document.addEventListener('click',async ev=>{
   if(a==='exportTerm'){S.termDlg=true;return render();}
   if(a==='expTermNo'){S.termDlg=false;return render();}
   if(a==='expTermGo'){
-    S.termDlg=false;S.busy='製作整個學期（全部老師）的檔案…';render();
+    S.termDlg=false;S.busy='製作整個學期（全部老師）的檔案…';S.busyA='exportTerm';render();
     try{await runFmt('apiExportTerm',S.termOrder||'date');}catch(e){S.err=e.message;}
-    S.busy='';return render();}
-  if(a==='exportWeek'||a==='exportSheets'){
-    S.busy='製作中…';render();
-    try{await runFmt(a==='exportWeek'?'apiExportRange':'apiExportRangeSheets',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder);}catch(e){S.err=e.message;}
-    S.busy='';return render();}
+    S.busy='';S.busyA='';return render();}
+  if(a==='exportWeek'||a==='exportSheets'){S.exDlg=a;S.exOrder=S.tOrder==='class'?'class':'date';return render();}
+  if(a==='exNo'){S.exDlg=null;return render();}
+  if(a==='exGo'){
+    const act=S.exDlg;S.exDlg=null;S.busy='製作中…';S.busyA=act;render();
+    try{await runFmt(act==='exportWeek'?'apiExportRange':'apiExportRangeSheets',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,act==='exportSheets'?S.exOrder:S.tOrder);}catch(e){S.err=e.message;}
+    S.busy='';S.busyA='';return render();}
 });
 /* 電腦上：把排好的格子拖到別的格子 */
 document.addEventListener('dragstart',ev=>{
@@ -1341,6 +1344,7 @@ document.addEventListener('change',ev=>{
   if(k==='exporder'){S.expOrder=t.value;return;}
   if(k==='dlfmt'){S.dlfmt=t.value;return;}
   if(k==='tdorder'){S.termOrder=t.value;return;}
+  if(k==='exorder'){S.exOrder=t.value;return;}
   if(k==='tOrder'){S.tOrder=t.value;S.tOpen=new Set();return loadRange();}
   if(k==='xmode'){S.xf.mode=t.value;S.xf.val='';return render();}
   if(k==='scTFrom'||k==='scTTo'||k==='rqFrom'||k==='rqTo'){
@@ -1728,6 +1732,14 @@ function dlFilesModal(){
     <p class="mut" style="margin:0 0 8px">按「全部下載」一次存下來，或一個一個按。瀏覽器如果問「是否允許下載多個檔案」，請按允許。</p>
     <div style="max-height:46vh;overflow:auto">${S.dlFiles.map(f=>`<div class="parow"><span style="word-break:break-all">${esc(f.name)}</span><a class="btn sm" href="${f.url}" download="${esc(f.name)}">下載</a></div>`).join('')}</div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="dlFilesClose">關閉</button><button class="btn" data-a="dlFilesAll">全部下載</button></div></div></div>`;
+}
+function exModal(){
+  const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
+  const sheets=S.exDlg==='exportSheets';
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">${sheets?'匯出材料單':'匯出總表'}</h2>
+    ${sheets?`<b>材料單要怎麼分？</b>${rad('exo','exorder',[['date','依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.exOrder||'date')}`:''}
+    <b style="display:block;margin-top:8px">檔案格式</b>${rad('exf','dlfmt',[['xlsx','Excel'],['pdf','PDF'],['both','Excel 和 PDF 都要']],S.dlfmt||'xlsx')}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="exNo">取消</button><button class="btn" data-a="exGo">匯出</button></div></div></div>`;
 }
 function termModal(){
   const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
