@@ -428,7 +428,7 @@ function L_docRequisition(entries, cat, ctx) {
                 T('總 量', { al: 'c', bd: BD }), T('單  價', { al: 'c', bd: BD }), T('總  價', { al: 'c', bd: BD })]);
     merges.push([hr, 1, hr, 2]);
     // 材料（至少留 16 列，方便手寫補充）
-    var title = ttl + (prod.serving ? '(' + prod.serving + ')' : '');
+    var title = ttl + (prod.serving ? '\n(' + prod.serving + ')' : '');               // 產品名稱一行、份量（1個/組）換到下一行
     var b0 = rows.length;
     for (var i = 0; i < N; i++) {
       var l = lines[i], rn = rows.length + 1, side = i === N - 1 ? 'lrb' : 'lr';
@@ -506,6 +506,73 @@ function L_docWeek(agg) {
   });
   var d3 = { name: '器具（技士）', cw: [11, 6, 22, 10, 26], rows: r3, merges: [], heights: {}, defH: 18, page: Object.assign({}, L_PAGE, { fit: 'width' }) };
   return [d1, d2, d3];
+}
+
+/* =====================================================================
+ * PDF：把同一批 docs（跟 xlsx 一樣的內容）排成 HTML，一份 docs 一頁（或多頁）A4 直印，全部放在同一個 PDF。
+ * 欄寬、字級、列高都直接照比例縮好（不靠 CSS zoom，Apps Script 轉 PDF 時比較穩）。
+ * ===================================================================== */
+function L_docsToHtml(docs) {
+  var W_IN = 7.0, H_IN = 10.3, PX = 96;                                                   // A4 扣掉邊界後可用的寬、高
+  var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  var col = function (s) { return s.charCodeAt(0) - 65; };
+  var pages = docs.map(function (doc, di) {
+    var memo = {};
+    var val = function (r, c) {
+      var k = r + ',' + c; if (k in memo) return memo[k];
+      var cell = (doc.rows[r] || [])[c], v = cell ? cell.v : '';
+      if (cell && cell.f) v = evalF(cell.f);
+      memo[k] = v; return v;
+    };
+    var evalF = function (f) {
+      var m;
+      if ((m = /^([A-Z])(\d+)\*([A-Z])(\d+)$/.exec(f))) return (Number(val(+m[2] - 1, col(m[1]))) || 0) * (Number(val(+m[4] - 1, col(m[3]))) || 0);
+      if ((m = /^ROUND\(([A-Z])(\d+)\/1000,2\)$/.exec(f))) return Math.round((Number(val(+m[2] - 1, col(m[1]))) || 0) / 10) / 100;
+      if ((m = /^SUMIF\(([A-Z])(\d+):[A-Z](\d+),"g",([A-Z])(\d+):[A-Z](\d+)\)$/.exec(f))) {
+        var s = 0; for (var r = +m[2] - 1; r <= +m[3] - 1; r++) if (val(r, col(m[1])) === 'g') s += Number(val(r, col(m[4]))) || 0; return s;
+      }
+      return '';
+    };
+    var nR = doc.rows.length, nC = doc.cw.length, cover = {}, span = {};
+    (doc.merges || []).forEach(function (m) {
+      span[m[0] + ',' + m[1]] = [m[2] - m[0] + 1, m[3] - m[1] + 1];
+      for (var r = m[0]; r <= m[2]; r++) for (var c = m[1]; c <= m[3]; c++) if (r !== m[0] || c !== m[1]) cover[r + ',' + c] = 1;
+    });
+    var widths = doc.cw.map(function (w) { return w * 7 + 5; }), totalW = widths.reduce(function (a, b) { return a + b; }, 0);
+    var hts = [], totalH = 0;
+    for (var r0 = 0; r0 < nR; r0++) { var ht = ((doc.heights && doc.heights[r0]) || doc.defH || 15) * PX / 72; hts.push(ht); totalH += ht; }
+    var k = Math.min(1, W_IN * PX / totalW);
+    if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / totalH);
+    var ws = widths.map(function (w) { return Math.round(w * k * 10) / 10; });
+    var tw = ws.reduce(function (a, b) { return a + b; }, 0);
+    var h = '<div style="' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:\'標楷體\',\'DFKai-SB\',\'Noto Serif TC\',serif"><colgroup>' +
+      ws.map(function (w) { return '<col width="' + w + '" style="width:' + w + 'px">'; }).join('') + '</colgroup>';
+    for (var r = 0; r < nR; r++) {
+      h += '<tr style="height:' + Math.round(hts[r] * k * 10) / 10 + 'px">';
+      for (var c = 0; c < nC; c++) {
+        if (cover[r + ',' + c]) continue;
+        var cell = (doc.rows[r] || [])[c], sp = span[r + ',' + c];
+        var st = 'padding:0 2px;overflow:hidden;white-space:' + (cell && cell.wrap ? 'normal' : 'nowrap') + ';';
+        if (cell) {
+          st += 'font-size:' + Math.round((cell.sz || 11) * k * 10) / 10 + 'pt;';
+          if (cell.b) st += 'font-weight:bold;';
+          st += 'text-align:' + ({ c: 'center', r: 'right', l: 'left' }[cell.al] || 'left') + ';vertical-align:' + ({ top: 'top', bottom: 'bottom' }[cell.va] || 'middle') + ';';
+          if (cell.bg) st += 'background-color:' + cell.bg + ';';
+          var bd = cell.bd || '';
+          st += 'border-left:' + (bd.indexOf('l') >= 0 ? '1px solid #000' : '0') + ';border-right:' + (bd.indexOf('r') >= 0 ? '1px solid #000' : '0') + ';border-top:' + (bd.indexOf('t') >= 0 ? '1px solid #000' : '0') + ';border-bottom:' + (bd.indexOf('b') >= 0 ? '1px solid #000' : '0') + ';';
+        } else st += 'font-size:' + Math.round(11 * k * 10) / 10 + 'pt;';
+        var v = val(r, c); if (typeof v === 'number') v = Math.round(v * 1000) / 1000;
+        var inner = (cell && cell.runs) ? cell.runs.map(function (rn) {
+          var rst = (rn.b ? 'font-weight:bold;' : '') + (rn.sz ? 'font-size:' + Math.round(rn.sz * k * 10) / 10 + 'pt;' : '') + (rn.color ? 'color:#' + rn.color + ';' : '');
+          return '<span style="' + rst + '">' + esc(rn.v).replace(/\n/g, '<br>') + '</span>';
+        }).join('') : (esc(v).replace(/\n/g, '<br>') || '&nbsp;');
+        h += '<td' + (sp ? ' rowspan="' + sp[0] + '" colspan="' + sp[1] + '"' : '') + ' style="' + st + '">' + inner + '</td>';
+      }
+      h += '</tr>';
+    }
+    return h + '</table></div>';
+  });
+  return '<html><head><meta charset="utf-8"><style>@page{size:A4;margin:0.6in}body{margin:0}</style></head><body>' + pages.join('') + '</body></html>';
 }
 
 /* =====================================================================
@@ -758,7 +825,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
         var cell = cells[L_cellKey(w.n, c.cls, multi ? dayKey(c, d) : 0)], col = 2 + ci * gN;
         var runsFor = function (g) {
           var ttl = g.pids.map(function (p) { return products[p] ? products[p].title : p; }).join('、'), runs = [{ v: cell.label || ttl, b: 1 }];
-          if (g.teacher) runs.push({ v: '\n' + (names[g.teacher] || g.teacher.split('@')[0]), sz: 9, color: '707070' });
+          if (g.teacher) runs.push({ v: '\n' + (names[g.teacher] || g.teacher.split('@')[0]), sz: 12, b: 1, color: '000000' });
           return runs;
         };
         var bgFor = function (teacher) { return hl && teacher === hl ? '#FFF2A8' : shadeFor(c.cls, teacher); };
