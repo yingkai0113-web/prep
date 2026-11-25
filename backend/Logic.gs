@@ -874,7 +874,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
   };
   var multi = single && (regD.length > 1 || weeks.some(function (w) { return rowDays(w).length > 1; }));
   var nCols = 2 + classes.length * gN, rows = [], merges = [], heights = {};
-  var cw = [5.5, 13], per = classes.length >= 3 ? 24 : 34;
+  var cw = [4.5, 11], per = classes.length >= 3 ? 26 : 38;
   classes.forEach(function () { for (var g = 0; g < gN; g++) cw.push(per / gN * (gN > 1 ? 1.0 : 1)); });
   var R = function (arr, h) { rows.push(arr); if (h) heights[rows.length - 1] = h; return rows.length - 1; };
   var title = (ctx.term ? ctx.term + ' ' : '') + table.course + '　教學進度表';
@@ -892,7 +892,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
     classes.forEach(function (c, ci) { labels.forEach(function (lb, g) { rows[h2][2 + ci * gN + g] = T(lb, HD); }); });
     merges.push([h1, 0, h2, 0], [h1, 1, h2, 1]);
   }
-  var WDN = '日一二三四五六日';
+  var WDN = '日一二三四五六日', wkStart = rows.length, rowNeed = {};
   weeks.forEach(function (w) {
     var dr = multi ? rowDays(w) : [0];
     dr.forEach(function (d, di) {
@@ -902,8 +902,14 @@ function L_docSchedule(table, weeks, cells, ctx) {
       if (di === dr.length - 1 && dr.length > 1) merges.push([ri - di, 0, ri, 0]);
       classes.forEach(function (c, ci) {
         var cell = cells[L_cellKey(w.n, c.cls, multi ? dayKey(c, d) : 0)], col = 2 + ci * gN;
-        var runsFor = function (g) {
-          var ttl = g.pids.map(function (p) { return products[p] ? products[p].title : p; }).join('、'), runs = [{ v: cell.label || ttl, b: 1 }];
+        var runsFor = function (g, span) {
+          var ttl = cell.label || g.pids.map(function (p) { return products[p] ? products[p].title : p; }).join('、'), cap = -1;
+          for (var q = 0; q < span; q++) cap += cw[col + q];
+          var u = 0; String(ttl).split('').forEach(function (ch) { u += /[^\x00-\x7f]/.test(ch) ? 2.1 : 1.2; });          // 估算文字寬度（中文字約 2.1 個數字寬）
+          var sz = 11, lines = Math.max(1, Math.ceil(u / cap));
+          if (u > cap) { sz = 10; lines = Math.max(1, Math.ceil(u * 10 / 11 / cap)); if (lines > 1) { sz = 9; lines = Math.max(1, Math.ceil(u * 9 / 11 / cap)); } }
+          rowNeed[ri] = Math.max(rowNeed[ri] || 0, lines * sz * 1.35 + (g.teacher ? 12 * 1.35 : 0) + 5);
+          var runs = [{ v: ttl, b: 1, sz: sz }];
           if (g.teacher) runs.push({ v: '\n' + (names[g.teacher] || g.teacher.split('@')[0]), sz: 12, b: 1, color: '000000' });
           return runs;
         };
@@ -913,16 +919,23 @@ function L_docSchedule(table, weeks, cells, ctx) {
           row[col] = T(cell.note, { al: 'c', bd: BD, bg: '#EEEEEE', wrap: 1 });
           if (gN > 1) merges.push([ri, col, ri, col + gN - 1]);
         } else if (cell.mode === 'joint' || gN === 1) {
-          var g0 = cell.groups[0]; row[col] = TR(runsFor(g0), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g0.teacher) });
+          var g0 = cell.groups[0]; row[col] = TR(runsFor(g0, gN), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g0.teacher) });
           if (gN > 1) merges.push([ri, col, ri, col + gN - 1]);
         } else {
-          cell.groups.forEach(function (g, gi) { row[col + gi] = g.pids.length ? TR(runsFor(g), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g.teacher) }) : T('', { al: 'c', bd: BD, wrap: 1 }); });
+          cell.groups.forEach(function (g, gi) { row[col + gi] = g.pids.length ? TR(runsFor(g, 1), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g.teacher) }) : T('', { al: 'c', bd: BD, wrap: 1 }); });
         }
       });
     });
   });
+  for (var ni in rowNeed) if (!ctx.rowH && rowNeed[ni] > (heights[ni] || 0)) heights[ni] = Math.ceil(rowNeed[ni]);       // 文字比較長要換行的列，列高跟著加高（不然會被切掉）
+  var dataN = rows.length - wkStart;                                                      // 週次很多（例如 21 週，或每天上課的班）：列高盡量縮小，一定要放在同一頁
+  if (!ctx.rowH && dataN > 18) {
+    var hdrH = 0; for (var hi = 0; hi < wkStart; hi++) hdrH += heights[hi] || 18;
+    var fitH = Math.max(14, Math.floor((730 - hdrH) / dataN));
+    for (var wi = wkStart; wi < rows.length; wi++) { var mn = Math.max(fitH, Math.ceil(rowNeed[wi] || 0)); if (heights[wi] > mn) heights[wi] = mn; }
+  }
   var nm = '進度表' + (ctx.n ? ctx.n : '');
-  return { name: nm, group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: (!multi || rows.length <= 30) ? 'page' : 'width', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
+  return { name: nm, group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: 'page', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
 }
 
 
