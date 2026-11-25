@@ -616,7 +616,7 @@ function apiRevertTemplate(pid) {
 
 /* scope：'sched' = 教學進度表排的課（第一頁是進度表）；'extra' = 額外材料單（不在進度表裡的臨時活動）；不給 = 全部 */
 /* what：'all' = 教學進度表（有的話）+ 每一堂課的材料申請單（預設）；'schedule' = 只有教學進度表。老師「只匯出」（不下載檔案）就不會呼叫這裡。 */
-function apiExportRequisition(scope, what, order) {
+function apiExportRequisition(scope, what, order, fmt) {
   var me = whoami_(), term = setting_('目前學年學期', ''), cat = loadCatalog_();
   var mine = readSent_().filter(function (e) { return e.teacher === me.email && e.term === term && (scope === 'sched' ? !!e.sid : scope === 'extra' ? !e.sid : true); });
   if (!mine.length) throw new Error(scope === 'extra' ? '還沒有送出的額外材料單可以匯出。' : '還沒有送出的排課可以匯出。');
@@ -629,9 +629,9 @@ function apiExportRequisition(scope, what, order) {
   }
   if (what === 'schedule') {
     if (!docs.length) throw new Error('沒有教學進度表可以下載（額外材料單沒有進度表，或學期的開學日還沒設定）。');
-    return buildXlsx_('教學進度表_' + me.name + '_' + term, docs);
+    return buildXlsx_('教學進度表_' + me.name + '_' + term, docs, fmt);
   }
-  return buildXlsx_((scope === 'extra' ? '額外材料單_' : '材料申請單_') + me.name + '_' + term, docs.concat(L_docRequisition(mine, cat, { teacherName: me.name, order: order === 'class' ? 'class' : 'date' })));
+  return buildXlsx_((scope === 'extra' ? '額外材料單_' : '材料申請單_') + me.name + '_' + term, docs.concat(L_docRequisition(mine, cat, { teacherName: me.name, order: order === 'class' ? 'class' : 'date' })), fmt);
 }
 
 function teacherNames_() {
@@ -1179,7 +1179,7 @@ function syncSchedule_(tableId, weekN, cls, day, force) {
 /* 教學進度表先匯出列印（拿去跟老師們討論）：不用送給技士，也不用先儲存——畫面上還沒儲存的修改（overlay）也會印進去。
  * tableIds：要哪幾張（不給 = 你看得到的全部）；overlay：{表ID: [{week, cls, day, cell（null = 清除）}]}；mine = true 就把「你開單」的格子標黃色；
  * blank = true：印空白的格式（週次、日期、班級、分組都在，格子是空的、列高比較高），拿去用紙本討論、手寫。 */
-function apiExportScheduleTables(tableIds, overlay, mine, blank) {
+function apiExportScheduleTables(tableIds, overlay, mine, blank, fmt) {
   var me = whoami_(), term = setting_('目前學年學期', ''), want = Array.isArray(tableIds) ? tableIds.map(String) : [];
   var tables = schedTables_(term).filter(function (t) { return canSeeTable_(me, t) && (!want.length || want.indexOf(t.id) >= 0) && tableWeeks_(t).length; })
     .sort(function (a, b) { return (a.dept + a.course) < (b.dept + b.course) ? -1 : (a.dept + a.course) > (b.dept + b.course) ? 1 : 0; });
@@ -1199,7 +1199,7 @@ function apiExportScheduleTables(tableIds, overlay, mine, blank) {
     });
     return L_docSchedule(t, tableWeeks_(t), map, { term: term, names: names, products: cat.products, highlight: blank !== true && mine === true ? me.email : '', printed: printed, rowH: blank === true ? 44 : 0, n: tables.length > 1 ? String(i + 1) : '' });
   });
-  return buildXlsx_((blank === true ? '教學進度表（空白格式）_' : '教學進度表（討論用）_') + term, docs);
+  return buildXlsx_((blank === true ? '教學進度表（空白格式）_' : '教學進度表（討論用）_') + term, docs, fmt);
 }
 function schedDocs_(tableIds, highlight) {
   var term = setting_('目前學年學期', '');
@@ -1389,15 +1389,15 @@ function apiTechWeek(anyDateInWeek, teacherEmail) {                      // 舊�
 }
 
 /* 匯出這段日期的總表（統計） */
-function apiExportRange(start, end, teacherEmail, filter, order) {
+function apiExportRange(start, end, teacherEmail, filter, order, fmt) {
   var agg = apiTechRange(start, end, teacherEmail, filter, order);
   if (!agg.classes.length) throw new Error('這段日期沒有排課。');
-  return buildXlsx_('備料總表_' + agg.start + '_' + agg.end, L_docWeek(agg));
+  return buildXlsx_('備料總表_' + agg.start + '_' + agg.end, L_docWeek(agg), fmt);
 }
 function apiExportWeek(anyDateInWeek, teacherEmail) { var ws = L_weekStart(anyDateInWeek); return apiExportRange(ws, L_addDays(ws, 6), teacherEmail); }
 
 /* 匯出這段日期每一堂課的材料申請單（跟老師匯出的一樣，A4 一堂課一張） */
-function apiExportRangeSheets(start, end, teacherEmail, filter, order) {
+function apiExportRangeSheets(start, end, teacherEmail, filter, order, fmt) {
   requireStaff_(); rangeCheck_(start, end);
   var names = teacherNames_(), only = String(teacherEmail || '').toLowerCase(), cat = loadCatalog_(), f = L_cleanFilter(filter);
   var list = readSent_().filter(function (e) { return e.date >= start && e.date <= end && (!only || e.teacher === only) && L_entryMatches(e, f, cat); })
@@ -1405,7 +1405,7 @@ function apiExportRangeSheets(start, end, teacherEmail, filter, order) {
   if (!list.length) throw new Error('這段日期沒有排課。');
   var ids = {};
   list.forEach(function (e) { if (e.sid) ids[e.sid.split('|')[0]] = 1; });
-  return buildXlsx_((L_hasFilter(f) ? '材料申請單（部分）_' : '材料申請單_') + start + '_' + end, (L_hasFilter(f) ? [] : schedDocs_(Object.keys(ids), '')).concat(L_docRequisition(list, cat, { order: order === 'class' ? 'class' : 'date' })));      // 只匯出某一部分的時候，不放教學進度表那一頁
+  return buildXlsx_((L_hasFilter(f) ? '材料申請單（部分）_' : '材料申請單_') + start + '_' + end, (L_hasFilter(f) ? [] : schedDocs_(Object.keys(ids), '')).concat(L_docRequisition(list, cat, { order: order === 'class' ? 'class' : 'date' })), fmt);      // 只匯出某一部分的時候，不放教學進度表那一頁
 }
 function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_weekStart(anyDateInWeek); return apiExportRangeSheets(ws, L_addDays(ws, 6), teacherEmail, null, order); }
 
@@ -1426,11 +1426,19 @@ function apiDeletePlanEntry(id) {
 }
 
 /* ---------------- 做出 xlsx 檔（自己組，A4 直印，跟原本的申請單一樣） ---------------- */
-function buildXlsx_(name, docs) {
+function buildXlsx_(name, docs, fmt) {
+  if (fmt === 'pdf') return buildPdf_(name, docs);
   var files = L_xlsxFiles(docs);
   var blobs = files.map(function (f) { return Utilities.newBlob(f.xml, 'application/xml', f.name); });
   var zip = Utilities.zip(blobs, name + '.xlsx');
   return { name: name + '.xlsx', base64: Utilities.base64Encode(zip.getBytes()) };
+}
+
+
+/* PDF：全部放在同一個 PDF（一堂課一頁 A4）。用 HTML 轉 PDF，不需要額外授權 */
+function buildPdf_(name, docs) {
+  var pdf = Utilities.newBlob(L_docsToHtml(docs), 'text/html', name + '.html').getAs('application/pdf');
+  return { name: name + '.pdf', base64: Utilities.base64Encode(pdf.getBytes()) };
 }
 
 

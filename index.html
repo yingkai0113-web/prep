@@ -404,7 +404,7 @@ function confirmHTML(){
   ${dup.length?`<div class="err">⚠ 有重複的課（同一天、同班、同一個產品排了兩次），請確認是不是多按了。</div>`:''}
   ${gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span class="${dup.includes(i)?'dup':''}">${md(e.date)}</span><span>${esc(titleOf(e))}</span><span class="mut">${fmt(e.sets)} 組</span></div>`;}).join('')}</div>`).join('')}
   <div class="card" style="margin:12px 0 0"><div class="cb" style="padding-top:10px"><b>匯出之後要下載什麼？</b><span class="mut" style="display:block;font-size:13px">不管選哪一個，都會送給技士。</span>
-    ${(curScope()==='extra'?[['none','只匯出（不下載檔案）'],['all','匯出 ＋ 下載材料單']]:[['none','只匯出（不下載檔案）'],['schedule','匯出 ＋ 下載教學進度表'],['all','匯出 ＋ 下載教學進度表 ＋ 材料單']]).map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="expwhat" data-k="expwhat" value="${v}" ${expWhat()===v?'checked':''}> <span>${n}</span></label>`).join('')}${expWhat()==='all'?`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['class','依課程、班級排（同一個班再依日期）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="exporder" data-k="exporder" value="${v}" ${S.expOrder===v?'checked':''}> <span>${n}</span></label>`).join('')}`:''}</div></div>
+    ${(curScope()==='extra'?[['none','只匯出（不下載檔案）'],['all','匯出 ＋ 下載材料單']]:[['none','只匯出（不下載檔案）'],['schedule','匯出 ＋ 下載教學進度表'],['all','匯出 ＋ 下載教學進度表 ＋ 材料單']]).map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="expwhat" data-k="expwhat" value="${v}" ${expWhat()===v?'checked':''}> <span>${n}</span></label>`).join('')}${expWhat()==='all'?`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['class','依課程、班級排（同一個班再依日期）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="exporder" data-k="exporder" value="${v}" ${S.expOrder===v?'checked':''}> <span>${n}</span></label>`).join('')}`:''}${expWhat()!=='none'?fmtPick():''}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px"><button class="btn ghost" data-a="sendNo">不對，回去改</button><button class="btn" data-a="sendYes">正確，送出</button></div>
   </div></div>`;
 }
@@ -546,7 +546,7 @@ function step5(){
   const list=gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span>${md(e.date)}</span><span>${esc(titleOf(e))}<small class="mut"> ${fmt(e.sets)}組${k_(e)!==1?'・×'+fmt(k_(e)):''}</small></span><span class="mut">${fmt(kgOf(e))} 公斤</span></div>`;}).join('')}</div>`).join('');
   return `<h2>確認並送出</h2>${sb}${locked()?`<p class="sub">${lockMsg()}要下載之前已經送出的材料單，按下面的按鈕。</p>`:`<p class="sub"><b>匯出之後，技士才看得到。</b>按「確認並匯出」，先核對一次日期和產品，再選要不要下載檔案（只匯出／進度表／進度表加材料單），沒問題就送給技士。還沒匯出的都只是草稿（已自動存起來），技士看不到、也不算。</p>`}
   <div class="card"><div class="cb" style="padding-top:12px">${list}<p class="mut" style="margin:10px 0 0">${sc().length} 堂課，跨 ${weeks} 週。</p></div></div>
-  ${locked()?bar(S.busy||'',`<button class="btn" data-a="dlSent" ${S.busy?'disabled':''}>${S.busy?'處理中…':'下載已送出的材料單'}</button>`)
+  ${locked()?fmtPick()+bar(S.busy||'',`<button class="btn" data-a="dlSent" ${S.busy?'disabled':''}>${S.busy?'處理中…':'下載已送出的材料單'}</button>`)
     :bar(S.busy||'',`<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
 }
 
@@ -708,7 +708,7 @@ function techHTML(){
   if(!t.classes.length)return h+`<div class="card"><div class="cb" style="padding-top:12px">${fOn?'這樣篩選沒有課。':`這段日期${S.tTeacher?'這位老師':''}沒有排課。`}</div></div>`;
   if(S.tMode==='sheets'){
     h+=`<p class="sub">每一堂課一張，跟老師交出來的材料申請單一樣（A4）。點開看材料，老師開錯的課可以在裡面刪掉。</p>${t.lessons.map(lessonHTML).join('')}`;
-    return h+bar(`${t.lessons.length} 堂課`,`<button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出材料單'}</button>`);
+    return h+fmtPick()+bar(`${t.lessons.length} 堂課`,`<button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出材料單'}</button>`);
   }
   h+=`<div>${t.classes.map(c=>`<span class="chip" ${c.id?`role="button" tabindex="0" data-a="tOne" data-id="${esc(c.id)}" title="只看這一堂" style="cursor:pointer"`:''}>${md0(c.date)}（${c.wd}）${esc(c.title)} <small>${esc(c.teacher)}・${esc(c.dept)}・${esc(c.course)}・${esc(c.cls)}・${fmt(c.sets)}組</small>${c.changed?` <span class="tg">已修改 ${esc(fmtT(c.updated))}</span>`:''}</span>`).join('')}</div>`;
   const max=Math.max(...t.materials.filter(m=>m.unit==='g').map(m=>m.total),1);
@@ -716,7 +716,7 @@ function techHTML(){
   <div class="sum"><span>合計（公克類）</span><span>${fmt(t.totalG/1000)} 公斤</span></div>
   ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.teacher)+'・'+esc(u.title)).join('、')+'）').join('；')}</div>`:''}</div></div>`;
   if(t.tools.length)h+=`<div class="card"><div class="cb" style="padding-top:12px"><b>技士要備的器具</b>${t.tools.map(d=>`<div style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${md0(d.date)}（${d.wd}）</b> <span class="mut">${d.items.map(x=>esc(x.name)+' '+(x.n===null?esc(x.rest):x.n+esc(x.unit))).join('、')}</span></div>`).join('')}</div></div>`;
-  return h+bar(`${t.classes.length} 堂課`,`<button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
+  return h+fmtPick()+bar(`${t.classes.length} 堂課`,`<button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
 }
 async function loadRange(){
   S.tech=null;S.err='';S.tOpen=new Set();render();
@@ -728,10 +728,13 @@ const setRange=(a,b)=>{S.rgFrom=a;S.rgTo=b;return loadRange();};
 /* ---------- 下載 ---------- */
 function download(name,b64){
   const bin=atob(b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
-  const url=URL.createObjectURL(new Blob([u8],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const url=URL.createObjectURL(new Blob([u8],{type:/\.pdf$/i.test(name)?'application/pdf':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
   const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
   return {name,url};
 }
+/* 下載格式：Excel／PDF／兩個都要（PDF 是全部合成同一個檔，一堂課一頁） */
+const fmtPick=()=>`<b style="display:block;margin-top:8px">檔案格式</b><div style="display:flex;gap:14px;flex-wrap:wrap">${[['xlsx','Excel'],['pdf','PDF（全部合成一個檔）'],['both','兩個都要']].map(([v,n])=>`<label style="display:flex;gap:6px;align-items:center;padding:6px 0"><input type="radio" name="dlfmt" data-k="dlfmt" value="${v}" ${(S.dlfmt||'xlsx')===v?'checked':''}> <span>${n}</span></label>`).join('')}</div>`;
+async function runFmt(fn,...args){const f=S.dlfmt||'xlsx';let last=null;for(const x of (f==='both'?['xlsx','pdf']:[f])){last=deliver(await run(fn,...args,x));}return last;}
 function deliver(r){
   if(r.previewHtml){S.preview=r.previewHtml;return {name:r.name,url:''};}
   return download(r.name,r.base64);
@@ -885,7 +888,7 @@ document.addEventListener('click',async ev=>{
     const p=S.sc.print,t=schedTable(S.sc.tab),ids=p.scope==='one'?[t.id]:[],ov={};
     Object.values(pendMap()).forEach(x=>{if(p.scope==='one'&&x.tid!==t.id)return;(ov[x.tid]=ov[x.tid]||[]).push({week:x.week,cls:x.cls,day:x.day,cell:x.cell});});
     S.sc.print=null;S.busy='製作中…';render();
-    try{const r=await run('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);deliver(r);}catch(er){S.err=er.message;}
+    try{await runFmt('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);}catch(er){S.err=er.message;}
     S.busy='';return render();}
   if(a==='scWf'){S.sc.wf=b.dataset.v;return render();}
   if(a==='scTab'){S.sc.tab=b.dataset.id;S.sc.delAsk='';S.sc.clip=null;return render();}
@@ -1187,19 +1190,19 @@ document.addEventListener('click',async ev=>{
     if(!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';S.view='extra';S.step=2;return render();}
     S.confirmSend=a;return render();}                                // 先讓老師核對日期、產品，確定了才送出
   if(a==='sendNo'){S.confirmSend='';return render();}
-  if(a==='dlSent'){S.busy='製作中…';render();try{const r=await run('apiExportRequisition',curScope());const f=deliver(r);S.info=`已下載「${f.name}」。`;}catch(e){S.err=e.message;}S.busy='';return render();}
+  if(a==='dlSent'){S.busy='製作中…';render();try{const f=await runFmt('apiExportRequisition',curScope(),'all',S.expOrder);S.info=`已下載「${f.name}」。`;}catch(e){S.err=e.message;}S.busy='';return render();}
   if(a==='sendYes'){
     const what=expWhat();S.confirmSend='';S.busy=what==='none'?'正在送出…':'正在送出並製作檔案…';S.sent=null;render();
     try{
       const rc=await run('apiSavePlan',payload(),curScope());
-      let file=null;const pSaved=run('apiBootstrap');if(what!=='none'){const r=await run('apiExportRequisition',curScope(),what,S.expOrder);file=deliver(r);}
+      let file=null;const pSaved=run('apiBootstrap');if(what!=='none'){file=await runFmt('apiExportRequisition',curScope(),what,S.expOrder);}
       const saved=await pSaved;S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;
       S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
     }catch(e){S.err=e.message;}
     S.busy='';return render();}
   if(a==='exportWeek'||a==='exportSheets'){
     S.busy='製作中…';render();
-    try{const r=await run(a==='exportWeek'?'apiExportRange':'apiExportRangeSheets',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder);deliver(r);}catch(e){S.err=e.message;}
+    try{await runFmt(a==='exportWeek'?'apiExportRange':'apiExportRangeSheets',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder);}catch(e){S.err=e.message;}
     S.busy='';return render();}
 });
 /* 電腦上：把排好的格子拖到別的格子 */
@@ -1288,6 +1291,7 @@ document.addEventListener('change',ev=>{
     return loadRange();}
   if(k==='expwhat'){S.expWhat=t.value;return render();}
   if(k==='exporder'){S.expOrder=t.value;return;}
+  if(k==='dlfmt'){S.dlfmt=t.value;return;}
   if(k==='tOrder'){S.tOrder=t.value;S.tOpen=new Set();return loadRange();}
   if(k==='xmode'){S.xf.mode=t.value;S.xf.val='';return render();}
   if(k==='scTFrom'||k==='scTTo'||k==='rqFrom'||k==='rqTo'){
@@ -1568,6 +1572,7 @@ function printModal(){
     <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="one" ${p.scope==='one'?'checked':''}> <span>只有這一張（${esc(t.dept)}・${esc(t.course)}）</span></label>
     <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="all" ${p.scope==='all'?'checked':''}> <span>全部進度表（你看得到的每一張，每張一頁）</span></label>
     ${p.blank?'':`<label style="display:flex;gap:8px;align-items:center;padding:8px 0 0"><input type="checkbox" data-k="pMine" ${p.mine?'checked':''}> <span>把我開單的格子標黃色</span></label>`}
+    ${fmtPick()}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="pNo">取消</button><button class="btn" data-a="pGo">匯出</button></div></div></div>`;
 }
 function pasteAskModal(){
