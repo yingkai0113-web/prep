@@ -432,7 +432,7 @@ function L_docRequisition(entries, cat, ctx) {
     var b0 = rows.length;
     for (var i = 0; i < N; i++) {
       var l = lines[i], rn = rows.length + 1, side = i === N - 1 ? 'lrb' : 'lr';
-      var A = i === 0 ? T(title, { sz: 14, bd: side, wrap: 1 }) : T('', { bd: side });
+      var A = i === 0 ? T(title, { sz: 14, bd: side, wrap: 1, al: 'c', va: 'center' }) : T('', { bd: side });
       var D = T('', { al: 'c', bd: BD }), E = T('', { al: 'c', bd: BD }), F = T('', { b: 1, al: 'c', bd: BD }), Hn = T('', { sz: 12, al: 'l', bd: BD }), nm = T('', { b: 0, al: 'l', bd: BD });
       if (l) {
         nm = T(l.raw, { b: 0, al: 'l', bd: BD });
