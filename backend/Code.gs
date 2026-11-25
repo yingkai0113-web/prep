@@ -1407,6 +1407,13 @@ function apiExportRangeSheets(start, end, teacherEmail, filter, order, fmt) {
   list.forEach(function (e) { if (e.sid) ids[e.sid.split('|')[0]] = 1; });
   return buildXlsx_((L_hasFilter(f) ? '材料申請單（部分）_' : '材料申請單_') + start + '_' + end, (L_hasFilter(f) ? [] : schedDocs_(Object.keys(ids), '')).concat(L_docRequisition(list, cat, { order: order === 'class' ? 'class' : 'date' })),fmt, order === 'class' ? 'class' : 'date');      // 只匯出某一部分的時候，不放教學進度表那一頁
 }
+/* 整個學期、所有老師：進度表 + 每一堂課的材料申請單（跟老師匯出的格式一樣）。技士、科主任、管理者用。只有老師已經送出的課。 */
+function apiExportTerm(order, fmt) {
+  requireStaff_();
+  var d = semDates_();
+  if (!d.start || !d.end) throw new Error('學期的開學日、結業式還沒設定，請先到「教學進度表」設定日期。');
+  return apiExportRangeSheets(d.start, d.end, '', null, order, fmt);
+}
 function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_weekStart(anyDateInWeek); return apiExportRangeSheets(ws, L_addDays(ws, 6), teacherEmail, null, order); }
 
 /* 刪除老師開錯的課。技士、科主任、管理者都可以；會留一筆紀錄在「排課刪除紀錄」分頁。 */

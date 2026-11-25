@@ -708,7 +708,7 @@ function techHTML(){
   if(!t.classes.length)return h+`<div class="card"><div class="cb" style="padding-top:12px">${fOn?'這樣篩選沒有課。':`這段日期${S.tTeacher?'這位老師':''}沒有排課。`}</div></div>`;
   if(S.tMode==='sheets'){
     h+=`<p class="sub">每一堂課一張，跟老師交出來的材料申請單一樣（A4）。點開看材料，老師開錯的課可以在裡面刪掉。</p>${t.lessons.map(lessonHTML).join('')}`;
-    return h+fmtPick()+bar(`${t.lessons.length} 堂課`,`<button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出材料單'}</button>`);
+    return h+fmtPick()+bar(`${t.lessons.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">匯出整個學期（全部老師）</button> <button class="btn" data-a="exportSheets" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出材料單'}</button>`);
   }
   h+=`<div>${t.classes.map(c=>`<span class="chip" ${c.id?`role="button" tabindex="0" data-a="tOne" data-id="${esc(c.id)}" title="只看這一堂" style="cursor:pointer"`:''}>${md0(c.date)}（${c.wd}）${esc(c.title)} <small>${esc(c.teacher)}・${esc(c.dept)}・${esc(c.course)}・${esc(c.cls)}・${fmt(c.sets)}組</small>${c.changed?` <span class="tg">已修改 ${esc(fmtT(c.updated))}</span>`:''}</span>`).join('')}</div>`;
   const max=Math.max(...t.materials.filter(m=>m.unit==='g').map(m=>m.total),1);
@@ -716,7 +716,7 @@ function techHTML(){
   <div class="sum"><span>合計（公克類）</span><span>${fmt(t.totalG/1000)} 公斤</span></div>
   ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.teacher)+'・'+esc(u.title)).join('、')+'）').join('；')}</div>`:''}</div></div>`;
   if(t.tools.length)h+=`<div class="card"><div class="cb" style="padding-top:12px"><b>技士要備的器具</b>${t.tools.map(d=>`<div style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${md0(d.date)}（${d.wd}）</b> <span class="mut">${d.items.map(x=>esc(x.name)+' '+(x.n===null?esc(x.rest):x.n+esc(x.unit))).join('、')}</span></div>`).join('')}</div></div>`;
-  return h+fmtPick()+bar(`${t.classes.length} 堂課`,`<button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
+  return h+fmtPick()+bar(`${t.classes.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">匯出整個學期（全部老師）</button> <button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
 }
 async function loadRange(){
   S.tech=null;S.err='';S.tOpen=new Set();render();
@@ -1222,6 +1222,10 @@ document.addEventListener('click',async ev=>{
       const saved=await pSaved;S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;
       S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
     }catch(e){S.err=e.message;}
+    S.busy='';return render();}
+  if(a==='exportTerm'){
+    S.busy='製作整個學期（全部老師）的檔案…';render();
+    try{await runFmt('apiExportTerm',S.tOrder);}catch(e){S.err=e.message;}
     S.busy='';return render();}
   if(a==='exportWeek'||a==='exportSheets'){
     S.busy='製作中…';render();
