@@ -737,7 +737,7 @@ function download(name,b64,auto=true){
 }
 /* 下載格式：Excel／PDF／兩個都要（PDF 是全部合成同一個檔，一堂課一頁） */
 const orderPick=()=>`<b style="display:block;margin-top:8px">材料單的順序</b>${[['date','依日期排（同一天的再依產品）'],['course','依課程、再依日期排（每一門課輸出一個檔，檔案內依日期排）'],['class','依課程、班級排（同一個班再依日期；每一門課輸出一個檔）']].map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="tordr" data-k="tOrder" value="${v}" ${(S.tOrder==='class'||S.tOrder==='course'?S.tOrder:'date')===v?'checked':''}> <span>${n}</span></label>`).join('')}`;
-const fmtPick=()=>`<b style="display:block;margin-top:8px">檔案格式</b><div style="display:flex;gap:14px;flex-wrap:wrap">${[['xlsx','Excel'],['pdf','PDF（全部合成一個檔）'],['both','兩個都要']].map(([v,n])=>`<label style="display:flex;gap:6px;align-items:center;padding:6px 0"><input type="radio" name="dlfmt" data-k="dlfmt" value="${v}" ${(S.dlfmt||'xlsx')===v?'checked':''}> <span>${n}</span></label>`).join('')}</div>`;
+const fmtPick=()=>`<b style="display:block;margin-top:8px">檔案格式</b><div style="display:flex;gap:14px;flex-wrap:wrap">${[['xlsx','Excel'],['pdf','PDF（瀏覽器列印存檔，很快）'],['both','兩個都要']].map(([v,n])=>`<label style="display:flex;gap:6px;align-items:center;padding:6px 0"><input type="radio" name="dlfmt" data-k="dlfmt" value="${v}" ${(S.dlfmt||'xlsx')===v?'checked':''}> <span>${n}</span></label>`).join('')}</div>`;
 const loadJs=(src)=>new Promise((ok,no)=>{if(document.querySelector(`script[data-lib="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.dataset.lib=src;e.onload=ok;e.onerror=()=>no(new Error('載入 PDF 工具失敗，請確認網路後再試。'));document.head.appendChild(e);});
 /* 伺服器給排好的 HTML，在這個瀏覽器裡轉成 PDF（用這台電腦的標楷體；沒有的話用楷體系網頁字型） */
 const prog=(msg)=>{let d=document.getElementById('pdfProg');if(!msg){if(d)d.remove();return;}if(!d){d=document.createElement('div');d.id='pdfProg';d.style.cssText='position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:#1d3a2f;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;z-index:98;box-shadow:0 4px 14px rgba(0,0,0,.25);max-width:92vw;text-align:center';document.body.appendChild(d);}d.textContent=msg;};
@@ -767,13 +767,35 @@ async function htmlToPdf(html,tag){
     return pdf.output('datauristring').split(',')[1];
   }finally{host.remove();}
 }
+/* PDF：用瀏覽器自己的「列印 → 另存為 PDF」（很快、字是向量不會糊、用這台電腦的標楷體）；要在列印視窗按一次儲存 */
+function printHtml(name,html){
+  return new Promise(async res=>{
+    const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(f);
+    const d=f.contentDocument,body=new DOMParser().parseFromString(html,'text/html').body.innerHTML,title=String(name).replace(/\.pdf$/i,'').replace(/[<>&]/g,'');
+    d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap"><style>@page{size:A4;margin:0.35in}html,body{margin:0;padding:0;background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>${body}</body></html>`);d.close();
+    try{await Promise.race([f.contentWindow.document.fonts.ready,new Promise(r=>setTimeout(r,5000))]);}catch(e){}
+    await new Promise(r=>setTimeout(r,300));
+    const oldT=document.title;document.title=title;                                  // 列印視窗預設的檔名
+    try{f.contentWindow.focus();f.contentWindow.print();}catch(e){}
+    document.title=oldT;setTimeout(()=>{f.remove();res();},800);
+  });
+}
 async function runFmt(fn,...args){
-  const f=S.dlfmt||'xlsx',got=[];
+  const f=S.dlfmt||'xlsx',got=[];let printed=0,last='';
   try{
-    for(const x of (f==='both'?['xlsx','pdf']:[f])){prog(x==='pdf'?'正在準備 PDF 內容（伺服器處理中）…':'正在準備 Excel…');const r=await run(fn,...args,x);const fl=r.files||[r],np=fl.filter(q=>q.html).length;let k=0;for(const q of fl){if(q.html){k++;got.push({name:q.name,base64:await htmlToPdf(q.html,np>1?`（第 ${k}／${np} 個檔）`:'')});}else got.push(q);}}
+    for(const x of (f==='both'?['xlsx','pdf']:[f])){
+      prog(x==='pdf'?'正在準備 PDF 內容（伺服器處理中）…':'正在準備 Excel…');const r=await run(fn,...args,x);
+      const fl=r.files||[r],np=fl.filter(q=>q.html).length;let k=0;
+      for(const q of fl){
+        if(q.html){k++;prog(`請在跳出的列印視窗，目的地選「另存為 PDF」，按「儲存」${np>1?`（第 ${k}／${np} 個檔）`:''}`);await printHtml(q.name,q.html);printed++;last=q.name;}
+        else got.push(q);
+      }
+    }
   }finally{prog('');}
-  if(got.length===1)return deliver(got[0]);                                   // 只有一個檔：直接下載
-  const list=got.map(q=>q.previewHtml?{name:q.name,url:''}:download(q.name,q.base64,false));   // 好幾個檔：瀏覽器常會擋掉「自動連續下載」，所以做好之後讓使用者按一下才下載
+  if(!got.length)return {name:last||'PDF',url:''};
+  if(got.length===1&&!printed)return deliver(got[0]);                         // 只有一個檔：直接下載
+  const list=got.map(q=>q.previewHtml?{name:q.name,url:''}:download(q.name,q.base64,false));
+  if(got.length===1){return deliver(got[0]);}
   S.dlFiles=list;return list[list.length-1];
 }
 function deliver(r){
