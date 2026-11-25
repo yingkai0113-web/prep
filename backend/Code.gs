@@ -1426,23 +1426,21 @@ function apiDeletePlanEntry(id) {
 }
 
 /* ---------------- 做出 xlsx 檔（自己組，A4 直印，跟原本的申請單一樣） ---------------- */
+/* 匯出一個檔案；依課程排序時（order = 'class'），每一門課各自一個檔（Excel 活頁簿或 PDF），進度表放在該課程那份的最前面 */
 function buildXlsx_(name, docs, fmt, order) {
-  if (fmt === 'pdf') return buildPdf_(name, docs, order);
+  if (order === 'class') {
+    var keys = [], by = {};
+    docs.forEach(function (d) { var k = d.group || ''; if (!by[k]) { by[k] = []; keys.push(k); } by[k].push(d); });
+    if (keys.length > 1) return { files: keys.map(function (k) { return buildOne_(name + '_' + String(k).replace(/[\\\/:*?"<>|]/g, ''), by[k], fmt); }) };
+  }
+  return buildOne_(name, docs, fmt);
+}
+function buildOne_(name, docs, fmt) {
+  if (fmt === 'pdf') return { name: name + '.pdf', html: L_docsToHtml(docs) };   // PDF 由使用者的瀏覽器轉（用電腦上的標楷體；Google 伺服器沒有標楷體）
   var files = L_xlsxFiles(docs);
   var blobs = files.map(function (f) { return Utilities.newBlob(f.xml, 'application/xml', f.name); });
   var zip = Utilities.zip(blobs, name + '.xlsx');
   return { name: name + '.xlsx', base64: Utilities.base64Encode(zip.getBytes()) };
-}
-
-
-/* PDF：伺服器只排好 HTML（一堂課一頁 A4），由使用者的瀏覽器轉成 PDF——這樣才能用他電腦上的標楷體（Google 的伺服器沒有標楷體）。
- * 依課程排序時，每一門課輸出一個 PDF；依日期排序就是全部一個 PDF。 */
-function buildPdf_(name, docs, order) {
-  if (order !== 'class') return { name: name + '.pdf', html: L_docsToHtml(docs) };
-  var keys = [], by = {};
-  docs.forEach(function (d) { var k = d.group || ''; if (!by[k]) { by[k] = []; keys.push(k); } by[k].push(d); });
-  if (keys.length <= 1) return { name: name + '.pdf', html: L_docsToHtml(docs) };
-  return { files: keys.map(function (k) { return { name: name + '_' + String(k).replace(/[\\\/:*?"<>|]/g, '') + '.pdf', html: L_docsToHtml(by[k]) }; }) };
 }
 
 
