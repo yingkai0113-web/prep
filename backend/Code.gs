@@ -1478,7 +1478,7 @@ function apiDeletePlanEntry(id) {
 /* ---------------- 做出 xlsx 檔（自己組，A4 直印，跟原本的申請單一樣） ---------------- */
 /* 匯出一個檔案；依課程排序時（order = 'class'），每一門課各自一個檔（Excel 活頁簿或 PDF），進度表放在該課程那份的最前面 */
 function buildXlsx_(name, docs, fmt, order) {
-  if (order === 'class') {
+  if (order === 'class' || order === 'course') {
     var keys = [], by = {};
     docs.forEach(function (d) { var k = d.group || ''; if (!by[k]) { by[k] = []; keys.push(k); } by[k].push(d); });
     if (keys.length > 1) return { files: keys.map(function (k) { return buildOne_(name + '_' + String(k).replace(/[\\\/:*?"<>|]/g, ''), by[k], fmt); }) };
