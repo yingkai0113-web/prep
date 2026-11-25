@@ -322,6 +322,7 @@ function render(){
   if(S.sc.tableEd)h+=scTableModal();
   if(S.hu)h+=histModal();
   if(S.remind)h+=remindModal();
+  if(S.termDlg)h+=termModal();
   if(S.rq)h+=rqModal();
   if(S.ed)h+=editorHTML();
   h+=`<datalist id="toollist">${[...new Set(Object.values(S.cat.tools).flat().map(t=>t.name))].sort().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
@@ -1223,9 +1224,11 @@ document.addEventListener('click',async ev=>{
       S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
     }catch(e){S.err=e.message;}
     S.busy='';return render();}
-  if(a==='exportTerm'){
-    S.busy='製作整個學期（全部老師）的檔案…';render();
-    try{await runFmt('apiExportTerm',S.tOrder);}catch(e){S.err=e.message;}
+  if(a==='exportTerm'){S.termDlg=true;return render();}
+  if(a==='termNo'){S.termDlg=false;return render();}
+  if(a==='termGo'){
+    S.termDlg=false;S.busy='製作整個學期（全部老師）的檔案…';render();
+    try{await runFmt('apiExportTerm',S.termOrder||'date');}catch(e){S.err=e.message;}
     S.busy='';return render();}
   if(a==='exportWeek'||a==='exportSheets'){
     S.busy='製作中…';render();
@@ -1319,6 +1322,7 @@ document.addEventListener('change',ev=>{
   if(k==='expwhat'){S.expWhat=t.value;return render();}
   if(k==='exporder'){S.expOrder=t.value;return;}
   if(k==='dlfmt'){S.dlfmt=t.value;return;}
+  if(k==='tdorder'){S.termOrder=t.value;return;}
   if(k==='tOrder'){S.tOrder=t.value;S.tOpen=new Set();return loadRange();}
   if(k==='xmode'){S.xf.mode=t.value;S.xf.val='';return render();}
   if(k==='scTFrom'||k==='scTTo'||k==='rqFrom'||k==='rqTo'){
@@ -1700,6 +1704,14 @@ function ssHTML(){
   return `<div class="card"><button class="ch" data-a="ssToggle"><span><b>教學進度表送單狀況</b><small>${scope}排了 ${all.length} 堂：已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}${miss?`（其中 ${miss} 堂沒人開單）`:''}</small></span><span>${S.ssOpen?'▴':'▾'}</span></button>
     ${S.ssOpen?`<div class="cb"><p class="mut" style="margin:0 0 6px">進度表排的每一堂課，都要有老師確認送出。這裡依課程列出還沒送的（預設看整個學期，也可以只看上面選的日期）。</p>${ssReqLines()}${cs.map(block).join('')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}<label><input type="checkbox" data-k="ssRange" ${!S.ssAll?'checked':''}> 只看上面選的日期</label></div></div>`:''}</div>`;
+}
+function termModal(){
+  const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">匯出整個學期（全部老師）</h2>
+    <p class="mut" style="margin:0 0 8px">整個學期、所有老師已經送出的進度表加材料單，格式跟老師匯出的一樣（一堂課一張 A4）。</p>
+    <b>材料單要怎麼分？</b>${rad('tdorder','tdorder',[['date','依日期排（全部放在一個檔）'],['class','依課程、班級排（每一門課輸出一個檔）']],S.termOrder||'date')}
+    <b style="display:block;margin-top:8px">檔案格式</b>${rad('tdfmt','dlfmt',[['xlsx','Excel'],['pdf','PDF'],['both','Excel 和 PDF 都要']],S.dlfmt||'xlsx')}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="termNo">取消</button><button class="btn" data-a="termGo">匯出</button></div></div></div>`;
 }
 function remindModal(){
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">催單文字</h2><p class="mut" style="margin:0 0 6px">按住文字全選、複製，貼到 LINE 群組就好。</p><textarea class="in" id="remindTxt" style="width:100%;height:14em" readonly>${esc(S.remind)}</textarea><div style="text-align:right;margin-top:8px"><button class="btn ghost" data-a="remindSel">全選文字</button> <button class="btn" data-a="remindNo">關閉</button></div></div></div>`;
