@@ -305,6 +305,16 @@ function L_entryMatches(e, f, cat) {
   if (f.q) { var prod = cat && cat.products[e.pid], t = String((e.title || (prod && prod.title) || '')).toLowerCase(); if (t.indexOf(f.q.toLowerCase()) < 0) return false; }
   return true;
 }
+/* 「用於」：同一天、同一門課合併成一筆（數量加總），顯示成「11/26 烘焙食品加工實習 720」，不顯示老師 */
+function L_mergeUses(uses) {
+  var out = [], idx = {};
+  (uses || []).forEach(function (u) {
+    var k = u.date + '|' + (u.course || u.title);
+    if (idx[k] === undefined) { idx[k] = out.length; out.push({ date: u.date, course: u.course || u.title, qty: typeof u.qty === 'number' ? u.qty : null }); }
+    else if (typeof u.qty === 'number') out[idx[k]].qty = (out[idx[k]].qty || 0) + u.qty;
+  });
+  return out.map(function (u) { if (typeof u.qty === 'number') u.qty = L_round(u.qty); return u; });
+}
 function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, filter, order) {
   var nameOf = function (email) { return (teacherNames && teacherNames[email]) || email || ''; };
   var all = entries.filter(function (e) { return e.date >= start && e.date <= end && cat.products[e.pid]; })
@@ -337,13 +347,13 @@ function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, f
       if (l.mode === 'text') {
         var ok = l.std + '|' + l.text;
         var o = others[ok] || (others[ok] = { std: l.std, text: l.text, uses: [] });
-        o.uses.push({ date: e.date, title: ttl, teacher: tname });
+        o.uses.push({ date: e.date, title: ttl, teacher: tname, course: e.course || '' });
         return;
       }
       var key = l.std + '|' + l.unit;
       var m = mats[key] || (mats[key] = { std: l.std, unit: l.unit || 'g', total: 0, uses: [] });
       m.total += l.total;
-      m.uses.push({ date: e.date, title: ttl, teacher: tname, cls: e.cls + (e.group ? '（' + e.group + '）' : ''), qty: l.total });
+      m.uses.push({ date: e.date, title: ttl, teacher: tname, course: e.course || '', cls: e.cls + (e.group ? '（' + e.group + '）' : ''), qty: l.total });
     });
     var day = byDate[e.date] || (byDate[e.date] = { date: e.date, wd: L_weekday(e.date), map: {}, texts: [] });
     L_toolsFor(e, cat).forEach(function (t) {
@@ -355,7 +365,7 @@ function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, f
       x.n += q.n;
     });
   });
-  var materials = Object.keys(mats).map(function (k) { var m = mats[k]; m.total = L_round(m.total); return m; })
+  var materials = Object.keys(mats).map(function (k) { var m = mats[k]; m.total = L_round(m.total); m.uses = L_mergeUses(m.uses); return m; })
     .sort(function (a, b) { return (a.unit === 'g' ? 0 : 1) - (b.unit === 'g' ? 0 : 1) || b.total - a.total || (a.std < b.std ? -1 : 1); });
   var totalG = L_round(materials.reduce(function (s, m) { return s + (m.unit === 'g' ? m.total : 0); }, 0));
   var tools = Object.keys(byDate).sort().map(function (d) {
@@ -365,7 +375,7 @@ function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, f
     return { date: d, wd: day.wd, items: items };
   });
   return { start: start, weekStart: start, end: end, teachers: teachers, onlyTeacher: onlyTeacher || '', filter: filter, facets: facets, classes: classes, lessons: lessons, materials: materials, totalG: totalG,
-           others: Object.keys(others).map(function (k) { return others[k]; }), tools: tools };
+           others: Object.keys(others).map(function (k) { var o = others[k]; o.uses = L_mergeUses(o.uses); return o; }), tools: tools };
 }
 
 function L_weekAggregate(entries, cat, weekStart, teacherNames, onlyTeacher) {
@@ -477,7 +487,7 @@ function L_docWeek(agg) {
   var first = rows.length + 1;
   agg.materials.forEach(function (m) {
     var r = rows.length + 1;
-    var uses = m.uses.map(function (u) { return L_md(u.date) + ' ' + u.title + '（' + u.teacher + '）' + L_num(u.qty); }).join('；');
+    var uses = m.uses.map(function (u) { return L_md(u.date) + ' ' + u.course + (u.qty === null || u.qty === undefined ? '' : ' ' + L_num(u.qty) + (m.unit === 'g' ? '克' : m.unit)); }).join('；');
     rows.push([T(m.std, BD), T(m.total, Object.assign({ al: 'r' }, BD)), T(m.unit, Object.assign({ al: 'c' }, BD)),
                m.unit === 'g' ? T('', Object.assign({ al: 'r', f: 'ROUND(B' + r + '/1000,2)' }, BD)) : T('', BD), T(uses, Object.assign({ wrap: 1, va: 'top' }, BD))]);
   });
@@ -489,7 +499,7 @@ function L_docWeek(agg) {
     rows.push([T('另計（不加總）', HD), T('內容', HD), T('', HD), T('', HD), T('用於', HD)]);
     merges.push([rows.length - 1, 1, rows.length - 1, 3]);
     agg.others.forEach(function (o) {
-      rows.push([T(o.std, BD), T(o.text, BD), T('', BD), T('', BD), T(o.uses.map(function (u) { return L_md(u.date) + ' ' + u.title + '（' + u.teacher + '）'; }).join('；'), Object.assign({ wrap: 1 }, BD))]);
+      rows.push([T(o.std, BD), T(o.text, BD), T('', BD), T('', BD), T(o.uses.map(function (u) { return L_md(u.date) + ' ' + u.course; }).join('；'), Object.assign({ wrap: 1 }, BD))]);
       merges.push([rows.length - 1, 1, rows.length - 1, 3]);
     });
   }

@@ -323,6 +323,7 @@ function render(){
   if(S.hu)h+=histModal();
   if(S.remind)h+=remindModal();
   if(S.termDlg)h+=termModal();
+  if(S.dlFiles&&S.dlFiles.length)h+=dlFilesModal();
   if(S.rq)h+=rqModal();
   if(S.ed)h+=editorHTML();
   h+=`<datalist id="toollist">${[...new Set(Object.values(S.cat.tools).flat().map(t=>t.name))].sort().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
@@ -713,9 +714,9 @@ function techHTML(){
   }
   h+=`<div>${t.classes.map(c=>`<span class="chip" ${c.id?`role="button" tabindex="0" data-a="tOne" data-id="${esc(c.id)}" title="只看這一堂" style="cursor:pointer"`:''}>${md0(c.date)}（${c.wd}）${esc(c.title)} <small>${esc(c.teacher)}・${esc(c.dept)}・${esc(c.course)}・${esc(c.cls)}・${fmt(c.sets)}組</small>${c.changed?` <span class="tg">已修改 ${esc(fmtT(c.updated))}</span>`:''}</span>`).join('')}</div>`;
   const max=Math.max(...t.materials.filter(m=>m.unit==='g').map(m=>m.total),1);
-  h+=`<div class="card"><div class="cb" style="padding-top:12px">${t.materials.map(m=>`<div class="wr"><span>${esc(m.std)}</span><span class="b">${m.unit==='g'?`<i style="width:${(m.total/max*100).toFixed(1)}%"></i>`:''}</span><span class="g">${fmt(m.total)} ${esc(m.unit)}</span><span class="use">${m.uses.map(u=>md0(u.date)+' '+esc(u.teacher)+'・'+esc(u.title)+' '+fmt(u.qty)).join('；')}</span></div>`).join('')}
+  h+=`<div class="card"><div class="cb" style="padding-top:12px">${t.materials.map(m=>`<div class="wr"><span>${esc(m.std)}</span><span class="b">${m.unit==='g'?`<i style="width:${(m.total/max*100).toFixed(1)}%"></i>`:''}</span><span class="g">${fmt(m.total)} ${esc(m.unit)}</span><span class="use">${m.uses.map(u=>md0(u.date)+' '+esc(u.course)+' '+fmt(u.qty)+(m.unit==='g'?'克':esc(m.unit))).join('；')}</span></div>`).join('')}
   <div class="sum"><span>合計（公克類）</span><span>${fmt(t.totalG/1000)} 公斤</span></div>
-  ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.teacher)+'・'+esc(u.title)).join('、')+'）').join('；')}</div>`:''}</div></div>`;
+  ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.course)).join('、')+'）').join('；')}</div>`:''}</div></div>`;
   if(t.tools.length)h+=`<div class="card"><div class="cb" style="padding-top:12px"><b>技士要備的器具</b>${t.tools.map(d=>`<div style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${md0(d.date)}（${d.wd}）</b> <span class="mut">${d.items.map(x=>esc(x.name)+' '+(x.n===null?esc(x.rest):x.n+esc(x.unit))).join('、')}</span></div>`).join('')}</div></div>`;
   return h+fmtPick()+bar(`${t.classes.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">匯出整個學期（全部老師）</button> <button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busy?'處理中…':'匯出總表'}</button>`);
 }
@@ -727,10 +728,10 @@ async function loadRange(){
 const setRange=(a,b)=>{S.rgFrom=a;S.rgTo=b;return loadRange();};
 
 /* ---------- 下載 ---------- */
-function download(name,b64){
+function download(name,b64,auto=true){
   const bin=atob(b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
   const url=URL.createObjectURL(new Blob([u8],{type:/\.pdf$/i.test(name)?'application/pdf':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  if(auto){const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();}
   return {name,url};
 }
 /* 下載格式：Excel／PDF／兩個都要（PDF 是全部合成同一個檔，一堂課一頁） */
@@ -759,7 +760,13 @@ async function htmlToPdf(html){
     return pdf.output('datauristring').split(',')[1];
   }finally{host.remove();}
 }
-async function runFmt(fn,...args){const f=S.dlfmt||'xlsx';let last=null;for(const x of (f==='both'?['xlsx','pdf']:[f])){const r=await run(fn,...args,x);for(const q of (r.files||[r])){last=deliver(q.html?{name:q.name,base64:await htmlToPdf(q.html)}:q);}}return last;}
+async function runFmt(fn,...args){
+  const f=S.dlfmt||'xlsx',got=[];
+  for(const x of (f==='both'?['xlsx','pdf']:[f])){const r=await run(fn,...args,x);for(const q of (r.files||[r]))got.push(q.html?{name:q.name,base64:await htmlToPdf(q.html)}:q);}
+  if(got.length===1)return deliver(got[0]);                                   // 只有一個檔：直接下載
+  const list=got.map(q=>q.previewHtml?{name:q.name,url:''}:download(q.name,q.base64,false));   // 好幾個檔：瀏覽器常會擋掉「自動連續下載」，所以做好之後讓使用者按一下才下載
+  S.dlFiles=list;return list[list.length-1];
+}
 function deliver(r){
   if(r.previewHtml){S.preview=r.previewHtml;return {name:r.name,url:''};}
   return download(r.name,r.base64);
@@ -1225,6 +1232,8 @@ document.addEventListener('click',async ev=>{
       S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
     }catch(e){S.err=e.message;}
     S.busy='';return render();}
+  if(a==='dlFilesClose'){S.dlFiles=null;return render();}
+  if(a==='dlFilesAll'){const fs=S.dlFiles||[];for(let i=0;i<fs.length;i++){const q=document.createElement('a');q.href=fs[i].url;q.download=fs[i].name;document.body.appendChild(q);q.click();q.remove();await new Promise(r=>setTimeout(r,400));}return;}
   if(a==='exportTerm'){S.termDlg=true;return render();}
   if(a==='expTermNo'){S.termDlg=false;return render();}
   if(a==='expTermGo'){
@@ -1705,6 +1714,12 @@ function ssHTML(){
   return `<div class="card"><button class="ch" data-a="ssToggle"><span><b>教學進度表送單狀況</b><small>${scope}排了 ${all.length} 堂：已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}${miss?`（其中 ${miss} 堂沒人開單）`:''}</small></span><span>${S.ssOpen?'▴':'▾'}</span></button>
     ${S.ssOpen?`<div class="cb"><p class="mut" style="margin:0 0 6px">進度表排的每一堂課，都要有老師確認送出。這裡依課程列出還沒送的（預設看整個學期，也可以只看上面選的日期）。</p>${ssReqLines()}${cs.map(block).join('')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}<label><input type="checkbox" data-k="ssRange" ${!S.ssAll?'checked':''}> 只看上面選的日期</label></div></div>`:''}</div>`;
+}
+function dlFilesModal(){
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">檔案做好了（${S.dlFiles.length} 個）</h2>
+    <p class="mut" style="margin:0 0 8px">按「全部下載」一次存下來，或一個一個按。瀏覽器如果問「是否允許下載多個檔案」，請按允許。</p>
+    <div style="max-height:46vh;overflow:auto">${S.dlFiles.map(f=>`<div class="parow"><span style="word-break:break-all">${esc(f.name)}</span><a class="btn sm" href="${f.url}" download="${esc(f.name)}">下載</a></div>`).join('')}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="dlFilesClose">關閉</button><button class="btn" data-a="dlFilesAll">全部下載</button></div></div></div>`;
 }
 function termModal(){
   const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
