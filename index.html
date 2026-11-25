@@ -746,12 +746,12 @@ async function htmlToPdf(html){
     try{await document.fonts.ready;}catch(e){}
     const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:'pt',format:'a4'}),M=43.2,availH=841.89-M*2;let first=true;
     for(const el of [...host.children]){
-      const cv=await html2canvas(el,{scale:2,backgroundColor:'#fff'}),w=cv.width/2*0.75,h=cv.height/2*0.75,sliceH=Math.floor(availH/0.75*2);
+      const SC=3,cv=await html2canvas(el,{scale:SC,backgroundColor:'#fff'}),w=cv.width/SC*0.75,sliceH=Math.floor(availH/0.75*SC);
       for(let y=0;y<cv.height;y+=sliceH){
         const hh=Math.min(sliceH,cv.height-y),c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;
         const g=c2.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c2.width,hh);g.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);
         if(!first)pdf.addPage();first=false;
-        pdf.addImage(c2.toDataURL('image/jpeg',0.92),'JPEG',M,M,w,hh/2*0.75);
+        pdf.addImage(c2.toDataURL('image/png'),'PNG',M,M,w,hh/SC*0.75,undefined,'FAST');
       }
     }
     return pdf.output('datauristring').split(',')[1];
