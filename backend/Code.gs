@@ -915,6 +915,48 @@ function cellProducts_(cells) {
   cells.forEach(function (x) { if (x.cell.kind === 'lesson') x.cell.groups.forEach(function (g) { g.pids.forEach(function (p) { if (!out[p] && prods[p]) out[p] = { title: prods[p].title, serving: prods[p].serving || '', custom: !!prods[p].custom }; }); }); });
   return out;
 }
+/* 把以前自己開的「額外材料單」（沒有掛進度表的）依日期、班級、課程帶進進度表格子，並跟材料單連動。apply 不是 true 時只試算，不寫入。 */
+function apiAdoptExtras(apply) {
+  var me = requireAdmin_(), term = setting_('目前學年學期', ''), cat = loadCatalog_(), users = schedEmails_();
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  var adopted = 0, skipped = [], byTeacher = {};
+  try {
+    var tables = schedTables_(term), plans = readPlans_(), all = schedCells_();
+    var have = {}; all.forEach(function (x) { have[x.tableId + '|' + x.week + '|' + x.cls + '|' + (x.day || 0)] = x; });
+    var changedPlans = {}, touched = {}, newCells = {};
+    plans.filter(function (e) { return e.term === term && !e.sid && !e.draft && e.date && e.pid; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }).forEach(function (e) {
+      var tag = e.date + ' ' + e.cls + ' ' + e.course + ' ' + e.pid, fail = function (why) { skipped.push(tag + '：' + why); };
+      var t = tables.filter(function (x) { return x.dept === e.dept && x.course === e.course && x.classes.some(function (c) { return c.cls === e.cls; }); })[0];
+      if (!t) return fail('找不到對應的進度表（部別／課程／班級）');
+      var wk = tableWeeks_(t).filter(function (w) { return w.mon === L_weekStart(e.date); })[0];
+      if (!wk) return fail('這個日期不在進度表的週次裡');
+      var tc = t.classes.filter(function (c) { return c.cls === e.cls; })[0], days = L_classDays(tc), multi = days.length > 1;
+      var wd = new Date(e.date + 'T00:00:00Z').getUTCDay() || 7, day = 0;
+      if (multi) { if (days.indexOf(wd) < 0) return fail('不是這個班的上課日'); day = wd; }
+      else if (wd !== days[0]) { if (t.classes.length !== 1) return fail('不是這個班的上課日（週' + '日一二三四五六日'.charAt(wd) + '）'); day = wd; }
+      var key = t.id + '|' + wk.n + '|' + e.cls + '|' + day, cur = newCells[key] || have[key], cell = cur ? JSON.parse(JSON.stringify(cur.cell)) : { kind: 'lesson', mode: 'joint', label: '', groups: [{ label: '', teacher: '', pids: [] }] };
+      if (cell.kind !== 'lesson') return fail('那一格是備註，不是上課');
+      var g = cell.groups.filter(function (x) { return x.teacher === e.teacher; })[0] || cell.groups.filter(function (x) { return !x.pids.length; })[0];
+      if (!g) return fail('那一格已經有別的老師的內容');
+      if (!g.teacher) g.teacher = e.teacher;
+      if (g.pids.indexOf(e.pid) < 0) g.pids.push(e.pid);
+      var clean; try { clean = L_cleanCell(cell, t, cat.products, users, me.email, [e.pid].concat.apply([], cell.groups.map(function (x) { return x.pids; }))); } catch (er) { return fail(er.message); }
+      newCells[key] = { tableId: t.id, week: wk.n, cls: e.cls, day: day, cell: clean, by: (cur && cur.by) || e.teacher, at: nowStr_() };
+      touched[t.id] = 1;
+      var sp = L_scheduleDerive(t, wk, e.cls, clean, cat.products, day).filter(function (x) { return x.pid === e.pid && x.teacher === e.teacher; })[0];
+      if (!sp) return fail('算不出對應的格子');
+      changedPlans[e.id] = { sid: sp.sid, group: sp.group, dept: sp.dept, course: sp.course, cls: sp.cls };
+      adopted++; byTeacher[e.teacher] = (byTeacher[e.teacher] || 0) + 1;
+    });
+    if (apply === true && adopted) {
+      var merged = all.filter(function (x) { return !newCells[x.tableId + '|' + x.week + '|' + x.cls + '|' + (x.day || 0)]; }).concat(Object.keys(newCells).map(function (k) { return newCells[k]; }));
+      writeSched_('教學進度內容', SCHED_CELL_HEAD, merged.map(cellRow_));
+      var out = plans.map(function (e) { var c = changedPlans[e.id]; if (c) { e.sid = c.sid; e.group = c.group; e.dept = c.dept; e.course = c.course; e.cls = c.cls; } return e; });
+      flushPlanRows_(ss_().getSheetByName('排課'), out.map(function (e) { return planRow_(e, e.created, e.updated); }));
+    }
+  } finally { rtClear_(); lock.releaseLock(); }
+  return { applied: apply === true, adopted: adopted, byTeacher: byTeacher, skipped: skipped };
+}
 /* 技士、科主任、管理者設定這個學期的開學日和結業式，進度表的每一週就是從這裡排出來的 */
 function apiScheduleSetDates(start, end) {
   requireAdmin_();
