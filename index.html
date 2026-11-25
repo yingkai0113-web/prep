@@ -748,7 +748,7 @@ async function htmlToPdf(html,tag){
   try{
     try{await Promise.race([document.fonts.load('16px "LXGW WenKai TC"','標楷體實習材料單'),new Promise(r=>setTimeout(r,6000))]);}catch(e){}
     try{await document.fonts.ready;}catch(e){}
-    const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:'pt',format:'a4'}),M=43.2,availH=841.89-M*2;let first=true;
+    const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:'pt',format:'a4'}),M=25.2,availH=841.89-M*2;let first=true;
     const kids=[...host.children],t0=Date.now();let done=0;
     for(const el of kids){
       const left=done?Math.round((Date.now()-t0)/done*(kids.length-done)/1000):0;

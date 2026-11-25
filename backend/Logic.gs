@@ -556,7 +556,7 @@ function L_cssFont(ff) {
 }
 function L_docsToHtml(docs) {
   docs = L_fontDocs(docs);
-  var W_IN = 7.0, H_IN = 10.3, PX = 96;                                                   // A4 扣掉邊界後可用的寬、高
+  var W_IN = 7.55, H_IN = 10.4, PX = 96;                                                   // A4 扣掉邊界後可用的寬、高
   var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
   var col = function (s) { return s.charCodeAt(0) - 65; };
   var pages = docs.map(function (doc, di) {
@@ -584,7 +584,7 @@ function L_docsToHtml(docs) {
     var widths = doc.cw.map(function (w) { return w * 7 + 5; }), totalW = widths.reduce(function (a, b) { return a + b; }, 0);
     var hts = [], totalH = 0;
     for (var r0 = 0; r0 < nR; r0++) { var ht = ((doc.heights && doc.heights[r0]) || doc.defH || 15) * PX / 72; hts.push(ht); totalH += ht; }
-    var k = Math.min(1, W_IN * PX / totalW);
+    var k = Math.min((doc.page && doc.page.grow) ? 1.3 : 1, W_IN * PX / totalW);
     if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / totalH);
     var ws = widths.map(function (w) { return Math.round(w * k * 10) / 10; });
     var tw = ws.reduce(function (a, b) { return a + b; }, 0);
@@ -935,7 +935,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
     for (var wi = wkStart; wi < rows.length; wi++) { var mn = Math.max(fitH, Math.ceil(rowNeed[wi] || 0)); if (heights[wi] > mn) heights[wi] = mn; }
   }
   var nm = '進度表' + (ctx.n ? ctx.n : '');
-  return { name: nm, group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: 'page', m: { l: 0.5, r: 0.5, t: 0.5, b: 0.5, h: 0.2, f: 0.2 } }) };
+  return { name: nm, group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: 'page', grow: true, m: { l: 0.3, r: 0.3, t: 0.3, b: 0.3, h: 0.1, f: 0.1 } }) };
 }
 
 
