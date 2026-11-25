@@ -588,6 +588,11 @@ function L_docsToHtml(docs) {
           st += 'text-align:' + ({ c: 'center', r: 'right', l: 'left' }[cell.al] || 'left') + ';vertical-align:' + ({ top: 'top', bottom: 'bottom' }[cell.va] || 'middle') + ';';
           if (cell.bg) st += 'background-color:' + cell.bg + ';';
           var bd = cell.bd || '';
+          if (sp) {                                                                              // 合併的格子：四邊的線各取範圍邊緣那一格的（左上角那格只有自己的線，下面的線會不見）
+            var edge = function (rr, cc) { var x = (doc.rows[rr] || [])[cc]; return (x && x.bd) || ''; };
+            bd = (edge(r, c).indexOf('l') >= 0 || bd.indexOf('l') >= 0 ? 'l' : '') + (edge(r, c).indexOf('t') >= 0 || bd.indexOf('t') >= 0 ? 't' : '') +
+                 (edge(r, c + sp[1] - 1).indexOf('r') >= 0 ? 'r' : '') + (edge(r + sp[0] - 1, c).indexOf('b') >= 0 ? 'b' : '');
+          }
           st += 'border-left:' + (bd.indexOf('l') >= 0 ? '1px solid #000' : '0') + ';border-right:' + (bd.indexOf('r') >= 0 ? '1px solid #000' : '0') + ';border-top:' + (bd.indexOf('t') >= 0 ? '1px solid #000' : '0') + ';border-bottom:' + (bd.indexOf('b') >= 0 ? '1px solid #000' : '0') + ';';
         } else st += 'font-size:' + Math.round(11 * k * 10) / 10 + 'pt;';
         var v = val(r, c); if (typeof v === 'number') v = Math.round(v * 1000) / 1000;
