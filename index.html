@@ -894,8 +894,8 @@ async function htmlToPdf(html,tag){
 function printHtml(name,html){
   return new Promise(async res=>{
     const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(f);
-    const d=f.contentDocument,body=new DOMParser().parseFromString(html,'text/html').body.innerHTML,title=String(name).replace(/\.pdf$/i,'').replace(/[<>&]/g,'');
-    d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap"><style>@page{size:A4;margin:0.35in}html,body{margin:0;padding:0;background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>${body}</body></html>`);d.close();
+    const d=f.contentDocument,body=new DOMParser().parseFromString(html,'text/html').body.innerHTML,land=/data-orient="landscape"/.test(html),title=String(name).replace(/\.pdf$/i,'').replace(/[<>&]/g,'');
+    d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap"><style>@page{size:A4${land?' landscape':''};margin:0.35in}html,body{margin:0;padding:0;background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>${body}</body></html>`);d.close();
     try{await Promise.race([f.contentWindow.document.fonts.ready,new Promise(r=>setTimeout(r,5000))]);}catch(e){}
     await new Promise(r=>setTimeout(r,300));
     const oldT=document.title;document.title=title;                                  // 列印視窗預設的檔名

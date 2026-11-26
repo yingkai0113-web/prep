@@ -666,7 +666,7 @@ function L_cssFont(ff) {
 }
 function L_docsToHtml(docs) {
   docs = L_fontDocs(docs);
-  var W_IN = 7.55, H_IN = 10.4, PX = 96;                                                   // A4 扣掉邊界後可用的寬、高
+  var W_IN0 = 7.55, H_IN0 = 10.4, PX = 96, W_IN = W_IN0, H_IN = H_IN0;                                                   // A4 扣掉邊界後可用的寬、高
   var esc = function (t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
   var col = function (s) { return s.charCodeAt(0) - 65; };
   var pages = docs.map(function (doc, di) {
@@ -686,6 +686,7 @@ function L_docsToHtml(docs) {
       }
       return '';
     };
+    var land = !!(doc.page && doc.page.orient === 'landscape'); W_IN = land ? 10.9 : W_IN0; H_IN = land ? 7.5 : H_IN0;
     var nR = doc.rows.length, nC = doc.cw.length, cover = {}, span = {};
     (doc.merges || []).forEach(function (m) {
       span[m[0] + ',' + m[1]] = [m[2] - m[0] + 1, m[3] - m[1] + 1];
@@ -698,7 +699,7 @@ function L_docsToHtml(docs) {
     if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / totalH);
     var ws = widths.map(function (w) { return Math.round(w * k * 10) / 10; });
     var tw = ws.reduce(function (a, b) { return a + b; }, 0);
-    var h = '<div style="position:relative;' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:' + L_cssFont('') + '"><colgroup>' +
+    var h = '<div data-orient="' + (land ? 'landscape' : 'portrait') + '" style="position:relative;' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:' + L_cssFont('') + '"><colgroup>' +
       ws.map(function (w) { return '<col width="' + w + '" style="width:' + w + 'px">'; }).join('') + '</colgroup>';
     for (var r = 0; r < nR; r++) {
       h += '<tr style="height:' + Math.round(hts[r] * k * 10) / 10 + 'px">';
@@ -1146,7 +1147,9 @@ function L_docSchedAth(table, weeks, cells, ctx) {
         var line = [T(String(row.t || '').replace('-', '-\n'), { bg: bg })], need = 0;
         var mk = function (s) {
           var ls = linesOf(s), col = s && s.st === 'r' ? 'C00000' : s && s.st === 'p' ? '7030A0' : '000000';
-          need = Math.max(need, ls.length * 16 + 8);
+          var capU = ((merged ? (nC - 1) * 24 : 24) - 2) / 1.25, nl = 0;
+          ls.forEach(function (t) { var u = 0; for (var q = 0; q < t.length; q++) u += t.charCodeAt(q) > 255 ? 2 : 1.15; nl += Math.max(1, Math.ceil(u / capU)); });
+          need = Math.max(need, nl * 17 + 10);
           return L_c(ls.join('\n'), { ff: L_FONT, sz: 12, b: 1, al: 'c', va: 'center', bd: BD, wrap: 1, bg: (s && s.st === 'y') ? '#FFFF00' : bg, color: col, runs: ls.map(function (t, q) { return { v: (q ? '\n' : '') + t, b: 1, sz: 12, color: col }; }) });
         };
         if (merged) { line.push(mk(sl[0])); for (var m = 1; m < nC - 1; m++) line.push(T('', { bg: bg })); }
