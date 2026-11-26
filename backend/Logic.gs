@@ -583,14 +583,12 @@ function L_splitModel(items) {
       (perDate[u.date] = perDate[u.date] || []).push(u);
     });
     Object.keys(perDate).forEach(function (d) {
-      var us = perDate[d], total = 0;
-      us.forEach(function (u) { total += Number(u.qty); });
-      var parts = us.map(function (u) {
-        var t = (u.titles || []).filter(Boolean).join('、'), who = String(u.teacher || '');
-        return (who + (t ? '(' + t + ')' : '')) + (us.length > 1 ? ' ' + L_num(Number(u.qty)) + (it.unit || '') : '');
-      });
+      var us = perDate[d];
       if (!by[d]) { by[d] = []; dates.push(d); }
-      by[d].push({ name: it.name + (it.unit ? '/' + it.unit : ''), total: L_round(total), note: parts.join('、'), key: String(us[0].teacher || ''), ix: ix });
+      us.forEach(function (u) {                                                        // 好幾位老師共用的材料：每位老師各一列（數量是他那份），放進他自己的備註區塊
+        var t = (u.titles || []).filter(Boolean).join('、'), who = String(u.teacher || '');
+        by[d].push({ name: it.name + (it.unit ? '/' + it.unit : ''), total: L_round(Number(u.qty)), note: who + (t ? '(' + t + ')' : ''), key: who, ix: ix });
+      });
     });
   });
   dates.sort();
