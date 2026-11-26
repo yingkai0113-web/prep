@@ -2152,7 +2152,9 @@ function athSlotOf(cell,rid,rows){
   const lg=rows[1]||rows[0];if(!lg||lg.id!==rid)return null;
   return cell.kind==='note'?{r:rid,pids:[],q:{},txt:cell.note,st:''}:{r:rid,pids:cell.groups.flatMap(g=>g.pids),q:{},txt:'',st:''};
 }
-const athLines=s=>s?[...(s.pids||[]).map(p=>pTitle(p)+((s.q&&s.q[p])?`(${s.q[p]})`:'')),...(s.txt?[s.txt]:[])]:[];
+const pServ=pid=>{const p=S.cat.pmap[pid];if(p)return p.serving||'';const c=S.sc&&S.sc.data&&S.sc.data.cellProducts&&S.sc.data.cellProducts[pid];return c?(c.serving||''):'';};
+const athQty=(s,p)=>(s.q&&s.q[p]!==undefined)?s.q[p]:pServ(p);        // 沒自己填數量，就用材料單的份量說明
+const athLines=s=>s?[...(s.pids||[]).map(p=>{const q=athQty(s,p);return pTitle(p)+(q?`(${q})`:'');}),...(s.txt?[s.txt]:[])]:[];
 const athSlotStyle=s=>!s?'':(s.st==='y'?'background:#FFFF00;':'')+(s.st==='r'?'color:#C00000;':s.st==='p'?'color:#7030A0;':'');
 function athRowCells(t,w,row,rows,xs){
   const c=t.classes[0],sl=xs.map(x=>athSlotOf(schedCell(t.id,w.n,c.cls,athDayKey(t,x)),row.id,rows));
@@ -2199,7 +2201,7 @@ function athSlotModal(){
     q=isL?'誰開單、上什麼課程（產品）？':'寫什麼？';
     body=isL?`<label class="lbl">哪位老師開單？</label><select class="in" data-ath="teacher"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===E.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
     <label class="lbl" style="margin-top:8px">上什麼課程（產品）？可以選好幾個，後面可以寫數量（例如 10個、各100）</label>
-    ${E.pids.length?E.pids.map(p=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b style="flex:2">${esc(pTitle(p))}</b><span>數量 (</span><input class="in" style="flex:1" data-ath="q" data-p="${esc(p)}" value="${esc(E.q[p]||'')}" placeholder="例如 10個"><span>)</span><button class="linkb" data-a="athRemP" data-p="${esc(p)}">✕</button></div>`).join(''):'<p class="mut">還沒選。</p>'}
+    ${E.pids.length?E.pids.map(p=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b style="flex:2">${esc(pTitle(p))}</b><span>數量 (</span><input class="in" style="flex:1" data-ath="q" data-p="${esc(p)}" value="${esc(E.q[p]!==undefined?E.q[p]:pServ(p))}" placeholder="例如 10個"><span>)</span><button class="linkb" data-a="athRemP" data-p="${esc(p)}">✕</button></div>`).join(''):'<p class="mut">還沒選。</p>'}
     <input class="in" id="athQ" style="margin-top:6px" placeholder="打字搜尋，或用下面的年級分頁挑…" autocomplete="off" value="${esc(E.search||'')}"><div id="athRes">${athResHTML()}</div>`
     :`<input class="in" style="width:100%" data-ath="txt" maxlength="30" value="${esc(E.txt)}" placeholder="例如：第七章上課"><div style="margin-top:8px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="athChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
     body+=`<div style="margin:10px 0 4px"><b>這格的樣子</b></div><select class="in" data-ath="st">${ATH_ST.map(([v,n])=>`<option value="${v}" ${E.st===v?'selected':''}>${n}</option>`).join('')}</select>
@@ -2297,7 +2299,7 @@ async function athAct(a,b){
   if(a==='athChip'){E.txt=b.dataset.n;return render();}
   if(a==='athSlotNo'){S.sc.athEd=null;return render();}
   if(a==='athPTab'){E.tab=b.dataset.t;E.search='';return render();}
-  if(a==='athAddP'){if(!E.pids.includes(b.dataset.p))E.pids.push(b.dataset.p);E.search='';return render();}
+  if(a==='athAddP'){if(!E.pids.includes(b.dataset.p)){E.pids.push(b.dataset.p);E.q[b.dataset.p]=pServ(b.dataset.p);}E.search='';return render();}
   if(a==='athRemP'){E.pids=E.pids.filter(p=>p!==b.dataset.p);delete E.q[b.dataset.p];return render();}
   if(a==='athSlotOk'&&E.kind==='lesson'&&E.pids.length&&!E.teacher){E.err='請選哪位老師開單。';return render();}
   if(a==='athSlotOk'||a==='athSlotClear'){athApply(E,a==='athSlotClear');S.sc.athEd=null;S.info='這格改好了，還沒儲存。按上面的「儲存進度表」才會生效，排給老師的材料單才會出現。';return render();}
