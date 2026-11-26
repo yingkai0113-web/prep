@@ -1042,7 +1042,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
         var bgFor = function (teacher) { return hl && teacher === hl ? '#FFF2A8' : shadeFor(c.cls, teacher); };
         if (!cell) return;
         if (cell.kind === 'note') {
-          row[col] = T(cell.note, { al: 'c', bd: BD, bg: '#EEEEEE', wrap: 1 });
+          row[col] = T(cell.note, { al: 'c', bd: BD, bg: '#FCE4D6', wrap: 1 });
           if (gN > 1) merges.push([ri, col, ri, col + gN - 1]);
         } else if (cell.mode === 'joint' || gN === 1) {
           var g0 = cell.groups[0]; row[col] = TR(runsFor(g0, gN), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g0.teacher) });
