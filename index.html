@@ -41,6 +41,7 @@ h2{font-size:20px;margin:0 0 4px}
 .tile.on{border-color:var(--pri);background:#E8F3EF}
 .tile.on .box{background:var(--pri);border-color:var(--pri)}
 .tile.on .box::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;margin:10px 0;font:inherit;font-size:18px;background:#fff;color:#1b2a22;border:2px solid #9DB8A9;border-radius:14px;cursor:pointer;box-shadow:0 2px 0 #C9D9CF}.opt:hover{border-color:var(--pri);background:#F3F8F5}.opt:active{transform:translateY(1px);box-shadow:none}.opt.on{border-color:var(--pri);background:#E3F1E9;box-shadow:0 0 0 2px var(--pri)}.opt .rd{font-size:26px;line-height:1;color:var(--pri)}.opt small{display:block;font-size:13px;font-weight:400;color:#5b6b62;margin-top:2px}
 .card.todo{background:#FFF1E0;border-color:#F0A04B}.card.todo .ch{background:#FFF1E0}.gh.todo{background:#E8820C;color:#fff}.gh.done{background:#2E9E5B;color:#fff}.card.seen{background:#E6F4EA;border-color:#6DBB86}.card.seen .ch{background:#E6F4EA}.okbox{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;margin-top:10px;border:2px solid #6DBB86;border-radius:12px;background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:#1d5a35;text-align:left}.okbox.on{background:#2E9E5B;color:#fff;border-color:#2E9E5B}.okbox b{font-size:22px;line-height:1}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;overflow:hidden}
 .ch{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;padding:12px;text-align:left}
@@ -1061,7 +1062,8 @@ document.addEventListener('click',async ev=>{
     if(a==='scSwapFill'){S.sc.cellEd=Object.assign(e,{kind:'lesson',mode:cell.mode,label:cell.label||'',groups:cell.groups.map((g,i)=>({label:cell.mode==='split'?t.groups[i]:'',teacher:g.teacher,pids:g.pids.slice(),q:''}))});return render();}
     stageCell(t.id,w,cl,day,cell);S.info='已接上週，單雙互換（還沒儲存）。';return render();}
   if(a==='scCellNo'){S.sc.cellEd=null;return render();}
-  if(a==='scKind'){const e=S.sc.cellEd,t=schedTable(e.tid);e.kind=b.dataset.k;e.step=e.kind==='note'?'note':((t.groups||[]).length>=2?'mode':'prod');return render();}
+  if(a==='scKind'){const e=S.sc.cellEd,t=schedTable(e.tid);e.kind=b.dataset.k;return render();}
+  if(a==='scNext'){const e=S.sc.cellEd,t=schedTable(e.tid);if(e.step==='mode')e.step='prod';else e.step=e.kind==='note'?'note':((t.groups||[]).length>=2?'mode':'prod');window.scrollTo(0,0);return render();}
   if(a==='scBack'){const e=S.sc.cellEd,t=schedTable(e.tid),hg=(t.groups||[]).length>=2;e.step=(e.step==='prod'&&hg&&e.kind==='lesson')?'mode':'kind';return render();}
   if(a==='scMode'){
     const e=S.sc.cellEd,t=schedTable(e.tid),m=b.dataset.m;
@@ -1069,7 +1071,7 @@ document.addEventListener('click',async ev=>{
       if(m==='split'){const g0=e.groups[0]||{teacher:'',pids:[]};e.groups=mkGroups(t,'split','');e.groups[0].teacher=g0.teacher;e.groups[0].pids=g0.pids.slice();}
       else{const all=[];e.groups.forEach(g=>g.pids.forEach(p=>{if(!all.includes(p))all.push(p);}));e.groups=[{label:'',teacher:(e.groups.find(g=>g.teacher)||{}).teacher||'',pids:all,q:''}];}
       e.mode=m;}
-    e.step='prod';return render();}
+    return render();}
   if(a==='scChip'){S.sc.cellEd.note=b.dataset.n;return render();}
   if(a==='scPTab'){const g=S.sc.cellEd.groups[+b.dataset.g];g.tab=b.dataset.t;g.q='';return render();}
   if(a==='scAddP'){const g=S.sc.cellEd.groups[+b.dataset.g];if(!g.pids.includes(b.dataset.p))g.pids.push(b.dataset.p);g.q='';return render();}
@@ -1678,7 +1680,7 @@ function scCellModal(){
   const users=S.sc.data.users.filter(u=>!(t.teachers&&t.teachers.length)||t.teachers.includes(u.email)),hasGroups=(t.groups||[]).length>=2,pv=hasGroups?prevLesson(t,e.cl,e.w,e.day):null;
   const step=e.step||'kind',isLesson=e.kind==='lesson';
   const nSteps=isLesson?(hasGroups?3:2):2,stepNo=step==='kind'?1:step==='mode'?2:(isLesson?(hasGroups?3:2):2);
-  const big=(act,attr,on,text,sub)=>`<button class="btn ${on?'':'ghost'}" style="display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-size:17px" data-a="${act}" ${attr}>${on?'✓ ':''}${text}${sub?`<small style="display:block;font-weight:400;opacity:.8;margin-top:2px">${sub}</small>`:''}</button>`;
+  const big=(act,attr,on,text,sub)=>`<button class="opt ${on?'on':''}" data-a="${act}" ${attr} aria-pressed="${on}"><span class="rd">${on?'◉':'○'}</span><span><b>${text}</b>${sub?`<small>${sub}</small>`:''}</span></button>`;
   const gBox=(g,i)=>`<div class="card" style="margin:10px 0"><div class="cb" style="padding-top:10px">${g.label?`<b style="font-size:16px">${esc(g.label)}</b>`:''}
     <label class="lbl">哪位老師開單？</label><select class="in" data-k="scteacher" data-g="${i}"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===g.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
     <label class="lbl" style="margin-top:8px">上什麼課程（產品）？可以選好幾個</label>
@@ -1688,11 +1690,11 @@ function scCellModal(){
   if(step==='kind'){
     q='這一週要上實習嗎？';
     body=big('scKind','data-k="lesson"',isLesson,'上實習')+big('scKind','data-k="note"',!isLesson,'不排實習','放假、段考、校外教學…');
-    foot=`<button class="btn ghost" data-a="scCellNo">取消</button>`;
+    foot=`<button class="btn ghost" data-a="scCellNo">取消</button><button class="btn" data-a="scNext">下一步 →</button>`;
   }else if(step==='mode'){
     q='全部一起上，還是分組上課？';
     body=big('scMode','data-m="joint"',e.mode==='joint','全部一起上','一位老師開單')+big('scMode','data-m="split"',e.mode==='split','分組上課',esc((t.groups||[]).join('、'))+'各有自己的老師和課程');
-    foot=`<button class="btn ghost" data-a="scBack">← 上一步</button>`;
+    foot=`<button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scNext">下一步 →</button>`;
   }else if(!isLesson){
     q='寫什麼？';
     body=`<input class="in" style="width:100%" data-k="scnote" maxlength="40" value="${esc(e.note)}" placeholder="例如：教師節放假"><div style="margin-top:8px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="scChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
