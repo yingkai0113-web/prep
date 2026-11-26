@@ -1036,7 +1036,11 @@ function L_docSchedule(table, weeks, cells, ctx) {
           if (u > cap) { sz = 10; lines = Math.max(1, Math.ceil(u * 10 / 11 / cap)); if (lines > 1) { sz = 9; lines = Math.max(1, Math.ceil(u * 9 / 11 / cap)); } }
           rowNeed[ri] = Math.max(rowNeed[ri] || 0, lines * sz * 1.35 + (g.teacher ? 12 * 1.35 : 0) + 5);
           var runs = [{ v: ttl, b: 1, sz: sz }];
-          if (g.teacher) runs.push({ v: '\n' + (names[g.teacher] || g.teacher.split('@')[0]), sz: 12, b: 1, color: '000000' });
+          if (g.teacher) {
+            var nm1 = function (em) { return names[em] || String(em).split('@')[0]; };
+            var tn = (cell.mode === 'joint' && c.teachers && c.teachers.length > 1 && c.teachers.indexOf(g.teacher) >= 0) ? c.teachers.map(nm1).join('、') : nm1(g.teacher);       // 全班一起上、這個班有好幾位老師：兩位老師的名字都印出來（開單的只有一位）
+            runs.push({ v: '\n' + tn, sz: 12, b: 1, color: '000000' });
+          }
           return runs;
         };
         var bgFor = function (teacher) { return hl && teacher === hl ? '#FFF2A8' : shadeFor(c.cls, teacher); };
