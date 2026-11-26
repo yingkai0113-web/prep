@@ -948,7 +948,7 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='rqOpen'){S.rq={form:null,delAsk:''};return render();}
   if(a==='rqClose'){S.rq=null;return render();}
-  if(a==='rqNew'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const dp=S.dept;S.rq.form={id:'',dept:dp,course:(S.courses[dp]||[])[0]||'',classes:[],groups:'',half:'每',note:'',teachers:[]};return render();}
+  if(a==='rqNew'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const dp=S.dept;S.rq.form={id:'',dept:dp,course:'',classes:[],groups:'',half:'每',note:'',teachers:[]};return render();}
   if(a==='rqEdit'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.filter(c=>!(x.course==='國中技藝班'&&c.cls==='國中技藝班')).map(c=>({cls:c.cls,days:c.days.slice(),teachers:(c.teachers?c.teachers:reqTeachers(x)).slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||'',teachers:reqTeachers(x)};return render();}
   if(a==='rqBack'){if(S.rq.direct){S.rq=null;return render();}S.rq.form=null;return render();}
   if(a==='rqDept'){const f=S.rq.form;f.dept=b.dataset.d;f.course=(S.courses[f.dept]||[])[0]||'';f.classes=[];if(f.dept==='夜間部')f.groups='';return render();}
@@ -978,7 +978,8 @@ document.addEventListener('click',async ev=>{
     catch(er){S.err=er.message;}
     return render();}
   if(a==='rqTeach'){const f=S.rq.form,em=b.dataset.em,c=f.classes.find(x=>x.cls===b.dataset.cl);if(!c)return;c.teachers=c.teachers||[];c.teachers=c.teachers.includes(em)?c.teachers.filter(x=>x!==em):c.teachers.concat([em]);return render();}
-  if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;if(f.course==='國中技藝班'&&f.classes.length!==1){f.err='請選一所國中（每一所國中是獨立的一張進度表）。';return render();}
+  if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;if(!f.course){f.err='請打課程名稱。';return render();}
+  if(f.course==='國中技藝班'&&f.classes.length!==1){f.err='請選一所國中（每一所國中是獨立的一張進度表）。';return render();}
   if(!f.id&&!f.groups&&f.dept==='日間部'&&!['國中技藝班','技藝競賽選手'].includes(f.course))f.groups='單數組、雙數組';f.busy=true;f.err='';render();
     try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));const dr=S.rq.direct;S.rq.form=null;if(dr)S.rq=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}if(S.view==='status'){render();loadStatus();return;}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
@@ -1456,6 +1457,7 @@ document.addEventListener('change',ev=>{
     c.days=[];for(let n=f;n<=to;n++)c.days.push(n);return render();}
   if(k==='scXFrom'||k==='scXTo'){S.sc.extraEd[k==='scXFrom'?'from':'to']=t.value;return;}
   if(k==='tfCourse'||k==='tfCls'||k==='tfQ'){S.tFilter={course:k==='tfCourse'?t.value:S.tFilter.course,cls:k==='tfCls'?t.value:S.tFilter.cls,q:k==='tfQ'?t.value.trim():S.tFilter.q,id:''};return loadRange();}
+  if(k==='rqcourse'){const f=S.rq.form,j0=f.course==='國中技藝班';f.course=t.value.trim();const j=f.course==='國中技藝班';if(j!==j0){f.classes=f.classes.filter(c=>j?/國中$/.test(c.cls):!/國中$/.test(c.cls));if(j&&f.classes.length>1)f.classes=[f.classes[0]];render();const el=document.querySelector('[data-k="rqcourse"]');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}return;}
   if(k==='archTerm'){S.arch.term=t.value;S.arch.data=null;if(!t.value)return render();S.arch.busy=true;render();run('apiTermArchive',t.value).then(r=>{S.arch.data=r;}).catch(e=>{S.err=e.message;}).then(()=>{S.arch.busy=false;render();});return;}
   if(k==='hTerm'){const H=S.sc.hist,tm=H.terms.find(x=>x.term===t.value),t0=schedTable(S.sc.tab);H.term=t.value;const x=tm.tables.find(y=>y.dept===t0.dept&&y.course===t0.course)||tm.tables[0];return loadHistTable(x.id);}
   if(k==='hTable'){return loadHistTable(t.value);}
@@ -1935,7 +1937,7 @@ function rqModal(){
   const NO=['①','②','③','④'],jr0=f.course==='國中技藝班',cls=(S.classes[f.dept]||[]).filter(c=>jr0?/國中$/.test(c):!/國中$/.test(c)),courses=S.courses[f.dept]||[],one=f.classes.length===1,jr=jr0,W=jr?'哪一所國中（每一所國中一張獨立的進度表）':'哪些班',W2=jr?'國中':'班';
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 8px">${f.id?'修改：'+esc(f.dept)+'・'+esc(f.course):'新增一門要排進度表的課'}</h2>
     ${f.id?'':`<div class="rqsec"><b class="rqh">部別</b><div class="seg">${DEPTS.map(x=>`<button data-a="rqDept" data-d="${x}" class="${f.dept===x?'on':''}">${x}</button>`).join('')}</div></div>`}
-    ${f.id?'':`<div class="rqsec"><b class="rqh">${NO[0]} 課程</b><div class="tabs" style="flex-wrap:wrap">${courses.map(c=>`<button class="gt ${f.course===c?'on':''}" data-a="rqCourse" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>`}
+    ${f.id?'':`<div class="rqsec"><b class="rqh">${NO[0]} 課程名稱</b><input class="in" style="width:100%" data-k="rqcourse" maxlength="20" placeholder="直接打課程名稱，例如：烘焙食品加工實習" value="${esc(f.course||'')}"></div>`}
     <div class="rqsec"><b class="rqh">${NO[1-(f.id?1:0)]} ${W}</b><div class="mut" style="font-size:13px;margin-bottom:4px">${jr?'一次選一所；要新增另一所，存好後再按「＋ 新增課程」':'同一門課、同一'+W2+'只能有一張進度表'}</div><div class="ccs">${cls.map(c=>f.clsDel?`<button class="cc" data-a="rqClsDel" data-cl="${esc(c)}" title="刪掉這個${W2}">✕ ${esc(c)}</button>`:`<button class="cc ${f.classes.some(x=>x.cls===c)?'on':''}" data-a="rqClass" data-cl="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div style="display:flex;gap:6px;margin-top:6px;align-items:center"><input class="in" data-k="rqNewCls" maxlength="10" placeholder="${jr?'新增國中（例如：大村國中）':'新增班級'}" value="${esc(f.newCls||'')}" style="flex:1"><button class="btn sm" data-a="rqClsAdd">加入</button></div>
     <button class="linkb" data-a="rqClsMode">${f.clsDel?'完成（回去選）':'刪掉用不到的'+W2}</button></div>
