@@ -2187,14 +2187,29 @@ function athGridHTML(t){
 }
 function athSlotModal(){
   const E=S.sc.athEd,t=schedTable(E.tid),rows=athRowsFor(t,E.w),row=rows.find(r=>r.id===E.rid),w=tWeeks(t).find(x=>x.n===E.w);
-  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${esc(athDayLbl(w.mon,E.x))}　${esc(row?row.t:'')}</h2>
-    <p class="mut" style="margin:0 0 8px">點產品加進來，後面可以寫數量（例如 10個、各100、一起10顆）。產品會自動變成這一天的材料單。</p>
-    ${E.pids.length?E.pids.map(p=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b style="flex:2">${esc(pTitle(p))}</b><span>(</span><input class="in" style="flex:1" data-ath="q" data-p="${esc(p)}" value="${esc(E.q[p]||'')}" placeholder="數量"><span>)</span><button class="linkb" data-a="athRemP" data-p="${esc(p)}">✕</button></div>`).join(''):'<p class="mut">還沒有加產品。</p>'}
-    <div style="margin:8px 0 4px"><b>加產品</b></div><input class="in" id="athQ" placeholder="輸入名稱找找看（例如 咖哩）" autocomplete="off" value="${esc(E.search||'')}"><div id="athRes">${athResHTML()}</div>
-    <div style="margin:10px 0 4px"><b>文字</b>（上課、考試、午休、放假…）</div><input class="in" data-ath="txt" value="${esc(E.txt)}" placeholder="例如 第七章上課" maxlength="30">
-    <div style="margin:10px 0 4px"><b>這格的樣子</b></div><select class="in" data-ath="st">${ATH_ST.map(([v,n])=>`<option value="${v}" ${E.st===v?'selected':''}>${n}</option>`).join('')}</select>
-    <label style="display:flex;gap:8px;align-items:center;padding:10px 0 0"><input type="checkbox" data-ath="all" ${E.all?'checked':''}> <span>這一週這一列的每一天都一樣（例如午休、上課）</span></label>
-    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px;flex-wrap:wrap"><button class="btn ghost danger" data-a="athSlotClear">清空這格</button><span style="display:flex;gap:8px"><button class="btn ghost" data-a="athSlotNo">取消</button><button class="btn" data-a="athSlotOk">完成</button></span></div></div></div>`;
+  const big=(act,attr,on,text,sub)=>`<button class="opt ${on?'on':''}" data-a="${act}" ${attr} aria-pressed="${on}"><span class="rd">${on?'◉':'○'}</span><span><b>${text}</b>${sub?`<small>${sub}</small>`:''}</span></button>`;
+  const isL=E.kind==='lesson',tl=(t.teachers&&t.teachers.length)?t.teachers:[],users=S.sc.data.users.filter(u=>!tl.length||tl.includes(u.email));
+  let q,body,foot;
+  const del=E.has?'<button class="btn ghost" data-a="athSlotClear" style="color:var(--err)">刪除這格</button>':'';
+  if(E.step==='kind'){
+    q='這一格要上實習嗎？';
+    body=big('athKind','data-k="lesson"',isL,'上實習','選產品，後面可以寫數量')+big('athKind','data-k="note"',!isL,'不排實習','放假、段考、校外教學、上課…');
+    foot=`${del}<button class="btn ghost" data-a="athSlotNo">取消</button><button class="btn" data-a="athNext">下一步 →</button>`;
+  }else{
+    q=isL?'誰開單、上什麼課程（產品）？':'寫什麼？';
+    body=isL?`<label class="lbl">哪位老師開單？</label><select class="in" data-ath="teacher"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===E.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
+    <label class="lbl" style="margin-top:8px">上什麼課程（產品）？可以選好幾個，後面可以寫數量（例如 10個、各100）</label>
+    ${E.pids.length?E.pids.map(p=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b style="flex:2">${esc(pTitle(p))}</b><span>數量 (</span><input class="in" style="flex:1" data-ath="q" data-p="${esc(p)}" value="${esc(E.q[p]||'')}" placeholder="例如 10個"><span>)</span><button class="linkb" data-a="athRemP" data-p="${esc(p)}">✕</button></div>`).join(''):'<p class="mut">還沒選。</p>'}
+    <input class="in" id="athQ" style="margin-top:6px" placeholder="打字搜尋，或用下面的年級分頁挑…" autocomplete="off" value="${esc(E.search||'')}"><div id="athRes">${athResHTML()}</div>`
+    :`<input class="in" style="width:100%" data-ath="txt" maxlength="30" value="${esc(E.txt)}" placeholder="例如：第七章上課"><div style="margin-top:8px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="athChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
+    body+=`<div style="margin:10px 0 4px"><b>這格的樣子</b></div><select class="in" data-ath="st">${ATH_ST.map(([v,n])=>`<option value="${v}" ${E.st===v?'selected':''}>${n}</option>`).join('')}</select>
+    <label style="display:flex;gap:8px;align-items:center;padding:10px 0 0"><input type="checkbox" data-ath="all" ${E.all?'checked':''}> <span>這一週這一列的每一天都一樣（例如午休、上課）</span></label>`;
+    foot=`${del}<button class="btn ghost" data-a="athSlotNo">取消</button><button class="btn ghost" data-a="athBack">← 上一步</button><button class="btn" data-a="athSlotOk">儲存</button>`;
+  }
+  return `<div class="modal"><div class="mb"><div class="mut" style="font-size:13px">${wLabel(w)}　${esc(t.classes[0].cls)}・${esc(t.course)}・${esc(athDayLbl(w.mon,E.x))}　${esc(row?row.t:'')}</div>
+    <h2 style="margin:4px 0 2px">${q}</h2><p class="mut" style="margin:0 0 6px;font-size:13px">第 ${E.step==='kind'?1:2}／2 步</p>${E.err?`<div class="err">${esc(E.err)}</div>`:''}
+    ${body}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px">${foot}</div></div></div>`;
 }
 function athResHTML(){
   const E=S.sc.athEd,q=String(E.search||'').trim().toLowerCase(),chosen=new Set(E.pids);
@@ -2220,11 +2235,12 @@ function athApply(E,clear){
     const dk=athDayKey(t,x),old=schedCell(t.id,E.w,c.cls,dk);let slots=[];
     if(old){if(old.slots)slots=athClone(old.slots);else{const lg=rows[1]||rows[0],s=lg?athSlotOf(old,lg.id,rows):null;if(s&&(s.pids.length||s.txt))slots.push(athClone(s));}}
     slots=slots.filter(s=>s.r!==E.rid);
-    if(!clear&&(E.pids.length||E.txt.trim()))slots.push({r:E.rid,pids:E.pids.slice(),q:Object.assign({},E.q),txt:E.txt.trim(),st:E.st});
+    const isL=E.kind==='lesson';
+    if(!clear&&((isL&&E.pids.length)||(!isL&&E.txt.trim())))slots.push({r:E.rid,pids:isL?E.pids.slice():[],q:isL?Object.assign({},E.q):{},txt:isL?'':E.txt.trim(),st:E.st});
     slots.sort((a,b)=>rows.findIndex(r=>r.id===a.r)-rows.findIndex(r=>r.id===b.r));
     const pids=[];slots.forEach(s=>s.pids.forEach(p=>{if(!pids.includes(p))pids.push(p);}));
     let cell=null;
-    if(pids.length){const og=old&&old.kind==='lesson'?old.groups.find(g=>g.teacher):null;cell={kind:'lesson',mode:'joint',label:'',groups:[{teacher:og?og.teacher:athDefTeacher(t),pids}],slots};}
+    if(pids.length){const og=old&&old.kind==='lesson'?old.groups.find(g=>g.teacher):null;cell={kind:'lesson',mode:'joint',label:'',groups:[{teacher:E.teacher||(og?og.teacher:athDefTeacher(t)),pids}],slots};}
     else if(slots.length)cell={kind:'note',note:slots.map(s=>s.txt).filter(Boolean).join('、').slice(0,40)||'—',slots};
     stageCell(t.id,E.w,c.cls,dk,cell);
   });
@@ -2271,13 +2287,19 @@ async function athAct(a,b){
   if(a==='athRowsAll'){const rows=athClone(athRowsFor(t,W)),st=athStore(t.id)||(S.sc.data.athRows[t.id]={def:[],w:{}});st.def=rows;st.w={};athRowsDirty(t);S.info='已把這一週的時間列套用到全部週。';return render();}
   if(a==='athSlot'){
     const x=+b.dataset.x,c=t.classes[0],rows=athRowsFor(t,W),s=athSlotOf(schedCell(t.id,W,c.cls,athDayKey(t,x)),RID,rows)||{pids:[],q:{},txt:'',st:''};
-    S.sc.athEd={tid:t.id,w:W,x,rid:RID,pids:s.pids.slice(),q:Object.assign({},s.q||{}),txt:s.txt||'',st:s.st||'',all:false,search:'',tab:'一'};return render();}
+    const og=(()=>{const cl=schedCell(t.id,W,c.cls,athDayKey(t,x));return cl&&cl.kind==='lesson'?cl.groups.find(g=>g.teacher):null;})();
+    S.sc.athEd={tid:t.id,w:W,x,rid:RID,pids:s.pids.slice(),q:Object.assign({},s.q||{}),txt:s.txt||'',st:s.st||'',all:false,search:'',tab:'一',step:'kind',kind:(!s.pids.length&&s.txt)?'note':'lesson',has:!!(s.pids.length||s.txt),teacher:og?og.teacher:athDefTeacher(t)};return render();}
   const E=S.sc.athEd;if(!E)return;
   if(a==='athNewProd'){S.ed={kind:'custom',pid:'',shared:false,category:'',origCategory:'',title:(E.search||'').trim(),serving:'',dsets:4,rows:[blankRow(),blankRow(),blankRow()],tools:[],showTools:false,err:'',confirmDel:false,confirmRevert:false,forCell:{g:0,ath:true}};return render();}
+  if(a==='athKind'){E.kind=b.dataset.k;return render();}
+  if(a==='athNext'){E.step='work';window.scrollTo(0,0);return render();}
+  if(a==='athBack'){E.step='kind';return render();}
+  if(a==='athChip'){E.txt=b.dataset.n;return render();}
   if(a==='athSlotNo'){S.sc.athEd=null;return render();}
   if(a==='athPTab'){E.tab=b.dataset.t;E.search='';return render();}
   if(a==='athAddP'){if(!E.pids.includes(b.dataset.p))E.pids.push(b.dataset.p);E.search='';return render();}
   if(a==='athRemP'){E.pids=E.pids.filter(p=>p!==b.dataset.p);delete E.q[b.dataset.p];return render();}
+  if(a==='athSlotOk'&&E.kind==='lesson'&&E.pids.length&&!E.teacher){E.err='請選哪位老師開單。';return render();}
   if(a==='athSlotOk'||a==='athSlotClear'){athApply(E,a==='athSlotClear');S.sc.athEd=null;S.info='這格改好了，還沒儲存。按上面的「儲存進度表」才會生效，排給老師的材料單才會出現。';return render();}
 }
 document.addEventListener('change',ev=>{
@@ -2290,6 +2312,7 @@ document.addEventListener('change',ev=>{
   if(!E)return;
   if(k==='q'){E.q[t.dataset.p]=t.value;return;}
   if(k==='txt'){E.txt=t.value;return;}
+  if(k==='teacher'){E.teacher=t.value;E.err='';return;}
   if(k==='st'){E.st=t.value;return;}
   if(k==='all'){E.all=t.checked;return;}
 });
