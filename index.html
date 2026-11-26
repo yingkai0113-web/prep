@@ -316,6 +316,7 @@ const dirty=()=>sigOf(S.entries)!==S.savedSig;
 /* ---------- 畫面 ---------- */
 function render(){
   if(!S.user){return;}
+  if(S.selActive){S.pendRender=1;return;}                    // 下拉選單正在展開：現在重畫會讓它縮回去，等選完或離開再畫
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
   if(S.trial)h+=`<div style="background:#E8590C;color:#fff;padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:700;text-align:center">⚠ 目前是「試用頁面」：這裡的資料是測試用的，怎麼改、刪都不會影響正式資料。${canTech()?'<button class="btn sm" style="margin-left:8px;background:#fff;color:#E8590C" data-a="trialOff">回到正式資料</button>':''}</div>`;
   const views=S.asT?[['sched','教學進度表'],S.extraOpen&&['extra','額外材料單']].filter(Boolean):[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','教學進度表管理'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','查詢舊資料'],isAdmin()&&['admin','後台']].filter(Boolean);
@@ -1654,6 +1655,11 @@ async function commitSched(after){
   return {saved};
 }
 async function quietSched(){try{S.sc.data=await run('apiScheduleGet',S.asT||'');if(document.activeElement&&document.activeElement.tagName==='SELECT'){S.pendRender=1;return;}render();}catch(e){}}
+const isSel=ev=>ev.target&&ev.target.tagName==='SELECT';
+document.addEventListener('mousedown',ev=>{if(isSel(ev))S.selActive=true;},true);
+document.addEventListener('change',ev=>{if(isSel(ev))S.selActive=false;},true);
+document.addEventListener('focusout',()=>{S.selActive=false;},true);
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape')S.selActive=false;},true);
 document.addEventListener('focusout',()=>{if(S.pendRender){S.pendRender=0;setTimeout(()=>{if(!(document.activeElement&&document.activeElement.tagName==='SELECT'))render();},60);}});
 
 const uName=em=>{const u=((S.sc.data&&S.sc.data.users)||[]).find(x=>x.email===em)||(S.pickList||[]).find(x=>x.email===em);return u?u.name:(em||'').split('@')[0];};
