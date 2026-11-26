@@ -712,7 +712,7 @@ function tableFromRow_(r) {
            classes: L_sortClasses(jparse_(r['班級'], []).map(function (x) { return clT_(x, L_classDays(x)); })),
            groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [], ext: extOf_(jparse_(r['額外日期'], null)), teachers: teachersOf_(r['授課老師']) };
 }
-function tableWeeksOf_(t) { var s = setting_('開學日 ' + t.term, ''), e = setting_('結業式 ' + t.term, ''); return L_weeksExt(s, e, t.ext); }     // 那個學期自己的開學日、結業式
+function tableWeeksOf_(t) { var s = setting_('開學日 ' + t.term, ''), e = setting_('結業式 ' + t.term, ''); return L_weeksTable(t, s, e, t.ext); }     // 那個學期自己的開學日、結業式
 function apiScheduleHistory() {
   whoami_(); ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   var cur = setting_('目前學年學期', ''), byTerm = {};
@@ -769,7 +769,7 @@ function isTeacherOf_(me, t) { return me.role === '技士' || (t.teachers || [])
 function assertCanEditTable_(me, t) { if (!isTeacherOf_(me, t)) throw new Error('這張進度表你不是授課老師，只能看，不能編輯。'); }
 function extOf_(v) { return v && L_parseDate(v.from) && L_parseDate(v.to) && v.to >= v.from ? { from: String(v.from), to: String(v.to) } : null; }
 function semDates_() { var term = setting_('目前學年學期', ''); return { start: setting_('開學日 ' + term, ''), end: setting_('結業式 ' + term, '') }; }
-function tableWeeks_(t) { var d = semDates_(); return L_weeksExt(d.start, d.end, t.ext); }        // 這張進度表的每一週：學期的週 + 寒暑假加課的週
+function tableWeeks_(t) { var d = semDates_(); return L_weeksTable(t, d.start, d.end, t.ext); }        // 這張進度表的每一週：學期的週 + 寒暑假加課的週
 function schedCells_() {
   ensureSheetFast_('教學進度內容', SCHED_CELL_HEAD);
   return readTable_('教學進度內容').map(function (r) { return { tableId: str_(r['表ID']), week: num_(r['週次']), cls: str_(r['班級']), day: num_(r['星期']) || 0, cell: jparse_(r['內容'], {}), by: str_(r['更新者']), at: str_(r['更新時間']) }; });
@@ -1094,7 +1094,7 @@ function apiScheduleSetExtra(tableId, from, to) {
     if ((L_parseDate(L_weekStart(to)).t - L_parseDate(L_weekStart(from)).t) / 86400000 / 7 + 1 > 30) throw new Error('一次最多加 30 週。');
     ext = { from: from, to: to };
   }
-  var oldW = tableWeeks_(t), keep = {}; L_weeksExt(d.start, d.end, ext).forEach(function (w) { keep[w.n] = 1; });
+  var oldW = tableWeeks_(t), keep = {}; L_weeksTable(t, d.start, d.end, ext).forEach(function (w) { keep[w.n] = 1; });
   var bad = {}; schedCells_().forEach(function (x) { if (x.tableId === t.id && !keep[x.week]) bad[x.week] = 1; });
   var badList = oldW.filter(function (w) { return bad[w.n]; }).map(function (w) { return w.label; });
   if (badList.length) throw new Error('這幾週已經排了課，不能縮掉：' + badList.join('、') + '。要縮短，請先清除那幾週的格子。');

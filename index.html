@@ -339,8 +339,8 @@ function render(){
   if(S.needCheck)h+=needCheckModal();
   if(S.dlFiles&&S.dlFiles.length)h+=dlFilesModal();
   if(S.rq)h+=rqModal();
-  if(S.ed)h+=editorHTML();
   if(S.sc&&S.sc.athEd)h+=athSlotModal();
+  if(S.ed)h+=editorHTML();
   h+=`<datalist id="toollist">${[...new Set(Object.values(S.cat.tools).flat().map(t=>t.name))].sort().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
   h+=`<datalist id="stdlist">${S.stdNames.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
   const sc=$('.modal .mb'),top=sc?sc.scrollTop:0;
@@ -605,7 +605,7 @@ function editorHTML(){
   return `<div class="modal"><div class="mb">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">${title}</h2><button class="btn sm ghost" data-a="edClose">取消</button></div>
   ${tpl?`<p class="mut" style="margin:0 0 8px">改的是所有老師看到的預設材料單，之後排的課會用新的量。原本的資料不會被刪，隨時可以還原。${p&&p.modified?'<span class="tg">已修改過</span>':''}${p&&p.hidden?'<span class="tg gr">已隱藏</span>':''}</p>`:''}
-  ${d.forCell?`<p class="mut" style="margin:0 0 8px">預設材料單裡沒有的，自己做一張。做好會自動加進進度表這一格，放在你的「我自創的」分頁，之後也可以重複用；排給哪位老師都可以。</p>`:''}
+  ${d.forCell?`<p class="mut" style="margin:0 0 8px">預設材料單裡沒有的，自己做一張。做好會自動加進這一格，放在你的「我自創的」分頁，之後也可以重複用；排給哪位老師都可以。</p>`:''}
   ${d.err?`<div class="err">${esc(d.err)}</div>`:''}
   <label class="lbl">名稱</label><input class="in" data-ed="title" value="${esc(d.title)}" placeholder="例如：手工餅乾" maxlength="40">
   <div class="g2"><div><label class="lbl">份量說明（選填）</label><input class="in" data-ed="serving" value="${esc(d.serving)}" placeholder="例如：20片/組" maxlength="20"></div><div><label class="lbl">預設組數</label><input class="in" type="number" min="1" max="200" data-ed="dsets" value="${esc(d.dsets)}"></div></div>
@@ -1433,7 +1433,7 @@ document.addEventListener('click',async ev=>{
       else{const r=await run('apiSaveCustom',body);applyCustom(r);savedPid=r.product.pid;
         if(S.view==='extra'){S.tab=r.product.shared?'共':'自';S.info=`已儲存「${r.product.title}」，到它的分頁勾一下就能用。`;}
         else S.info=`已儲存「${r.product.title}」。${r.product.shared?'所有老師都選得到。':''}`;
-        if(d.forCell&&S.sc.cellEd){const gr=S.sc.cellEd.groups[d.forCell.g];if(gr&&!gr.pids.includes(savedPid))gr.pids.push(savedPid);if(gr)gr.q='';S.info=`已做好「${r.product.title}」，也加進這一格了。`;}}
+        if(d.forCell&&d.forCell.ath&&S.sc.athEd){if(!S.sc.athEd.pids.includes(savedPid))S.sc.athEd.pids.push(savedPid);S.sc.athEd.search='';S.info=`已做好「${r.product.title}」，也加進這一格了。`;}else if(d.forCell&&S.sc.cellEd){const gr=S.sc.cellEd.groups[d.forCell.g];if(gr&&!gr.pids.includes(savedPid))gr.pids.push(savedPid);if(gr)gr.q='';S.info=`已做好「${r.product.title}」，也加進這一格了。`;}}
       if(isAdmin()&&(d.kind==='template'||d.shared)&&(d.category||'')!==(d.origCategory||'')){await run('apiSetCategory',savedPid,d.category||'');const pp=P(savedPid);if(pp)pp.category=d.category||'';}
       S.ed=null;}
     catch(e){d.err=e.message;}
@@ -1865,9 +1865,9 @@ function resHTML(g){
 }
 function extraModal(){
   const e=S.sc.extraEd,t=schedTable(e.id);
-  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">寒暑假的週</h2><p class="mut" style="margin:0 0 8px">${esc(t.dept)}・${esc(t.course)}。寒暑假也要上課（例如技藝競賽選手）的話，選那一段日期，那幾週會接在學期後面（或前面）出現在進度表，用日期表示，不影響學期的週次。</p>
+  return `<div class="modal"><div class="mb">${isAth(t)?`<h2 style="margin:0 0 4px">上課日期</h2><p class="mut" style="margin:0 0 8px">技藝競賽選手的上課日期由授課老師訂，不用照學期。選第一週到最後一週的日期，只會列出這一段的週；之後隨時可以再加週。已經排了課的週，不能縮掉。</p>`:`<h2 style="margin:0 0 4px">寒暑假的週</h2><p class="mut" style="margin:0 0 8px">${esc(t.dept)}・${esc(t.course)}。寒暑假也要上課（例如技藝競賽選手）的話，選那一段日期，那幾週會接在學期後面（或前面）出現在進度表，用日期表示，不影響學期的週次。</p>`}
     <div class="rgrow"><label>從 <input class="in" type="date" data-k="scXFrom" value="${esc(e.from)}"></label><label>到 <input class="in" type="date" data-k="scXTo" value="${esc(e.to)}"></label></div>
-    <p class="mut" style="margin:6px 0 0">例如寒假：學期結束後的第一個週一，到開學前的週五。已經排了課的週，不能縮掉。</p>
+    ${isAth(t)?'':`<p class="mut" style="margin:6px 0 0">例如寒假：學期結束後的第一個週一，到開學前的週五。已經排了課的週，不能縮掉。</p>`}
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px">${t.ext?'<button class="btn ghost" data-a="scExtraClear">不要寒暑假的週了</button>':''}<button class="btn ghost" data-a="scExtraNo">取消</button><button class="btn" data-a="scExtraSave">儲存</button></div></div></div>`;
 }
 function conflictModal(){
@@ -2169,10 +2169,10 @@ function athEditRows(t,wn,fn){
 }
 function athGridHTML(t){
   const wf=S.sc.wf||'all',canE=t.canEdit&&S.sc.data.canEditCells!==false,c=t.classes[0];
-  let h=`<div class="sgw">`;
+  let h=`<div class="spill" style="flex-wrap:wrap;margin:0 0 8px"><span style="flex:1;min-width:12em">上課日期由授課老師訂，不用照學期：${t.ext?`<b>${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}</b>`:'<b style="color:var(--err)">還沒設定</b>（現在先列出學期的週）'}</span>${canE?`<button class="btn sm ghost" data-a="scExtra">${t.ext?'修改日期':'設定上課日期'}</button> <button class="btn sm" data-a="athWeekAdd">＋ 再加一週</button>`:''}</div><div class="sgw">`;
   tWeeks(t).filter(w=>wf==='all'||(wf==='vac'?w.vac:!w.vac)).forEach(w=>{
     const rows=athRowsFor(t,w.n),xs=athDays(t,w.n);
-    h+=`<table class="athtb"><thead><tr class="athh"><th style="width:104px">${w.vac?'寒暑假':'第 '+w.n+' 週'}<br><small>時間/日期</small></th>${xs.map(x=>`<th>${athDayLbl(w.mon,x)}</th>`).join('')}</tr></thead><tbody>`;
+    h+=`<table class="athtb"><thead><tr class="athh"><th style="width:104px">${w.vac?esc(w.label):'第 '+w.n+' 週'}<br><small>時間/日期</small></th>${xs.map(x=>`<th>${athDayLbl(w.mon,x)}</th>`).join('')}</tr></thead><tbody>`;
     rows.forEach((row,ri)=>{
       const bg=row.bg?`background:${ATH_BG[row.bg]};`:'';
       const {sl,merged}=athRowCells(t,w,row,rows,xs);
@@ -2199,10 +2199,11 @@ function athSlotModal(){
 function athResHTML(){
   const E=S.sc.athEd,q=String(E.search||'').trim().toLowerCase(),chosen=new Set(E.pids);
   const btn=p=>`<button data-a="athAddP" data-p="${esc(p.pid)}">＋ ${esc(p.title)} <small>${esc(p.serving||'')}</small></button>`;
-  if(q){const l=usableProducts().filter(p=>!chosen.has(p.pid)&&p.title.toLowerCase().includes(q)).slice(0,20);return l.length?`<div class="sres">${l.map(btn).join('')}</div>`:'<p class="mut" style="margin:4px 0">找不到；可以用下面「文字」直接打。</p>';}
+  const nb=`<button class="btn sm ghost" style="margin-top:6px" data-a="athNewProd">找不到？自己建一張新的材料單${q?`「${esc(E.search.trim())}」`:''}</button>`;
+  if(q){const l=usableProducts().filter(p=>!chosen.has(p.pid)&&p.title.toLowerCase().includes(q)).slice(0,20);return (l.length?`<div class="sres">${l.map(btn).join('')}</div>`:'<p class="mut" style="margin:4px 0">找不到。</p>')+nb;}
   const tab=E.tab||'一',bl=browseList(tab);
   const body=bl.flat?bl.flat.filter(p=>!chosen.has(p.pid)).map(btn).join(''):bl.sems.map(([nm,l])=>{const x=l.filter(p=>!chosen.has(p.pid));return x.length?`<div class="mut" style="padding:4px 9px;font-size:12px;background:#F3F7F5">${nm==='新增的'?'新增的材料單':nm+'學期'}</div>${x.map(btn).join('')}`:'';}).join('');
-  return `<div class="tabs" style="flex-wrap:wrap;margin:6px 0 4px">${pickTabs().map(([k,n])=>`<button class="gt ${tab===k?'on':''}" data-a="athPTab" data-t="${esc(k)}">${esc(n)}</button>`).join('')}</div>${body?`<div class="sres" style="max-height:15em">${body}</div>`:'<p class="mut" style="margin:4px 0">這個分頁的產品都選了。</p>'}`;
+  return `<div class="tabs" style="flex-wrap:wrap;margin:6px 0 4px">${pickTabs().map(([k,n])=>`<button class="gt ${tab===k?'on':''}" data-a="athPTab" data-t="${esc(k)}">${esc(n)}</button>`).join('')}</div>${body?`<div class="sres" style="max-height:15em">${body}</div>`:'<p class="mut" style="margin:4px 0">這個分頁的產品都選了。</p>'}${nb}`;
 }
 function athLastFilled(t){
   const c=t.classes[0];let last=null;
@@ -2260,6 +2261,9 @@ th.tt{font-size:14pt;background:#fff}th.tm,td.tm{width:8.5%;font-size:12pt}tr.wh
 }
 async function athAct(a,b){
   const t=schedTable(S.sc.tab),W=b.dataset.w!==undefined?+b.dataset.w:0,RID=b.dataset.rid;
+  if(a==='athWeekAdd'){
+    const tw=tWeeks(t),last=tw[tw.length-1],from=t.ext?t.ext.from:(tw[0]?tw[0].mon:today()),to=addDays(last?last.mon:weekStart(today()),(last?7:0)+4);
+    S.busy='處理中…';render();try{S.sc.data=await run('apiScheduleSetExtra',t.id,from,to);S.info='已加一週。';}catch(er){S.err=er.message;}S.busy='';return render();}
   if(a==='athRowAdd'){athEditRows(t,W,l=>l.push({id:Math.random().toString(36).slice(2,8),t:'',bg:''}));return;}
   if(a==='athRowDel'){athEditRows(t,W,l=>{const i=l.findIndex(r=>r.id===RID);if(i>=0)l.splice(i,1);});return;}
   if(a==='athRowUp'){athEditRows(t,W,l=>{const i=l.findIndex(r=>r.id===RID);if(i>0)[l[i-1],l[i]]=[l[i],l[i-1]];});return;}
@@ -2269,6 +2273,7 @@ async function athAct(a,b){
     const x=+b.dataset.x,c=t.classes[0],rows=athRowsFor(t,W),s=athSlotOf(schedCell(t.id,W,c.cls,athDayKey(t,x)),RID,rows)||{pids:[],q:{},txt:'',st:''};
     S.sc.athEd={tid:t.id,w:W,x,rid:RID,pids:s.pids.slice(),q:Object.assign({},s.q||{}),txt:s.txt||'',st:s.st||'',all:false,search:'',tab:'一'};return render();}
   const E=S.sc.athEd;if(!E)return;
+  if(a==='athNewProd'){S.ed={kind:'custom',pid:'',shared:false,category:'',origCategory:'',title:(E.search||'').trim(),serving:'',dsets:4,rows:[blankRow(),blankRow(),blankRow()],tools:[],showTools:false,err:'',confirmDel:false,confirmRevert:false,forCell:{g:0,ath:true}};return render();}
   if(a==='athSlotNo'){S.sc.athEd=null;return render();}
   if(a==='athPTab'){E.tab=b.dataset.t;E.search='';return render();}
   if(a==='athAddP'){if(!E.pids.includes(b.dataset.p))E.pids.push(b.dataset.p);E.search='';return render();}

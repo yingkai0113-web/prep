@@ -892,6 +892,21 @@ function L_weeksExt(start, end, ext) {
   out.sort(function (a, b) { return a.mon < b.mon ? -1 : a.mon > b.mon ? 1 : 0; });
   return out;
 }
+/* 技藝競賽選手的進度表：上課日期由授課老師訂，不用照學期；有設定日期範圍（ext）就只列那一段的週 */
+function L_isAthTable(t) { return !!t && (t.classes || []).length === 1 && /技藝競賽|選手/.test(String(t.course || '') + String(t.title || '')); }
+function L_weeksTable(t, start, end, ext) {
+  if (!L_isAthTable(t) || !ext || !L_parseDate(ext.from) || !L_parseDate(ext.to) || ext.to < ext.from) return L_weeksExt(start, end, ext);
+  var a = L_weekStart(ext.from), b = L_weekStart(ext.to), have = {};
+  var out = L_weeks(start, end).filter(function (w) { return w.mon >= a && w.mon <= b; });
+  out.forEach(function (w) { have[w.mon] = 1; });
+  var m = a, guard = 0;
+  while (m <= b && guard++ < 60) {
+    if (!have[m]) { var fri = L_addDays(m, 4); out.push({ n: L_weekId(m), mon: m, fri: fri, label: L_md2(m) + '~' + L_md2(fri), vac: true }); }
+    m = L_addDays(m, 7);
+  }
+  out.sort(function (x, y) { return x.mon < y.mon ? -1 : x.mon > y.mon ? 1 : 0; });
+  return out;
+}
 /* 整理一個格子：{kind:'note', note} 或 {kind:'lesson', mode:'joint'|'split', label, groups:[{label, teacher, pids}]} */
 /* 一格的文字說明（衝突提示用）：例如「鳳梨酥（王老師）／海綿蛋糕（林老師）」 */
 function L_cellSummary(cell, products, names) {
