@@ -282,6 +282,7 @@ const newEntry=(pid,dept,course)=>{const p=P(pid);return norm({pid,dept,course,d
 const order=()=>S.entries.map((e,i)=>i).sort((a,b)=>{const x=S.entries[a],y=S.entries[b];return (x.date||'~')<(y.date||'~')?-1:(x.date||'~')>(y.date||'~')?1:x.pid<y.pid?-1:1});
 /* 依「課程＋班級」分欄：一位老師同時有很多門課、很多班，才不會混在一起 */
 const eKey=e=>[e.pid,e.date,e.dept,e.course,e.cls,e.group||''].join('|');           // 這堂課看過（確認過）了沒
+function seedSeen(){S.entries.forEach(e=>{if(!e.draft&&!e.pend){S.seen.add(eKey(e));S.seen4.add(eKey(e));}});}   // 已經送出（匯出給技士）的課，重量和器具就算確認過了
 /* 兩條路完全分開：「教學進度表」排的課（有 sid），和「額外材料單」（臨時活動，不在進度表裡） */
 const curScope=()=>S.view==='extra'?'extra':'sched';
 const inScope=e=>curScope()==='extra'?!e.sid:!!e.sid;
@@ -1435,7 +1436,7 @@ document.addEventListener('click',async ev=>{
     try{
       const rc=await run('apiSavePlan',payload(),curScope());
       let file=null;const pSaved=run('apiBootstrap');if(what!=='none'){file=await runFmt('apiExportRequisition',curScope(),what,S.expOrder);}
-      const saved=await pSaved;S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;
+      const saved=await pSaved;S.entries=saved.entries.map(norm);S.savedSig=sigOf(S.entries);S.sentAt=rc.at;seedSeen();
       S.sent={n:rc.saved,at:rc.at,first:rc.first,last:rc.last,file};window.scrollTo(0,0);
     }catch(e){S.err=e.message;}
     S.busy='';return render();}
@@ -2066,7 +2067,7 @@ function applyBoot(d,first){
   refreshStd();S.adminUrl=d.adminUrl||'';S.accepting=d.open!==false;S.openNote=d.openNote||'';
   S.extraOpen=d.extraOpen===true;S.extraNote=d.extraNote||'';
   if(!first&&dirty())return;                       // 已經動手改了就不要蓋掉
-  S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));S.savedSig=sigOf(S.entries);S.sentAt=S.entries.map(e=>e.updated).filter(Boolean).sort().pop()||'';
+  S.entries=d.entries.map(norm);S.hist=d.hist||{};S.sel=new Set(S.entries.map(e=>K(e.dept,e.course,e.pid)));S.savedSig=sigOf(S.entries);S.sentAt=S.entries.map(e=>e.updated).filter(Boolean).sort().pop()||'';seedSeen();
   if(!first)return;
   S.dept=(S.entries[0]&&S.entries[0].dept)||'日間部';S.course=(S.entries[0]&&S.entries[0].course)||(S.courses[S.dept]||[])[0]||'';
   const t0=today(),w0=weekStart(t0);S.rgFrom=w0;S.rgTo=addDays(w0,6);
