@@ -41,6 +41,7 @@ h2{font-size:20px;margin:0 0 4px}
 .tile.on{border-color:var(--pri);background:#E8F3EF}
 .tile.on .box{background:var(--pri);border-color:var(--pri)}
 .tile.on .box::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.card.seen{background:#E6F4EA;border-color:#6DBB86}.card.seen .ch{background:#E6F4EA}.okbox{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;margin-top:10px;border:2px solid #6DBB86;border-radius:12px;background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:#1d5a35;text-align:left}.okbox.on{background:#2E9E5B;color:#fff;border-color:#2E9E5B}.okbox b{font-size:22px;line-height:1}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;overflow:hidden}
 .ch{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;padding:12px;text-align:left}
 .ch b{font-size:16px}
@@ -248,7 +249,7 @@ const K=(d,c,p)=>d+'||'+c+'||'+p, kd=k=>k.split('||')[0], kc=k=>k.split('||')[1]
 const UNITS=['g','ml','顆','個','條','包','罐','瓶','支','片','束','公分'];
 const DEPTS=['日間部','夜間部'];
 const S={user:null,term:'',cat:null,classes:{'日間部':[],'夜間部':[]},stdNames:[],ed:null,view:'sched',step:0,extraOpen:false,extraNote:'',estep:1,dept:'日間部',course:'',courses:{'日間部':[],'夜間部':[]},tab:'一',atab:'一',confirmTerm:'',adminUrl:'',
-  expWhat:'all',expOrder:'date',tOrder:'date',tTeacher:'',tFilter:{course:'',cls:'',q:'',id:''},tMode:'stats',tOpen:new Set(),tDel:'',open4:new Set(),xf:null,gOpen:{},confirmSend:'',accepting:true,openNote:'',confirmClose:false,sub:null,um:{list:null,busy:false,err:'',ed:null,bulk:null,del:''},rs:{open:false,txt:'',busy:false},subOpen:true,catAdd:null,catDel:'',ren:null,cv:null,ss:null,ssOpen:true,ssAll:true,remind:'',rq:null,pstep:1,sstep:0,seen:new Set(),sc:{data:null,tab:'',cellEd:null,tableEd:null,datesEd:null,delAsk:'',busy:false},hu:null,hist:{},appUrl:'',sel:new Set(),entries:[],open:new Set(),
+  expWhat:'all',expOrder:'date',tOrder:'date',tTeacher:'',tFilter:{course:'',cls:'',q:'',id:''},tMode:'stats',tOpen:new Set(),tDel:'',open4:new Set(),xf:null,gOpen:{},confirmSend:'',accepting:true,openNote:'',confirmClose:false,sub:null,um:{list:null,busy:false,err:'',ed:null,bulk:null,del:''},rs:{open:false,txt:'',busy:false},subOpen:true,catAdd:null,catDel:'',ren:null,cv:null,ss:null,ssOpen:true,ssAll:true,remind:'',rq:null,pstep:1,sstep:0,seen:new Set(),seen4:new Set(),sc:{data:null,tab:'',cellEd:null,tableEd:null,datesEd:null,delAsk:'',busy:false},hu:null,hist:{},appUrl:'',sel:new Set(),entries:[],open:new Set(),
   err:'',info:'',busy:'',done:null,sent:null,savedSig:'[]',sentAt:'',preview:'',rgFrom:'',rgTo:'',tech:null};
 const P=pid=>S.cat.pmap[pid];
 const titleOf=e=>e.title||P(e.pid).title;              // 這堂課的產品名稱（老師可以改，沒改就用原本的）
@@ -403,7 +404,8 @@ function confirmHTML(){
   return `<div class="modal"><div class="mb">
   <h2 style="margin:0 0 6px">送出前，請再確認一次</h2>
   <p class="mut" style="margin:0 0 10px">共 ${sc().length} 堂課。請對照你的課表，<b>日期（星期）、產品</b>有沒有對？分成「課程｜班級」，比較好核對。</p>
-  ${sc().some(e=>!S.seen.has(eKey(e)))?`<div class="spill warn">還有 ${sc().filter(e=>!S.seen.has(eKey(e))).length} 堂課的重量你還沒確認過。用預設的量也可以直接送出；想再看，按「不對，回去改」。</div>`:''}
+  ${sc().some(e=>!S.seen.has(eKey(e)))?`<div class="spill warn">還有 ${sc().filter(e=>!S.seen.has(eKey(e))).length} 堂課的重量你還沒打勾確認過。用預設的量也可以直接送出；想再看，按「不對，回去改」。</div>`:''}
+  ${sc().some(e=>!S.seen4.has(eKey(e)))?`<div class="spill warn">器具還有 ${sc().filter(e=>!S.seen4.has(eKey(e))).length} 堂課你還沒看過（用模板帶入的也可以直接送出）。</div>`:''}
   ${dup.length?`<div class="err">⚠ 有重複的課（同一天、同班、同一個產品排了兩次），請確認是不是多按了。</div>`:''}
   ${gs.map(g=>`<div class="cg"><div class="cgh">${esc(gLabel(g))}　${g.idx.length} 堂</div>${g.idx.map(i=>{const e=S.entries[i];return `<div class="cl"><span class="${dup.includes(i)?'dup':''}">${md(e.date)}</span><span>${esc(titleOf(e))}</span><span class="mut">${fmt(e.sets)} 組</span></div>`;}).join('')}</div>`).join('')}
   <div class="card" style="margin:12px 0 0"><div class="cb" style="padding-top:10px"><b>匯出之後要下載什麼？</b><span class="mut" style="display:block;font-size:13px">不管選哪一個，都會送給技士。</span>
@@ -500,7 +502,7 @@ function step2(){
 }
 function card3(i){
   const e=S.entries[i],p=P(e.pid),open=S.open.has(i),base=parseYield(p.serving);
-  return `<div class="card" data-c="${i}"><button class="ch" data-a="toggle" data-i="${i}"><span><b>${md(e.date)} ${esc(titleOf(e))}</b><small>${esc(e.dept)}・${esc(e.course)}・${esc(e.cls)}${e.group?'（'+esc(e.group)+'）':''}・${fmt(e.sets)} 組${k_(e)!==1?'・份量 ×'+fmt(k_(e)):''}${e.sid?` <span class="tg">${e.draft?'進度表・還沒匯出':(e.pend?'進度表・改了還沒匯出':'進度表・已匯出')}</span>`:(e.draft?' <span class="tg">還沒匯出</span>':(e.pend?' <span class="tg">改了還沒匯出</span>':''))}</small></span><span data-kg>${S.seen.has(eKey(e))?'✓ ':''}${fmt(kgOf(e))} 公斤 ${open?'▴':'▾'}</span></button>
+  return `<div class="card ${S.seen.has(eKey(e))?'seen':''}" data-c="${i}"><button class="ch" data-a="toggle" data-i="${i}"><span><b>${md(e.date)} ${esc(titleOf(e))}</b><small>${esc(e.dept)}・${esc(e.course)}・${esc(e.cls)}${e.group?'（'+esc(e.group)+'）':''}・${fmt(e.sets)} 組${k_(e)!==1?'・份量 ×'+fmt(k_(e)):''}${e.sid?` <span class="tg">${e.draft?'進度表・還沒匯出':(e.pend?'進度表・改了還沒匯出':'進度表・已匯出')}</span>`:(e.draft?' <span class="tg">還沒匯出</span>':(e.pend?' <span class="tg">改了還沒匯出</span>':''))}</small></span><span data-kg>${S.seen.has(eKey(e))?'✓ ':''}${fmt(kgOf(e))} 公斤 ${open?'▴':'▾'}</span></button>
     ${open?`<div class="cb"><div class="ctl">
       <div class="wide" style="flex-basis:100%"><label>產品名稱（申請單上印這個，只改這一堂課）</label><input class="in" style="width:100%" data-k="etitle" data-i="${i}" maxlength="40" value="${esc(titleOf(e))}" placeholder="${esc(p.title)}">${e.title?`<button class="linkb" style="font-size:13px" data-a="titleReset" data-i="${i}">還原成原本的名稱「${esc(p.title)}」</button>`:''}</div>
       <div><label>組數</label><input class="in" style="width:5em" type="number" min="1" max="200" step="1" data-k="sets" data-i="${i}" value="${e.sets}"></div>
@@ -508,7 +510,8 @@ function card3(i){
       <div><label>材料倍率 ×</label><input class="in" style="width:5.5em" type="number" step="any" min="0.05" max="20" data-k="scale" data-i="${i}" value="${k_(e)}"></div></div>
       <div data-rows>${rowsHTML(e)}</div>
       <div data-xform>${xformHTML(i)}</div>
-      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ${S.seen.has(eKey(e))?'ghost':''}" data-a="okEntry" data-i="${i}">${S.seen.has(eKey(e))?'✓ 已確認':'✓ 這堂沒問題'}</button>${S.entries.some((x,j)=>j!==i&&x.pid===e.pid)?`<button class="btn sm ghost" data-a="applyAll" data-i="${i}">套用到其他同產品的課</button>`:''}<button class="btn sm ${S.hist[e.pid]?'':'ghost'}" data-a="histOpen" data-i="${i}">${S.hist[e.pid]?'以前改過，叫出來沿用':'叫出以前的紀錄'}</button><button class="btn sm ghost" data-a="resetEntry" data-i="${i}">全部還原成模板</button></div></div>`:''}</div>`;
+      <button class="okbox ${S.seen.has(eKey(e))?'on':''}" data-a="okEntry" data-i="${i}"><b>${S.seen.has(eKey(e))?'☑':'☐'}</b> ${S.seen.has(eKey(e))?'已確認，這堂沒問題（再點一下取消）':'我看完了，這堂沒問題'}</button>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">${S.entries.some((x,j)=>j!==i&&x.pid===e.pid)?`<button class="btn sm ghost" data-a="applyAll" data-i="${i}">套用到其他同產品的課</button>`:''}<button class="btn sm ${S.hist[e.pid]?'':'ghost'}" data-a="histOpen" data-i="${i}">${S.hist[e.pid]?'以前改過，叫出來沿用':'叫出以前的紀錄'}</button><button class="btn sm ghost" data-a="resetEntry" data-i="${i}">全部還原成模板</button></div></div>`:''}</div>`;
 }
 function step3(){
   const gs=groups(true);
@@ -530,15 +533,17 @@ function toolGroup(i,who,label){
 function card4(i){
   const e=S.entries[i],p=P(e.pid),open=S.open4.has(i),tl=toolsOf(e),n1=tl.filter(t=>t.who==='技士').length,n2=tl.length-n1;
   const same=S.entries.filter((x,j)=>j!==i&&x.pid===e.pid).length;
-  return `<div class="card" data-t="${i}"><button class="ch" data-a="t4toggle" data-i="${i}"><span><b>${md(e.date)} ${esc(titleOf(e))}</b><small>${esc(e.cls)}・技士 ${n1} 項、小老師 ${n2} 項${Array.isArray(e.tools)?'・已調整':''}</small></span><span>${open?'▴':'▾'}</span></button>
+  const sn=S.seen4.has(eKey(e));
+  return `<div class="card ${sn?'seen':''}" data-t="${i}"><button class="ch" data-a="t4toggle" data-i="${i}"><span><b>${md(e.date)} ${esc(titleOf(e))}</b><small>${esc(e.cls)}・技士 ${n1} 項、小老師 ${n2} 項${Array.isArray(e.tools)?'・已調整':''}</small></span><span>${sn?'✓ ':''}${open?'▴':'▾'}</span></button>
     ${open?`<div class="cb">${WHO.map(([w,l])=>toolGroup(i,w,l)).join('')}
+      <button class="okbox ${sn?'on':''}" data-a="okTool" data-i="${i}"><b>${sn?'☑':'☐'}</b> ${sn?'已確認，器具沒問題（再點一下取消）':'我看完了，器具沒問題'}</button>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ${S.hist[e.pid]?'':'ghost'}" data-a="toolHist" data-i="${i}">${S.hist[e.pid]?'以前調整過，叫出來沿用':'叫出以前的器具'}</button>${Array.isArray(e.tools)?`<button class="btn sm ghost" data-a="treset" data-i="${i}">還原成模板</button>`:''}${same?`<button class="btn sm ghost" data-a="tcopy" data-i="${i}">套用到同一個產品的其他 ${same} 堂</button>`:''}</div></div>`:''}</div>`;
 }
 function stepTools(){
   const gs=groups(true);
   if(!S.open4.size&&gs.length)S.open4.add(gs[0].idx[0]);
   return `<h2>準備器具</h2><p class="sub">每堂課的器具，分給技士和小老師準備。先帶入模板的，可以改數量、換邊、加減，也能叫出以前的。</p>${gs.length>1?gAll('4'):''}`
-  +gs.map((g,n)=>`<div class="gwrap">${gHead('4',g,n,`${g.idx.length} 堂課`)}${gIsOpen('4',g,n)?`<div class="gbody">${g.idx.map(card4).join('')}</div>`:''}</div>`).join('')
+  +gs.map((g,n)=>`<div class="gwrap">${gHead('4',g,n,`${g.idx.length} 堂課・已確認 ${g.idx.filter(i=>S.seen4.has(eKey(S.entries[i]))).length}/${g.idx.length}`)}${gIsOpen('4',g,n)?`<div class="gbody">${g.idx.map(card4).join('')}</div>`:''}</div>`).join('')
   +bar(`${sc().length} 堂課`,`<button class="btn" data-a="step" data-n="5">下一步：匯出</button>`);
 }
 function step5(){
@@ -858,7 +863,7 @@ document.addEventListener('click',async ev=>{
   if(a==='xname'){S.entries[+b.dataset.i].course=b.dataset.n;return render();}
   if(a==='addEntry'){const i=+b.dataset.i,e=S.entries[i],n=newEntry(e.pid,e.dept,e.course);n.cls=e.cls;n.sets=e.sets;if(pd(e.date))n.date=addDays(e.date,7);S.entries.splice(i+1,0,n);return render();}
   if(a==='delEntry'){const e=S.entries[+b.dataset.i];if(!e)return;if(e.sid){S.err=SCHED_MSG;return render();}S.entries.splice(+b.dataset.i,1);return render();}
-  if(a==='toggle'){const i=+b.dataset.i;if(S.open.has(i))S.open.delete(i);else{S.open.add(i);S.seen.add(eKey(S.entries[i]));}return render();}
+  if(a==='toggle'){const i=+b.dataset.i;if(S.open.has(i))S.open.delete(i);else{S.open.add(i);}return render();}
   if(a==='okEntry'){const i=+b.dataset.i,k=eKey(S.entries[i]);if(S.seen.has(k))S.seen.delete(k);else{S.seen.add(k);S.open.delete(i);}return render();}
   if(a==='okGroup'){const g=groups(true).find(x=>x.key===b.dataset.g);if(g)g.idx.forEach(i=>S.seen.add(eKey(S.entries[i])));return render();}
   if(a==='applyAll'){
@@ -1040,14 +1045,14 @@ document.addEventListener('click',async ev=>{
   if(a==='scDayNo'){S.sc.dayPick=null;return render();}
   if(a==='scDayGo'){
     const t=schedTable(S.sc.tab),w=S.sc.dayPick.w,c=t.classes[0],day=+b.dataset.n;S.sc.dayPick=null;
-    S.sc.cellEd={kind:'lesson',note:'',mode:'joint',label:'',groups:mkGroups(t,'joint',S.user.email),tid:t.id,w,cl:c.cls,day,has:false};return render();}
+    S.sc.cellEd={kind:'lesson',note:'',mode:'joint',label:'',groups:mkGroups(t,'joint',S.user.email),tid:t.id,w,cl:c.cls,day,has:false,step:'kind'};return render();}
   if(a==='scEdit'){
     const t=schedTable(S.sc.tab),w=+b.dataset.w,cl=b.dataset.cl,day=+b.dataset.d||0,cell=schedCell(t.id,w,cl,day),me=S.user.email;
     let ed;
     if(cell&&cell.kind==='note')ed={kind:'note',note:cell.note,mode:'joint',label:'',groups:mkGroups(t,'joint',me)};
     else if(cell)ed={kind:'lesson',note:'',mode:cell.mode,label:cell.label||'',groups:cell.groups.map(g=>({label:g.label,teacher:g.teacher,pids:g.pids.slice(),q:''}))};
     else ed={kind:'lesson',note:'',mode:'joint',label:'',groups:mkGroups(t,'joint',me)};
-    S.sc.cellEd=Object.assign(ed,{tid:t.id,w,cl,day,has:!!cell});return render();}
+    S.sc.cellEd=Object.assign(ed,{tid:t.id,w,cl,day,has:!!cell,step:'kind'});return render();}
   if(a==='scSwap'||a==='scSwapFill'){                   // 接上一次有實習的那週：單雙互換，老師跟著產品走
     const t=schedTable(S.sc.tab),e=S.sc.cellEd,w=e?e.w:+b.dataset.w,cl=e?e.cl:b.dataset.cl,day=e?(e.day||0):(+b.dataset.d||0),pv=prevLesson(t,cl,w,day);
     if(!pv)return;
@@ -1055,14 +1060,15 @@ document.addEventListener('click',async ev=>{
     if(a==='scSwapFill'){S.sc.cellEd=Object.assign(e,{kind:'lesson',mode:cell.mode,label:cell.label||'',groups:cell.groups.map((g,i)=>({label:cell.mode==='split'?t.groups[i]:'',teacher:g.teacher,pids:g.pids.slice(),q:''}))});return render();}
     stageCell(t.id,w,cl,day,cell);S.info='已接上週，單雙互換（還沒儲存）。';return render();}
   if(a==='scCellNo'){S.sc.cellEd=null;return render();}
-  if(a==='scKind'){S.sc.cellEd.kind=b.dataset.k;return render();}
+  if(a==='scKind'){const e=S.sc.cellEd,t=schedTable(e.tid);e.kind=b.dataset.k;e.step=e.kind==='note'?'note':((t.groups||[]).length>=2?'mode':'prod');return render();}
+  if(a==='scBack'){const e=S.sc.cellEd,t=schedTable(e.tid),hg=(t.groups||[]).length>=2;e.step=(e.step==='prod'&&hg&&e.kind==='lesson')?'mode':'kind';return render();}
   if(a==='scMode'){
     const e=S.sc.cellEd,t=schedTable(e.tid),m=b.dataset.m;
     if(m!==e.mode){
       if(m==='split'){const g0=e.groups[0]||{teacher:'',pids:[]};e.groups=mkGroups(t,'split','');e.groups[0].teacher=g0.teacher;e.groups[0].pids=g0.pids.slice();}
       else{const all=[];e.groups.forEach(g=>g.pids.forEach(p=>{if(!all.includes(p))all.push(p);}));e.groups=[{label:'',teacher:(e.groups.find(g=>g.teacher)||{}).teacher||'',pids:all,q:''}];}
       e.mode=m;}
-    return render();}
+    e.step='prod';return render();}
   if(a==='scChip'){S.sc.cellEd.note=b.dataset.n;return render();}
   if(a==='scPTab'){const g=S.sc.cellEd.groups[+b.dataset.g];g.tab=b.dataset.t;g.q='';return render();}
   if(a==='scAddP'){const g=S.sc.cellEd.groups[+b.dataset.g];if(!g.pids.includes(b.dataset.p))g.pids.push(b.dataset.p);g.q='';return render();}
@@ -1186,6 +1192,7 @@ document.addEventListener('click',async ev=>{
     try{await run('apiSetTerm',to);S.step=1;S.sent=null;await boot();S.view='admin';S.info=`已切換到 ${to}。老師重新整理頁面就是新學期。`;}
     catch(e){S.err=e.message;}
     S.busy='';return render();}
+  if(a==='okTool'){const i=+b.dataset.i,k=eKey(S.entries[i]);if(S.seen4.has(k))S.seen4.delete(k);else{S.seen4.add(k);S.open4.delete(i);}return render();}
   if(a==='t4toggle'){const i=+b.dataset.i;S.open4.has(i)?S.open4.delete(i):S.open4.add(i);return render();}
   if(a==='tmove'){const e=S.entries[+b.dataset.i],t=ensureTools(e)[+b.dataset.ti];t.who=t.who==='技士'?'實習股長':'技士';return render();}
   if(a==='tdel'){ensureTools(S.entries[+b.dataset.i]).splice(+b.dataset.ti,1);return render();}
@@ -1663,23 +1670,41 @@ function dayPickModal(){
 function scCellModal(){
   const e=S.sc.cellEd,t=schedTable(e.tid),c=t.classes.find(x=>x.cls===e.cl),w=tWeeks(t).find(x=>x.n===e.w);
   const dayN=e.day||clDays(c)[0],date=w?addDays(w.mon,dayN-1):'';
-  const users=S.sc.data.users.filter(u=>!(t.teachers&&t.teachers.length)||t.teachers.includes(u.email)),pv=(t.groups||[]).length>=2?prevLesson(t,e.cl,e.w,e.day):null;
-  const gBox=(g,i)=>`<div class="card" style="margin:8px 0"><div class="cb" style="padding-top:10px">${g.label?`<b>${esc(g.label)}</b>`:''}
-    <label class="lbl">開材料單的老師</label><select class="in" data-k="scteacher" data-g="${i}"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===g.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
-    <label class="lbl" style="margin-top:8px">上什麼產品（可以選好幾個）</label>
+  const users=S.sc.data.users.filter(u=>!(t.teachers&&t.teachers.length)||t.teachers.includes(u.email)),hasGroups=(t.groups||[]).length>=2,pv=hasGroups?prevLesson(t,e.cl,e.w,e.day):null;
+  const step=e.step||'kind',isLesson=e.kind==='lesson';
+  const nSteps=isLesson?(hasGroups?3:2):2,stepNo=step==='kind'?1:step==='mode'?2:(isLesson?(hasGroups?3:2):2);
+  const big=(act,attr,on,text,sub)=>`<button class="btn ${on?'':'ghost'}" style="display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-size:17px" data-a="${act}" ${attr}>${on?'✓ ':''}${text}${sub?`<small style="display:block;font-weight:400;opacity:.8;margin-top:2px">${sub}</small>`:''}</button>`;
+  const gBox=(g,i)=>`<div class="card" style="margin:10px 0"><div class="cb" style="padding-top:10px">${g.label?`<b style="font-size:16px">${esc(g.label)}</b>`:''}
+    <label class="lbl">哪位老師開單？</label><select class="in" data-k="scteacher" data-g="${i}"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===g.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
+    <label class="lbl" style="margin-top:8px">上什麼課程（產品）？可以選好幾個</label>
     <div>${g.pids.map(p=>`<span class="pchip2">${esc(pTitle(p))}<button data-a="scRemP" data-g="${i}" data-p="${esc(p)}" aria-label="拿掉">×</button></span>`).join('')||'<span class="mut">還沒選</span>'}</div>
-    <input class="in" style="margin-top:6px" data-k="scq" data-g="${i}" placeholder="打字搜尋產品，或用下面的年級分頁挑…" value="${esc(g.q||'')}"><div id="scres_${i}">${resHTML(i)}</div></div></div>`;
-  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${wLabel(w)}　${esc(e.cl)}</h2><p class="mut" style="margin:0 0 8px">${esc(t.course)}・${daysText([dayN])} ${md(date)}${clDays(c).includes(dayN)?'':'　<span class="tg">加練</span>'}</p>
-    <div class="seg" style="margin-bottom:8px"><button data-a="scKind" data-k="lesson" class="${e.kind==='lesson'?'on':''}">上實習</button><button data-a="scKind" data-k="note" class="${e.kind==='note'?'on':''}">不排實習（放假…）</button></div>
-    ${e.kind==='note'?`<label class="lbl">寫什麼？</label><input class="in" style="width:100%" data-k="scnote" maxlength="40" value="${esc(e.note)}" placeholder="例如：教師節放假">
-      <div style="margin-top:6px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="scChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`
-    :`${pv?`<button class="btn sm" style="margin-bottom:8px" data-a="scSwapFill">⇄ 接上一次有實習的那週（單雙互換，老師跟著產品走）</button>`:''}
-      ${(t.groups||[]).length>=2?`<div class="seg" style="margin-bottom:6px"><button data-a="scMode" data-m="joint" class="${e.mode==='joint'?'on':''}">全班一起上（一位老師開單）</button><button data-a="scMode" data-m="split" class="${e.mode==='split'?'on':''}">分組上課（${esc(t.groups.join('、'))}）</button></div>`:''}
-      ${e.mode==='split'?'<p class="mut" style="margin:0 0 4px">分組教學：每一組各有自己的老師和產品。</p>':'<p class="mut" style="margin:0 0 4px">全班一起上：一位老師開所有產品的材料單。</p>'}
-      ${e.groups.map(gBox).join('')}
-      <label class="lbl">進度表上顯示的文字（不填就顯示產品名稱，例如「月餅週」）</label><input class="in" style="width:100%" data-k="sclabel" maxlength="30" value="${esc(e.label)}">`}
-    ${e.has?`<div class="card" style="margin:12px 0 0"><div class="cb" style="padding-top:10px"><b>複製這一格（用已儲存的內容）</b><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${t.classes.filter(x=>x.cls!==e.cl).map(x=>`<button class="btn sm ghost" data-a="scCopyTo" data-cl="${esc(x.cls)}">→ ${esc(x.cls)}（同一週）</button>`).join('')}<button class="btn sm ghost" data-a="scCopyClip">複製，再點別的格子貼上</button></div></div></div>`:''}
-    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px">${e.has?'<button class="btn ghost" data-a="scCellClear">清除這格</button>':''}<button class="btn ghost" data-a="scCellNo">取消</button><button class="btn" data-a="scCellSave">儲存</button></div></div></div>`;
+    <input class="in" style="margin-top:6px" data-k="scq" data-g="${i}" placeholder="打字搜尋，或用下面的年級分頁挑…" value="${esc(g.q||'')}"><div id="scres_${i}">${resHTML(i)}</div></div></div>`;
+  let q='',body='',foot='';
+  if(step==='kind'){
+    q='這一週要上實習嗎？';
+    body=big('scKind','data-k="lesson"',isLesson,'上實習')+big('scKind','data-k="note"',!isLesson,'不排實習','放假、段考、校外教學…');
+    foot=`<button class="btn ghost" data-a="scCellNo">取消</button>`;
+  }else if(step==='mode'){
+    q='全部一起上，還是分組上課？';
+    body=big('scMode','data-m="joint"',e.mode==='joint','全部一起上','一位老師開單')+big('scMode','data-m="split"',e.mode==='split','分組上課',esc((t.groups||[]).join('、'))+'各有自己的老師和課程');
+    foot=`<button class="btn ghost" data-a="scBack">← 上一步</button>`;
+  }else if(!isLesson){
+    q='寫什麼？';
+    body=`<input class="in" style="width:100%" data-k="scnote" maxlength="40" value="${esc(e.note)}" placeholder="例如：教師節放假"><div style="margin-top:8px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="scChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
+    foot=`<button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scCellSave">儲存</button>`;
+  }else{
+    q=e.mode==='split'?'各組的老師和課程是？':(hasGroups?'老師和課程是？':'誰開單、上什麼課程？');
+    body=`${pv?`<button class="btn sm" style="margin-bottom:6px" data-a="scSwapFill">⇄ 接上一次有實習的那週（單雙互換，老師跟著產品走）</button>`:''}${e.groups.map(gBox).join('')}
+      <details style="margin-top:8px"><summary class="mut" style="cursor:pointer">更多設定</summary>
+        <label class="lbl" style="margin-top:6px">進度表上顯示的文字（不填就顯示課程名稱，例如「月餅週」）</label><input class="in" style="width:100%" data-k="sclabel" maxlength="30" value="${esc(e.label)}">
+        ${e.has?`<div style="margin-top:10px"><b>複製這一格（用已儲存的內容）</b><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${t.classes.filter(x=>x.cls!==e.cl).map(x=>`<button class="btn sm ghost" data-a="scCopyTo" data-cl="${esc(x.cls)}">→ ${esc(x.cls)}（同一週）</button>`).join('')}<button class="btn sm ghost" data-a="scCopyClip">複製，再點別的格子貼上</button></div></div>`:''}
+      </details>`;
+    foot=`${e.has?'<button class="btn ghost" data-a="scCellClear">清除這格</button>':''}<button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scCellSave">儲存</button>`;
+  }
+  return `<div class="modal"><div class="mb"><div class="mut" style="font-size:13px">${wLabel(w)}　${esc(e.cl)}・${esc(t.course)}・${daysText([dayN])} ${md(date)}${clDays(c).includes(dayN)?'':'　<span class="tg">加練</span>'}</div>
+    <h2 style="margin:4px 0 2px">${q}</h2><p class="mut" style="margin:0 0 6px;font-size:13px">第 ${stepNo}／${nSteps} 步</p>
+    ${body}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px">${foot}</div></div></div>`;
 }
 /* 修改一張進度表的上課日（每週幾）和分組（技士、科主任、管理者） */
 function scTableModal(){
