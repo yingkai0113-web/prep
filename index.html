@@ -717,7 +717,6 @@ function techHTML(){
   <div class="rgrow"><button class="btn sm ghost" data-a="rgShift" data-d="-1" aria-label="往前一段">◀</button><b style="flex:1;min-width:8em;text-align:center">${rangeText()}（${rangeLen()} 天）</b><button class="btn sm ghost" data-a="rgShift" data-d="1" aria-label="往後一段">▶</button></div>
   <div class="rgrow">${[['week','本週'],['next','下週'],['month','本月'],['nmonth','下個月']].map(([v,n])=>`<button class="btn sm ghost" data-a="rgPreset" data-p="${v}">${n}</button>`).join('')}</div>`;
   if(!t)return h+`<p class="load">${S.err?'':'計算中…'}</p>`;
-  h+=subHTML();
   h+=ssHTML();
   const tl=[...t.teachers];if(S.tTeacher&&!tl.some(x=>x.email===S.tTeacher))tl.push({email:S.tTeacher,name:S.tTeacher});
   h+=`<div class="tctl"><select class="in" data-k="tTeacher" aria-label="哪位老師"><option value="">全部老師</option>${tl.map(x=>`<option value="${esc(x.email)}" ${x.email===S.tTeacher?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
@@ -1806,6 +1805,7 @@ function ssHTML(){
   const pendRq=rq.filter(x=>x.state!=='done').length;
   return `<div class="card"><button class="ch" data-a="ssToggle"><span><b>教學進度表送單狀況</b><small>${rq.length} 門課要排進度表${pendRq?`・<span style="color:var(--err)">${pendRq} 門還沒完成</span>`:'・全部完成 ✓'}　｜　已排 ${all.length} 堂，已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}</small></span><span>${S.ssOpen?'▴':'▾'}</span></button>
     ${S.ssOpen?`<div class="cb"><p class="mut" style="margin:0 0 6px">每一門要排進度表的課，授課老師有沒有送單。點一列可以看那張進度表。</p>${depts||'<p class="mut">還沒設定哪些課要排進度表。</p>'}
+      ${S.sub&&S.sub.rows.length?`<div class="ssd">只看某位老師的材料</div><div style="display:flex;gap:6px;flex-wrap:wrap">${S.sub.rows.map(r=>`<button class="btn sm ${S.tTeacher===r.email?'':'ghost'}" data-a="tfilter" data-e="${esc(r.email)}">${esc(r.name)}${r.total?' ✓':'<small class="mut">（還沒送）</small>'}</button>`).join('')}${S.tTeacher?'<button class="btn sm" data-a="tfilter" data-e="'+esc(S.tTeacher)+'">顯示全部老師</button>':''}</div>`:''}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}<label><input type="checkbox" data-k="ssRange" ${!S.ssAll?'checked':''}> 只看上面選的日期</label></div></div>`:''}</div>`;
 }
 function dlFilesModal(){
