@@ -1266,7 +1266,8 @@ function apiScheduleStatus(start, end) {
   tables.forEach(function (t) { ids[t.id] = 1; });
   var plans = readPlans_().filter(function (e) { return e.term === term; });
   var allCells = schedCells_();
-  return { term: term, start: start, end: end, items: L_scheduleStatus(tables, allCells.filter(function (x) { return ids[x.tableId]; }), weeks, plans, loadCatalog_().products, teacherNames_(), start, end, tableWeeks_), required: requiredStatus_(term, tables, allCells, weeks) };
+  return { term: term, start: start, end: end, items: L_scheduleStatus(tables, allCells.filter(function (x) { return ids[x.tableId]; }), weeks, plans, loadCatalog_().products, teacherNames_(), start, end, tableWeeks_), required: requiredStatus_(term, tables, allCells, weeks),
+           tinfo: tables.map(function (t) { return { id: t.id, teachers: (t.teachers || []).map(function (em) { var nm = teacherNames_(); return { email: em, name: nm[em] || em.split('@')[0] }; }) }; }) };
 }
 /* 進度表有排、但排課不見了（例如被刪掉）的課，重新補給開單的老師（待確認） */
 function apiScheduleRepair() {
