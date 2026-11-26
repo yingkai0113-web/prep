@@ -165,7 +165,7 @@ h3.hh{font-size:15px;margin:14px 0 6px;color:var(--mut);font-weight:500}
 .wr .g{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
 .mclk{cursor:pointer}.wr.mclk{cursor:pointer}.wr.mclk:hover{background:#F4F8F6}.mar{color:var(--mut);font-size:10px}.mdet{grid-column:1/-1;font-size:13px;background:#F4F8F6;border-radius:8px;padding:6px 10px;line-height:1.7}.wr .use{grid-column:1/-1;font-size:12px;color:var(--mut);margin-top:-4px}
 .load{text-align:center;color:var(--mut);padding:60px 0}
-.athtb{width:100%;border-collapse:collapse;table-layout:fixed;min-width:760px}.athtb th,.athtb td{border:1px solid #444;text-align:center;vertical-align:middle;padding:4px;font-weight:700}.athh th{background:#DAEEF3;border-top:3px solid #444}.athtime{width:96px}.athtime .in{padding:3px 4px;font-size:13px;text-align:center}.athrc{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:2px}.athrc .linkb{font-size:11px}.athc{cursor:pointer;height:44px}.athc.pd{box-shadow:inset 0 0 0 2px #E8A200}.athc:hover{outline:2px solid var(--pri);outline-offset:-2px}.athplus{color:#B8C7C1;font-weight:400}.athq{font-weight:700}
+.athtb td.athc .cp{position:absolute;top:1px;right:1px;border:0;background:rgba(255,255,255,.75);color:var(--pri);font-size:13px;line-height:1;padding:2px 4px;border-radius:5px;cursor:pointer}.athtb td.athc.pm{outline:1px dashed var(--pri);outline-offset:-2px;cursor:copy}.athtb{width:100%;border-collapse:collapse;table-layout:fixed;min-width:760px}.athtb th,.athtb td{border:1px solid #444;text-align:center;vertical-align:middle;padding:4px;font-weight:700}.athh th{background:#DAEEF3;border-top:3px solid #444}.athtime{width:96px}.athtime .in{padding:3px 4px;font-size:13px;text-align:center}.athrc{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:2px}.athrc .linkb{font-size:11px}.athc{cursor:pointer;height:44px}.athc.pd{box-shadow:inset 0 0 0 2px #E8A200}.athc:hover{outline:2px solid var(--pri);outline-offset:-2px}.athplus{color:#B8C7C1;font-weight:400}.athq{font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(20,48,43,.5);display:grid;place-items:center;padding:12px;z-index:50}
 .modal .mb{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:14px}
 @media(min-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}.ctl{grid-template-columns:auto 1fr auto;align-items:end}.ctl .wide{grid-column:auto}.er{grid-template-columns:2fr 6em 5em auto 3fr 2.4em}.er .nm,.er .nt{grid-column:auto}}
@@ -2170,7 +2170,8 @@ function athEditRows(t,wn,fn){
 }
 function athGridHTML(t){
   const wf=S.sc.wf||'all',canE=t.canEdit&&S.sc.data.canEditCells!==false,c=t.classes[0];
-  let h=`<div class="spill" style="flex-wrap:wrap;margin:0 0 8px"><span style="flex:1;min-width:12em">上課日期由授課老師訂，不用照學期：${t.ext?`<b>${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}</b>`:'<b style="color:var(--err)">還沒設定</b>（現在先列出學期的週）'}</span>${canE?`<button class="btn sm ghost" data-a="scExtra">${t.ext?'修改日期':'設定上課日期'}</button> <button class="btn sm" data-a="athWeekAdd">＋ 再加一週</button>`:''}</div><div class="sgw">`;
+  const ac=S.sc.aclip&&S.sc.aclip.tid===t.id?S.sc.aclip:null;
+  let h=(ac?`<div class="spill warn" style="flex-wrap:wrap;position:sticky;top:0;z-index:5;margin:0 0 8px"><span style="flex:1;min-width:10em">已複製「${esc(ac.desc)}」。點要貼上的格子（可以連續貼好幾格），貼完按「結束」。</span><button class="btn sm" data-a="athClipEnd">結束</button></div>`:'')+`<div class="spill" style="flex-wrap:wrap;margin:0 0 8px"><span style="flex:1;min-width:12em">上課日期由授課老師訂，不用照學期：${t.ext?`<b>${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}</b>`:'<b style="color:var(--err)">還沒設定</b>（現在先列出學期的週）'}</span>${canE?`<button class="btn sm ghost" data-a="scExtra">${t.ext?'修改日期':'設定上課日期'}</button> <button class="btn sm" data-a="athWeekAdd">＋ 再加一週</button>`:''}</div><div class="sgw">`;
   tWeeks(t).filter(w=>wf==='all'||(wf==='vac'?w.vac:!w.vac)).forEach(w=>{
     const rows=athRowsFor(t,w.n),xs=athDays(t,w.n);
     h+=`<table class="athtb"><thead><tr class="athh"><th style="width:104px">${w.vac?esc(w.label):'第 '+w.n+' 週'}<br><small>時間/日期</small></th>${xs.map(x=>`<th>${athDayLbl(w.mon,x)}</th>`).join('')}</tr></thead><tbody>`;
@@ -2178,7 +2179,7 @@ function athGridHTML(t){
       const bg=row.bg?`background:${ATH_BG[row.bg]};`:'';
       const {sl,merged}=athRowCells(t,w,row,rows,xs);
       h+=`<tr><td class="athtime" style="${bg}"><input class="in" data-ath="time" data-w="${w.n}" data-rid="${esc(row.id)}" value="${esc(row.t)}" aria-label="時間"${canE?'':' disabled'}>${canE?`<div class="athrc"><button class="linkb" data-a="athRowBg" data-w="${w.n}" data-rid="${esc(row.id)}" title="換底色">底色</button><button class="linkb" data-a="athRowUp" data-w="${w.n}" data-rid="${esc(row.id)}" title="上移">↑</button><button class="linkb" data-a="athRowDel" data-w="${w.n}" data-rid="${esc(row.id)}" title="刪除這一列">✕</button></div>`:''}</td>`;
-      const td=(x,s,span)=>{const pd=pendMap()[pkey(t.id,w.n,c.cls,athDayKey(t,x))]?' pd':'';const ln=athLines(s);return `<td class="athc${pd}" ${span?`colspan="${xs.length}"`:''} style="${bg}${athSlotStyle(s)}" ${canE?`data-a="athSlot" data-w="${w.n}" data-x="${x}" data-rid="${esc(row.id)}"`:''}>${ln.length?ln.map(l=>`<div>${esc(l)}</div>`).join(''):(canE?'<span class="athplus">＋</span>':'')}</td>`;};
+      const td=(x,s,span)=>{const pd=pendMap()[pkey(t.id,w.n,c.cls,athDayKey(t,x))]?' pd':'';const ln=athLines(s);const pm=canE&&S.sc.aclip&&S.sc.aclip.tid===t.id,has=!!(s&&((s.pids||[]).length||s.txt));const cpb=(canE&&has&&!pm)?`<button class="cp" data-a="athCopy" data-w="${w.n}" data-x="${x}" data-rid="${esc(row.id)}" title="複製這一格，再點別的格子貼上">⧉</button>`:'';return `<td class="athc${pd}${pm?' pm':''}" ${span?`colspan="${xs.length}"`:''} style="${bg}${athSlotStyle(s)}position:relative" ${canE?`data-a="${pm?'athPaste':'athSlot'}" data-w="${w.n}" data-x="${x}" data-rid="${esc(row.id)}"`:''}${(canE&&has&&!pm)?' draggable="true"':''}>${cpb}${ln.length?ln.map(l=>`<div>${esc(l)}</div>`).join(''):(canE?'<span class="athplus">＋</span>':'')}</td>`;};
       h+=merged?td(xs[0],sl[0],true):xs.map((x,i)=>td(x,sl[i],false)).join('');
       h+='</tr>';
     });
@@ -2230,6 +2231,32 @@ function athPrintOpts(p,t){
   const ws=tWeeks(t);if(p.from===undefined){p.from=ws[0]?ws[0].mon:'';p.to=(athLastFilled(t)||{}).mon||'';p.per=3;}
   return `<b style="display:block;margin-top:8px">要印哪幾週（排到哪就印到哪）</b><div class="rgrow"><label>從 <input class="in" type="date" data-ath="prFrom" value="${esc(p.from)}"></label><label>到 <input class="in" type="date" data-ath="prTo" value="${esc(p.to)}"></label><label>一頁放 <select class="in" data-ath="prPer" style="width:auto">${[1,2,3,4].map(n=>`<option value="${n}" ${(+p.per||3)===n?'selected':''}>${n} 週</option>`).join('')}</select></label></div><p class="mut" style="margin:4px 0 0">格式跟 Word 版一樣（A4 橫式，時間列、週一到週五）。</p>`;
 }
+function athPasteSlot(t,w,x,rid,src){
+  const c=t.classes[0],rows=athRowsFor(t,w),dk=athDayKey(t,x),old=schedCell(t.id,w,c.cls,dk);let slots=[];
+  if(old){if(old.slots)slots=athClone(old.slots);else{const lg=rows[1]||rows[0],s=lg?athSlotOf(old,lg.id,rows):null;if(s&&(s.pids.length||s.txt))slots.push(athClone(s));}}
+  slots=slots.filter(s=>s.r!==rid);slots.push(Object.assign(athClone(src),{r:rid}));
+  slots.sort((a,b)=>rows.findIndex(r=>r.id===a.r)-rows.findIndex(r=>r.id===b.r));
+  const pids=[];slots.forEach(s=>(s.pids||[]).forEach(p=>{if(!pids.includes(p))pids.push(p);}));
+  let cell;const og=old&&old.kind==='lesson'?old.groups.find(g=>g.teacher):null;
+  if(pids.length)cell={kind:'lesson',mode:'joint',label:'',groups:[{teacher:og?og.teacher:(S.sc.aclip&&S.sc.aclip.teacher)||athDefTeacher(t),pids}],slots};
+  else cell={kind:'note',note:slots.map(s=>s.txt).filter(Boolean).join('、').slice(0,40)||'—',slots};
+  stageCell(t.id,w,c.cls,dk,cell);
+}
+const athSlotAt=(t,w,x,rid)=>athSlotOf(schedCell(t.id,w,t.classes[0].cls,athDayKey(t,x)),rid,athRowsFor(t,w));
+document.addEventListener('dragstart',ev=>{
+  const td=ev.target.closest&&ev.target.closest('td.athc[draggable="true"]');if(!td||!S.sc)return;
+  S.sc.adrag={w:+td.dataset.w,x:+td.dataset.x,rid:td.dataset.rid};
+  if(ev.dataTransfer){ev.dataTransfer.effectAllowed='copy';ev.dataTransfer.setData('text/plain','cell');}
+});
+document.addEventListener('dragover',ev=>{if(S.sc&&S.sc.adrag&&ev.target.closest&&ev.target.closest('td.athc'))ev.preventDefault();});
+document.addEventListener('drop',ev=>{
+  const td=ev.target.closest&&ev.target.closest('td.athc');if(!td||!S.sc||!S.sc.adrag)return;
+  ev.preventDefault();const d=S.sc.adrag;S.sc.adrag=null;
+  if(locked()){S.err=lockMsg();return render();}
+  const t=schedTable(S.sc.tab),s=t&&athSlotAt(t,d.w,d.x,d.rid),w=+td.dataset.w,x=+td.dataset.x,rid=td.dataset.rid;
+  if(!s||(d.w===w&&d.x===x&&d.rid===rid))return;
+  athPasteSlot(t,w,x,rid,s);S.info='已複製過去了（還沒儲存，按「儲存進度表」才會生效）。';render();
+});
 function athApply(E,clear){
   const t=schedTable(E.tid),c=t.classes[0],rows=athRowsFor(t,E.w),xs=E.all?athDays(t,E.w):[E.x];
   xs.forEach(x=>{
@@ -2286,6 +2313,9 @@ async function athAct(a,b){
   if(a==='athRowUp'){athEditRows(t,W,l=>{const i=l.findIndex(r=>r.id===RID);if(i>0)[l[i-1],l[i]]=[l[i],l[i-1]];});return;}
   if(a==='athRowBg'){athEditRows(t,W,l=>{const r=l.find(r=>r.id===RID),o=['','pk','gr','bl'];if(r)r.bg=o[(o.indexOf(r.bg||'')+1)%o.length];});return;}
   if(a==='athRowsAll'){const rows=athClone(athRowsFor(t,W)),st=athStore(t.id)||(S.sc.data.athRows[t.id]={def:[],w:{}});st.def=rows;st.w={};athRowsDirty(t);S.info='已把這一週的時間列套用到全部週。';return render();}
+  if(a==='athCopy'){const s=athSlotAt(t,W,+b.dataset.x,RID);if(!s)return;const cl=schedCell(t.id,W,t.classes[0].cls,athDayKey(t,+b.dataset.x)),og=cl&&cl.kind==='lesson'?cl.groups.find(g=>g.teacher):null;S.sc.aclip={tid:t.id,slot:athClone(s),teacher:og?og.teacher:'',desc:athLines(s).join('、')||'這一格'};return render();}
+  if(a==='athPaste'){const c=S.sc.aclip;if(!c||c.tid!==t.id)return;athPasteSlot(t,W,+b.dataset.x,RID,c.slot);S.info='已貼上（還沒儲存，按「儲存進度表」才會生效）。';return render();}
+  if(a==='athClipEnd'){S.sc.aclip=null;return render();}
   if(a==='athSlot'){
     const x=+b.dataset.x,c=t.classes[0],rows=athRowsFor(t,W),s=athSlotOf(schedCell(t.id,W,c.cls,athDayKey(t,x)),RID,rows)||{pids:[],q:{},txt:'',st:''};
     const og=(()=>{const cl=schedCell(t.id,W,c.cls,athDayKey(t,x));return cl&&cl.kind==='lesson'?cl.groups.find(g=>g.teacher):null;})();
