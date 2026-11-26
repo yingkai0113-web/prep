@@ -11,6 +11,7 @@ var TZ = 'Asia/Taipei';
  * 連同要呼叫的函式名稱一起 POST 過來；這裡先驗證憑證、取得信箱，再看信箱有沒有列在「使用者」分頁。 */
 var CLIENT_ID_ = '464168761979-8jfd9ut1fjpst60hqlsva6peopvol2n6.apps.googleusercontent.com';
 var SITE_URL_ = 'https://yingkai0113-web.github.io/prep/';
+var REQ_AS_ = '';          // 技士「代為操作」某位老師時，網頁帶來的老師信箱（只有技士才會生效）
 var REQ_EMAIL_ = null;     // 這一次請求驗證過的登入信箱（小寫）
 
 function doGet() {
@@ -51,6 +52,7 @@ function doPost(e) {
     var fn = globalThis[name];
     if (typeof fn !== 'function') throw new Error('不明的呼叫：' + name);
     REQ_EMAIL_ = verifyToken_(req.token);
+    REQ_AS_ = String(req.as || '').toLowerCase().trim();
     try { var sp = SpreadsheetApp.getActiveSpreadsheet(); if (sp.getSpreadsheetTimeZone() !== TZ) sp.setSpreadsheetTimeZone(TZ); } catch (tzErr) {}   // 複製到別的帳號時，試算表時區會變成預設的美國時區，日期會差一天
     var out = fn.apply(null, Array.isArray(req.args) ? req.args : []);
     return json_({ ok: true, data: out === undefined ? null : out, ms: Date.now() - t0_ });
@@ -59,7 +61,7 @@ function doPost(e) {
     var auth = msg.indexOf('AUTH:') === 0;
     return json_({ ok: false, code: auth ? 'AUTH' : '', error: auth ? msg.slice(5) : msg });
   } finally {
-    REQ_EMAIL_ = null;
+    REQ_EMAIL_ = null; REQ_AS_ = '';
   }
 }
 function curEmail_() {
@@ -445,7 +447,13 @@ function whoami_() {
   var rawRole = str_(me['角色']).trim();
   if (rawRole === '主任') rawRole = '科主任';                       // 寫「主任」也可以，一樣當科主任
   var role = ['老師', '技士', '科主任', '管理者'].indexOf(rawRole) >= 0 ? rawRole : '老師';
-  return { email: email, name: me['姓名'] ? str_(me['姓名']) : email.split('@')[0], role: role };
+  var self = { email: email, name: me['姓名'] ? str_(me['姓名']) : email.split('@')[0], role: role };
+  /* 技士可以「代為操作」任何一位老師：之後所有動作都用那位老師的身分做（排課、確認、匯出…），但不受「老師送單已關閉」限制；管理功能用不了。 */
+  if (REQ_AS_ && role === '技士' && REQ_AS_ !== email) {
+    var tgt = null; users.forEach(function (u) { if (str_(u['信箱']).toLowerCase().trim() === REQ_AS_) tgt = u; });
+    if (tgt) return { email: REQ_AS_, name: tgt['姓名'] ? str_(tgt['姓名']) : REQ_AS_.split('@')[0], role: '老師', actBy: email, actByName: self.name };
+  }
+  return self;
 }
 
 /* 網頁一打開先問這個：判斷是不是學校帳號、有沒有被編進系統，不是的話網頁會出現「切換帳號」按鈕。只回答自己的帳號，不洩漏其他資料。 */
@@ -488,14 +496,14 @@ function apiBootstrap(asEmail) {
   var admin = isStaff_(me), hist = {};
   all.forEach(function (e) { if (e.teacher === me.email && e.term !== term && !e.draft && L_customized(e)) hist[e.pid] = (hist[e.pid] || 0) + 1; });
   return { user: me, term: term, catalog: L_catalogForClient(cat, me.email, mine.map(function (e) { return e.pid; }), admin), entries: workingCopies_(mine), hist: hist,
-           adminUrl: '', open: submissionOpen_(), openNote: setting_('開放老師送單更新', ''), extraOpen: extraOpen_(), extraNote: setting_('開放額外材料單更新', ''), trial: (ss_(), TRIAL_) };
+           adminUrl: '', open: submissionOpen_(), openMe: !teacherLocked_(me), openList: openTeachers_(), openNote: setting_('開放老師送單更新', ''), extraOpen: extraOpen_(), extraNote: setting_('開放額外材料單更新', ''), trial: (ss_(), TRIAL_) };
 }
 
 /* mode：'draft' = 只存草稿（技士看不到）；'sched' = 匯出教學進度表的課；'extra' = 匯出額外材料單；不給 = 全部匯出。
  * 只有「匯出」才算送給技士；沒匯出的，不管做到哪裡，技士都看不到、也不會算進總量。 */
 function apiSavePlan(entries, mode) {
   var me = whoami_(), term = setting_('目前學年學期', ''), cat = loadCatalog_();
-  if (me.role === '老師' && !submissionOpen_()) throw new Error('目前已關閉老師送出材料單，不能新增或修改。需要修改請聯絡技士、科主任或管理者。');
+  if (teacherLocked_(me)) throw new Error('目前已關閉老師送出材料單，不能新增或修改。需要修改請聯絡技士、科主任或管理者。');
   if (!entries || entries.length > 800) throw new Error('一次最多 800 堂課。');
   var lock = LockService.getScriptLock(), clean = [];
   lock.waitLock(30000);
@@ -514,7 +522,7 @@ function apiSavePlan(entries, mode) {
       var o = mineOld[id];
       if (o.sid && !seen[id]) clean.push({ id: o.id, _keep: true, sid: o.sid });
     });
-    if (me.role === '老師' && !extraOpen_()) {                                   // 額外材料單平常不開放：老師不能新增、修改、刪除
+    if (me.role === '老師' && !me.actBy && !extraOpen_()) {                                   // 額外材料單平常不開放：老師不能新增、修改、刪除
       var oldSig = {}, changed = false, cnt = 0;
       Object.keys(mineOld).forEach(function (id) { var w = !mineOld[id].sid ? workingCopies_([mineOld[id]])[0] : null; if (w) { oldSig[id] = planSig_(w); cnt++; } });          // 跟「工作中的版本」比
       clean.forEach(function (e) { if (!e.sid && !e._keep) { cnt--; if (!e.id || oldSig[e.id] === undefined || oldSig[e.id] !== planSig_(e)) changed = true; } });
@@ -757,7 +765,7 @@ function tablePids_(tableId) {                                                  
 }
 /* 進度表只有被指定的授課老師才看得到、改得了；還沒指定授課老師的，只有技士、科主任、管理者能動 */
 function canSeeTable_(me, t) { return isStaff_(me) || (t.teachers.length > 0 && t.teachers.indexOf(me.email) >= 0); }
-function isTeacherOf_(me, t) { return (t.teachers || []).indexOf(me.email) >= 0; }
+function isTeacherOf_(me, t) { return me.role === '技士' || (t.teachers || []).indexOf(me.email) >= 0; }       // 技士可以編輯所有進度表
 function assertCanEditTable_(me, t) { if (!isTeacherOf_(me, t)) throw new Error('這張進度表你不是授課老師，只能看，不能編輯。'); }
 function extOf_(v) { return v && L_parseDate(v.from) && L_parseDate(v.to) && v.to >= v.from ? { from: String(v.from), to: String(v.to) } : null; }
 function semDates_() { var term = setting_('目前學年學期', ''); return { start: setting_('開學日 ' + term, ''), end: setting_('結業式 ' + term, '') }; }
@@ -1015,7 +1023,7 @@ function apiScheduleSetDates(start, end) {
   return { start: s, end: end, weeks: L_weeks(s, end) };
 }
 function schedGuard_(me) {
-  if (me.role === '老師' && !submissionOpen_()) throw new Error('目前已關閉老師送出材料單，不能新增或修改進度表。需要修改請聯絡技士、科主任或管理者。');
+  if (teacherLocked_(me)) throw new Error('目前已關閉老師送出材料單，不能新增或修改進度表。需要修改請聯絡技士、科主任或管理者。');
 }
 /* 改一張進度表的每週上課日、分組。技士、科主任、管理者都能改；老師只能改「只有一個班」的進度表的上課日（例如技藝競賽選手選週幾到週幾），分組要請管理的人改。 */
 function apiScheduleSaveTable(rec) {
@@ -1343,6 +1351,18 @@ function apiSetExtraOpen(open) {
 
 /* ---------------- 開啟／關閉「老師送材料單」 ---------------- */
 function submissionOpen_() { return setting_('開放老師送單', '是') !== '否'; }
+/* 總開關關閉時，可以「單獨開放」某幾位老師：他們還是能新增、修改、送單 */
+function openTeachers_() { return String(setting_('單獨開放老師', '') || '').split(/[,;\s]+/).map(function (x) { return x.toLowerCase().trim(); }).filter(Boolean); }
+function teacherLocked_(me) { return me.role === '老師' && !me.actBy && !submissionOpen_() && openTeachers_().indexOf(me.email) < 0; }
+function apiSetTeacherOpen(email, on) {
+  var me = requireAdmin_(), em = String(email || '').toLowerCase().trim();
+  if (!em) throw new Error('請選一位老師。');
+  var list = openTeachers_().filter(function (x) { return x !== em; });
+  if (on === true || on === '是') list.push(em);
+  setSetting_('單獨開放老師', list.join(','));
+  setSetting_('開放老師送單更新', Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss') + ' ' + me.name + (on ? ' 單獨開放 ' : ' 取消單獨開放 ') + (teacherNames_()[em] || em));
+  return { list: list, note: setting_('開放老師送單更新', '') };
+}
 /* 關閉之後老師不能新增、修改、送出（還是可以下載已送出的材料單）；技士、科主任、管理者不受影響。 */
 function apiSetSubmissionOpen(open) {
   var me = requireAdmin_(), on = open === true || open === '是';
@@ -1981,4 +2001,51 @@ function apiProfile() {
   ph('【有快取】apiBootstrap', function () { RT_ = {}; SS_ = null; ENS_ = {}; CAT_ = null; PL_ = null; apiBootstrap(); });
   ph('【有快取】apiScheduleGet', function () { RT_ = {}; SS_ = null; ENS_ = {}; CAT_ = null; PL_ = null; apiScheduleGet(); });
   return out;
+}
+
+/* ---------------- 選手進度表（技藝競賽選手的訓練時段表，一週一格，產品後面可寫數量） ---------------- */
+var ATH_HEAD = ['編號', '擁有者', '名稱', '內容', '更新'];
+function athSheet_() {
+  var sh = ss_().getSheetByName('選手進度表');
+  if (!sh) { sh = ss_().insertSheet('選手進度表'); sh.getRange(1, 1, 1, ATH_HEAD.length).setValues([ATH_HEAD]); }
+  return sh;
+}
+function athRows_() {
+  var sh = athSheet_(), v = sh.getDataRange().getValues(), out = [];
+  for (var i = 1; i < v.length; i++) if (str_(v[i][0])) out.push({ row: i + 1, id: str_(v[i][0]), owner: str_(v[i][1]).toLowerCase(), name: str_(v[i][2]), json: str_(v[i][3]), at: str_(v[i][4]) });
+  return out;
+}
+/* 自己的選手進度表；技士、科主任、管理者看得到所有人的 */
+function apiAthList() {
+  var me = whoami_();
+  return athRows_().filter(function (r) { return r.owner === me.email || isStaff_(me); }).map(function (r) {
+    var d = {}; try { d = JSON.parse(r.json || '{}'); } catch (e) {}
+    return { id: r.id, owner: r.owner, ownerName: teacherNames_()[r.owner] || r.owner.split('@')[0], name: r.name, data: d, at: r.at };
+  });
+}
+function apiAthSave(rec) {
+  var me = whoami_(); rec = rec || {};
+  var name = L_safeText(rec.name, 60) || '選手進度表', json = JSON.stringify(rec.data || {});
+  if (json.length > 48000) throw new Error('這份進度表內容太多，存不下（超過 48000 字）。請把已經排完的週另存成一份新的進度表。');
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var sh = athSheet_(), rows = athRows_(), hit = null, id = str_(rec.id);
+    rows.forEach(function (r) { if (id && r.id === id) hit = r; });
+    if (hit && hit.owner !== me.email && !isStaff_(me)) throw new Error('這份選手進度表是別人的，不能修改。');
+    var at = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss');
+    if (hit) { sh.getRange(hit.row, 3, 1, 3).setValues([[name, json, at]]); return { id: hit.id, at: at }; }
+    id = Utilities.getUuid().slice(0, 8);
+    sh.getRange(sh.getLastRow() + 1, 1, 1, 5).setValues([[id, me.email, name, json, at]]);
+    return { id: id, at: at };
+  } finally { lock.releaseLock(); }
+}
+function apiAthDelete(id) {
+  var me = whoami_(), lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var hit = null; athRows_().forEach(function (r) { if (r.id === str_(id)) hit = r; });
+    if (!hit) return { ok: true };
+    if (hit.owner !== me.email && !isStaff_(me)) throw new Error('這份選手進度表是別人的，不能刪除。');
+    athSheet_().deleteRow(hit.row);
+    return { ok: true };
+  } finally { lock.releaseLock(); }
 }
