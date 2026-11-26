@@ -697,12 +697,14 @@ function L_docsToHtml(docs) {
     for (var r0 = 0; r0 < nR; r0++) { var ht = ((doc.heights && doc.heights[r0]) || doc.defH || 15) * PX / 72; hts.push(ht); totalH += ht; }
     var k = Math.min((doc.page && doc.page.grow) ? 1.3 : 1, W_IN * PX / totalW);
     if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / totalH);
+    var kv = k;                                                                              // 列高的倍率：選手進度表頁面有空位時，格子往下拉高（只要不超過一頁）
+    if (doc.page && doc.page.stretch) kv = Math.max(k, Math.min(2.4, H_IN * PX / totalH * 0.97));
     var ws = widths.map(function (w) { return Math.round(w * k * 10) / 10; });
     var tw = ws.reduce(function (a, b) { return a + b; }, 0);
     var h = '<div data-orient="' + (land ? 'landscape' : 'portrait') + '" style="position:relative;' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:' + L_cssFont('') + '"><colgroup>' +
       ws.map(function (w) { return '<col width="' + w + '" style="width:' + w + 'px">'; }).join('') + '</colgroup>';
     for (var r = 0; r < nR; r++) {
-      h += '<tr style="height:' + Math.round(hts[r] * k * 10) / 10 + 'px">';
+      h += '<tr style="height:' + Math.round(hts[r] * kv * 10) / 10 + 'px">';
       for (var c = 0; c < nC; c++) {
         if (cover[r + ',' + c]) continue;
         var cell = (doc.rows[r] || [])[c], sp = span[r + ',' + c];
@@ -1159,7 +1161,7 @@ function L_docSchedAth(table, weeks, cells, ctx) {
       });
     });
     docs.push({ name: '進度表' + (ws.length > per ? String(i / per + 1) : ''), group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18,
-                page: Object.assign({}, L_PAGE, { fit: 'page', grow: true, orient: 'landscape', m: { l: 0.4, r: 0.4, t: 0.4, b: 0.4, h: 0.1, f: 0.1 } }) });
+                page: Object.assign({}, L_PAGE, { fit: 'page', grow: true, stretch: true, orient: 'landscape', m: { l: 0.4, r: 0.4, t: 0.4, b: 0.4, h: 0.1, f: 0.1 } }) });
   }
   return docs;
 }
