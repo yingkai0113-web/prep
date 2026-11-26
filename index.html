@@ -329,6 +329,7 @@ function render(){
   if(S.hu)h+=histModal();
   if(S.remind)h+=remindModal();
   if(S.busyA==='trial')h+=`<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center"><div style="background:#fff;border-radius:14px;padding:22px 28px;text-align:center;max-width:320px"><div style="width:38px;height:38px;border:4px solid #ddd;border-top-color:#E8590C;border-radius:50%;margin:0 auto 12px;animation:tspin 0.9s linear infinite"></div><b>${esc(S.busy||'處理中…')}</b><p class="mut" style="margin:8px 0 0">請不要關掉或重新整理頁面，完成後會自動重新載入。</p></div></div><style>@keyframes tspin{to{transform:rotate(360deg)}}</style>`;
+  if(S.sc&&S.sc.dropAsk)h+=dropModal();
   if(S.termDlg)h+=termModal();
   if(S.exDlg)h+=exModal();
   if(S.needCheck)h+=needCheckModal();
@@ -1152,6 +1153,14 @@ document.addEventListener('click',async ev=>{
   if(a==='scCopyClip'){
     const t=schedTable(S.sc.tab),e=S.sc.cellEd,w=e?e.w:+b.dataset.w,cl=e?e.cl:b.dataset.cl,day=e?(e.day||0):(+b.dataset.d||0),cell=schedCell(t.id,w,cl,day);
     if(!cell)return;S.sc.clip={tid:t.id,cell:cellCopy(cell),desc:cellDesc(cell),src:{w,cl,day}};S.sc.cellEd=null;return render();}
+  if(a==='dropNo'){S.sc.dropAsk=null;return render();}
+  if(a==='dropCopy'||a==='dropMove'){
+    const d=S.sc.dropAsk;S.sc.dropAsk=null;if(!d)return render();
+    const t=schedTable(S.sc.tab);if(!t)return render();
+    if(a==='dropCopy')return pasteInto(t,d.dst.w,d.dst.cl,d.dst.day,d.cell);
+    stageCell(t.id,d.src.w,d.src.cl,d.src.day,null);
+    pasteInto(t,d.dst.w,d.dst.cl,d.dst.day,d.cell,true);
+    S.info='已整個移過去了，原本那格清空（還沒儲存，按「儲存進度表」才會生效）。';return render();}
   if(a==='scClipEnd'){S.sc.clip=null;return render();}
   if(a==='scPaste'){
     const t=schedTable(S.sc.tab),c=S.sc.clip,w=+b.dataset.w,cl=b.dataset.cl,day=+b.dataset.d||0;
@@ -1470,7 +1479,7 @@ document.addEventListener('click',async ev=>{
 document.addEventListener('dragstart',ev=>{
   const td=ev.target.closest&&ev.target.closest('td.sc[draggable="true"]');if(!td||!S.sc)return;
   S.sc.drag={w:+td.dataset.w,cl:td.dataset.cl,day:+td.dataset.d||0};
-  if(ev.dataTransfer){ev.dataTransfer.effectAllowed='copy';ev.dataTransfer.setData('text/plain','cell');}
+  if(ev.dataTransfer){ev.dataTransfer.effectAllowed='copyMove';ev.dataTransfer.setData('text/plain','cell');}
 });
 document.addEventListener('dragover',ev=>{if(S.sc&&S.sc.drag&&ev.target.closest&&ev.target.closest('td.sc'))ev.preventDefault();});
 document.addEventListener('drop',ev=>{
@@ -1479,7 +1488,7 @@ document.addEventListener('drop',ev=>{
   if(locked()){S.err=lockMsg();return render();}
   const t=schedTable(S.sc.tab),cell=t&&schedCell(t.id,d.w,d.cl,d.day),w=+td.dataset.w,cl=td.dataset.cl,day=+td.dataset.d||0;
   if(!cell||(d.w===w&&d.cl===cl&&d.day===day))return;
-  pasteInto(t,w,cl,day,cellCopy(cell));
+  S.sc.dropAsk={src:d,dst:{w,cl,day},cell:cellCopy(cell),had:schedCell(t.id,w,cl,day)?true:false,desc:cellDesc(cell)};render();
 });
 /* 額外材料單「課程名稱、日期」：打字時不整頁重畫，「下一步」要跟著能不能按更新 */
 function refreshBar2(){
@@ -1663,6 +1672,11 @@ async function refreshEntries(){
 /* 複製格子：把排好的一格（例如甲班）貼到別的格子（乙班同一週、或別的週） */
 const cellCopy=c=>c.kind==='note'?{kind:'note',note:c.note}:{kind:'lesson',mode:c.mode,label:c.label||'',groups:c.groups.map(g=>({teacher:g.teacher,pids:g.pids.slice()}))};
 const cellDesc=c=>c.kind==='note'?c.note:(c.label||c.groups.map(g=>g.pids.map(pTitle).join('、')).filter(Boolean).join(' / '));
+function dropModal(){
+  const d=S.sc.dropAsk;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">要複製，還是整個移過去？</h2><p class="mut" style="margin:0 0 10px">「${esc(d.desc)}」${d.had?'<br><b style="color:var(--err)">目標那一格已經有內容，會被換掉。</b>':''}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" data-a="dropNo">取消</button><button class="btn" data-a="dropCopy">複製（原本那格留著）</button><button class="btn" data-a="dropMove">整個移過去（原本那格清空）</button></div></div></div>`;
+}
 function pasteInto(t,w,cl,day,cell,force){
   const cur=schedCell(t.id,w,cl,day);
   if(cur&&!force){S.sc.pasteAsk={w,cl,day,cell,had:cellDesc(cur)};return render();}
