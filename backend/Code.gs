@@ -1882,6 +1882,45 @@ function apiPaperImport(rec) {
   } finally { rtClear_(); lock.releaseLock(); }
 }
 
+/* 照紙本進度表一次填好很多格子，並把產生的材料單照預設直接送出（管理者用）。
+ * rec.items = [{table, week, cls, cell}]，cell 格式跟進度表格子一樣（kind note / lesson）；rec.send = true 就把這些格子產生的材料單直接送出。 */
+function apiScheduleBulk(rec) {
+  var me = requireStaff_(); rec = rec || {};
+  var items = Array.isArray(rec.items) ? rec.items : [];
+  if (!items.length || items.length > 200) throw new Error('一次填 1 到 200 格。');
+  var term = setting_('目前學年學期', ''), emails = schedEmails_(), cat = loadCatalog_();
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var tables = schedTables_(term), done = {}, keys = {}, newRows = [], now = nowStr_();
+    items.forEach(function (it, ix) {
+      var tag = '第 ' + (ix + 1) + ' 格：';
+      var t = tables.filter(function (x) { return x.id === it.table; })[0]; if (!t) throw new Error(tag + '找不到進度表');
+      var tc = t.classes.filter(function (c) { return c.cls === it.cls; })[0]; if (!tc) throw new Error(tag + '找不到班級 ' + it.cls);
+      var wk = tableWeeks_(t).filter(function (w) { return w.n === Number(it.week); })[0]; if (!wk) throw new Error(tag + '沒有第 ' + it.week + ' 週');
+      var cell = L_cleanCell(it.cell, t, cat.products, emails, '', tablePids_(t.id));
+      var day = L_classDays(tc).length > 1 ? Number(it.day || 0) : 0;
+      keys[t.id + '|' + wk.n + '|' + it.cls + '|' + day] = 1; done[t.id] = 1;
+      newRows.push({ tableId: t.id, week: wk.n, cls: it.cls, day: day, cell: cell, by: me.email || 'import', at: now });
+    });
+    var keep = schedCells_().filter(function (x) { return !keys[x.tableId + '|' + x.week + '|' + x.cls + '|' + (x.day || 0)]; });
+    writeSched_('教學進度內容', SCHED_CELL_HEAD, keep.map(cellRow_).concat(newRows.map(cellRow_)));
+    rtClear_(['教學進度內容', '排課']);
+    Object.keys(done).forEach(function (id) { syncSchedule_(id); });
+    var sent = 0;
+    if (rec.send) {
+      var plans = readPlans_(), want = {};
+      newRows.forEach(function (r) { want[r.tableId + '|' + r.week + '|' + r.cls + '|'] = 1; });
+      plans.forEach(function (e) {
+        if (e.term !== term || !e.sid || !e.draft) return;
+        var q = e.sid.split('|'); if (!want[q[0] + '|' + q[1] + '|' + q[2] + '|']) return;
+        e.draft = false; e.pending = null; e.updated = now; sent++;
+      });
+      flushPlanRows_(ss_().getSheetByName('排課'), plans.map(function (e) { return planRow_(e, e.created, e.updated); }));
+    }
+    return { ok: true, cells: newRows.length, sent: sent };
+  } finally { rtClear_(); lock.releaseLock(); }
+}
+
 /* 量一下各分頁讀取要多久（找哪裡慢）。只有技士、科主任、管理者能呼叫。 */
 function apiProfile() {
   requireAdmin_();
