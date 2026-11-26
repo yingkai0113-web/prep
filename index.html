@@ -668,11 +668,7 @@ function adminHTML(){
   const prevTerm=th===2?`${ty}-1`:`${ty-1}-2`;
   const termOpts=[prevTerm].concat(nextTerms.slice(1).map(([y,h])=>`${y}-${h}`));
   return `<h2>後台</h2>
-  ${switchHTML()}
   ${catMgrHTML()}
-  <div class="adm"><b>學年學期：${esc(S.term)}</b><p class="mut" style="margin:4px 0 8px">換學期時在這裡切換。老師打開來是新學期的空白排課，舊學期排過的課都還留著。</p>
-    <div class="tctl" style="margin:0"><select class="in" id="termSel" style="width:auto" aria-label="切換到哪個學期">${termOpts.map((t,i)=>`<option${i===1?' selected':''}>${t}</option>`).join('')}</select>
-    ${S.confirmTerm?`<button class="btn danger" data-a="termGo">確定切換到 ${esc(S.confirmTerm)}</button><button class="btn ghost" data-a="termCancel">取消</button>`:'<button class="btn" data-a="termAsk">切換</button>'}</div></div>
   <div class="adm"><b>新增材料單給大家選</b><p class="mut" style="margin:4px 0 8px">建好的共用材料單，所有老師都會在「共用」分頁看到。</p><button class="btn" data-a="edNew" data-sh="1">＋ 新增共用材料單</button></div>
   <div class="adm"><b>共用材料單（${shared.length}）</b>${shared.length?shared.map(p=>`<div class="arow"><span>${esc(p.title)}<small>${esc(p.serving)}${p.ownerName?(p.serving?'・':'')+'建立：'+esc(p.ownerName):''}</small></span><button class="btn sm ghost" data-a="edEdit" data-p="${esc(p.pid)}">修改</button></div>`).join(''):'<p class="mut" style="margin:6px 0 0">還沒有。</p>'}</div>
   <div class="adm"><b>預設材料單</b><p class="mut" style="margin:4px 0 8px">改這裡，所有老師選到的就是新的。原本的資料會保留，可以還原。新增分類後，上面也會出現那個分類的分頁。</p>
@@ -697,6 +693,15 @@ function lessonHTML(l,i){
 }
 const rangeLen=()=>Math.round((pd(S.rgTo)-pd(S.rgFrom))/86400000)+1;
 const rangeText=()=>`${md0(S.rgFrom)} – ${md0(S.rgTo)}`+(S.rgFrom.slice(0,4)!==S.rgTo.slice(0,4)?`（${S.rgFrom.slice(0,4)}–${S.rgTo.slice(0,4)}）`:'');
+function termBlockHTML(){
+  const [ty,th]=S.term.split('-').map(Number);
+  const prevTerm=th===2?`${ty}-1`:`${ty-1}-2`;
+  const nx=[[ty,th]];{let y=ty,h=th;for(let k=0;k<3;k++){if(h===1)h=2;else{h=1;y++;}nx.push([y,h]);}}
+  const termOpts=[prevTerm].concat(nx.slice(1).map(([y,h])=>`${y}-${h}`));
+  return `<div class="adm"><b>學年學期：${esc(S.term)}</b><p class="mut" style="margin:4px 0 8px">換學期時在這裡切換。老師打開來是新學期的空白排課，舊學期排過的課都還留著。</p>
+    <div class="tctl" style="margin:0"><select class="in" id="termSel" style="width:auto" aria-label="切換到哪個學期">${termOpts.map((t,i)=>`<option${i===1?' selected':''}>${t}</option>`).join('')}</select>
+    ${S.confirmTerm?`<button class="btn danger" data-a="termGo">確定切換到 ${esc(S.confirmTerm)}</button><button class="btn ghost" data-a="termCancel">取消</button>`:'<button class="btn" data-a="termAsk">切換</button>'}</div></div>`;
+}
 function switchHTML(){
   const on=S.accepting!==false;
   return `<div class="spill ${on?'ok':'warn'}" style="flex-wrap:wrap"><span style="flex:1;min-width:12em">老師送材料單：<b>${on?'開放中':'已關閉（老師不能新增或修改）'}</b>${S.openNote?`<small class="mut" style="display:block">${esc(S.openNote)}</small>`:''}</span>${on?(S.confirmClose?`<button class="btn danger sm" data-a="subClose">確定關閉</button><button class="btn ghost sm" data-a="subCancel">取消</button>`:`<button class="btn ghost sm" data-a="subAskClose">關閉老師送單</button>`):`<button class="btn sm" data-a="subOpen">重新開放</button>`}</div>`;
@@ -750,7 +755,7 @@ async function loadStatus(){
 }
 function statusHTML(){
   const d=S.sc.data;
-  let h=switchHTML()+extraSwitchHTML();
+  let h=termBlockHTML()+switchHTML()+extraSwitchHTML();
   if(!S.ss||!d)return h+`<p class="load">${S.err?'':'載入中…'}</p>`;
   const de=S.sc.datesEd;
   h+=`<div class="card"><div class="cb" style="padding-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span>${d.canConfig&&!de?'<button class="btn sm ghost" data-a="scDates">設定日期</button>':''}</div>
@@ -1230,7 +1235,7 @@ document.addEventListener('click',async ev=>{
   if(a==='termCancel'){S.confirmTerm='';return render();}
   if(a==='termGo'){
     const to=S.confirmTerm;S.confirmTerm='';S.busy='term';render();
-    try{await run('apiSetTerm',to);S.step=1;S.sent=null;await boot();S.view='admin';S.info=`已切換到 ${to}。老師重新整理頁面就是新學期。`;}
+    try{await run('apiSetTerm',to);S.step=1;S.sent=null;await boot();S.view='status';loadStatus();S.info=`已切換到 ${to}。老師重新整理頁面就是新學期。`;}
     catch(e){S.err=e.message;}
     S.busy='';return render();}
   if(a==='okTool'){const i=+b.dataset.i,k=eKey(S.entries[i]);if(S.seen4.has(k))S.seen4.delete(k);else{S.seen4.add(k);S.open4.delete(i);}return render();}
