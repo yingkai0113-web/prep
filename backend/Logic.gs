@@ -609,7 +609,7 @@ function L_docxSplitFiles(model) {
   var cell = function (i, t, jc) { return '<w:tc><w:tcPr><w:tcW w:w="' + W[i] + '" w:type="dxa"/></w:tcPr>' + para(t, 28, false, { jc: jc }) + '</w:tc>'; };
   var noteCell = function (t, hdr, vm) { return '<w:tc><w:tcPr><w:tcW w:w="' + W[3] + '" w:type="dxa"/>' + (vm === 'start' ? '<w:vMerge w:val="restart"/>' : vm === 'cont' ? '<w:vMerge/>' : '') + (vm ? '<w:vAlign w:val="center"/>' : '') + '</w:tcPr>' + para(vm === 'cont' ? '' : t, 28, false, { jc: 'center' }) + '</w:tc>'; };
   var row = function (a, hdr, vm) { return '<w:tr><w:trPr><w:cantSplit/>' + (hdr ? '<w:tblHeader/>' : '') + '</w:trPr>' + cell(0, a[0], 'center') + cell(1, a[1], hdr ? 'center' : null) + cell(2, a[2], 'center') + noteCell(a[3], hdr, vm) + '</w:tr>'; };
-  var body = para('員林農工食品加工科', 44, false);
+  var body = para('員林農工食品加工科', 44, false, { jc: 'center' });
   model.forEach(function (d, i) {
     var p = L_parseDate(d.date);
     body += para('上課日期：' + (p.y - 1911) + '.' + p.m + '.' + p.d + '(' + L_weekday(d.date) + ')', 44, true, { keep: 1, before: i ? 240 : 0 });
