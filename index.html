@@ -1119,10 +1119,9 @@ document.addEventListener('click',async ev=>{
   if(a==='pNo'){S.sc.print=null;return render();}
   if(a==='pGo'){
     const p=S.sc.print,t=schedTable(S.sc.tab),ids=p.scope==='one'?[t.id]:[],ov={};
-    if(isAth(t)&&p.scope==='one'&&!p.blank){S.sc.print=null;render();await athPrintDoc(t,p.from,p.to,p.per||3);return;}
     Object.values(pendMap()).forEach(x=>{if(p.scope==='one'&&x.tid!==t.id)return;(ov[x.tid]=ov[x.tid]||[]).push({week:x.week,cls:x.cls,day:x.day,cell:x.cell});});
     S.sc.print=null;S.busy='製作中…';render();
-    try{await runFmt('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);}catch(er){S.err=er.message;}
+    try{if(isAth(t)&&p.scope==='one'&&!p.blank)await runFmt('apiExportScheduleTables',ids,ov,false,false,{from:p.from,to:p.to,per:p.per||3});else await runFmt('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);}catch(er){S.err=er.message;}
     S.busy='';return render();}
   if(a==='scWf'){S.sc.wf=b.dataset.v;return render();}
   if(a==='ssOpenT'){S.view='sched';S.step=0;S.sent=null;S.sc.tab=b.dataset.id;S.sc.delAsk='';S.sc.clip=null;window.scrollTo(0,0);if(!S.sc.data)await loadSched();return render();}
@@ -1886,8 +1885,8 @@ function printModal(){
     <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="one" ${p.scope==='one'?'checked':''}> <span>只有這一張（${esc(t.dept)}・${esc(t.course)}）</span></label>
     <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="all" ${p.scope==='all'?'checked':''}> <span>全部進度表（你看得到的每一張，每張一頁）</span></label>
     ${p.blank?'':`<label style="display:flex;gap:8px;align-items:center;padding:8px 0 0"><input type="checkbox" data-k="pMine" ${p.mine?'checked':''}> <span>把我開單的格子標黃色</span></label>`}
-    ${isAth(t)&&p.scope==='one'&&!p.blank?athPrintOpts(p,t):fmtPick()}
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="pNo">取消</button><button class="btn" data-a="pGo">${isAth(t)&&p.scope==='one'&&!p.blank?'列印／存成 PDF':'匯出'}</button></div></div></div>`;
+    ${isAth(t)&&p.scope==='one'&&!p.blank?athPrintOpts(p,t)+fmtPick():fmtPick()}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="pNo">取消</button><button class="btn" data-a="pGo">匯出</button></div></div></div>`;
 }
 function pasteAskModal(){
   const a=S.sc.pasteAsk;
@@ -2152,7 +2151,7 @@ function athSlotOf(cell,rid,rows){
   const lg=rows[1]||rows[0];if(!lg||lg.id!==rid)return null;
   return cell.kind==='note'?{r:rid,pids:[],q:{},txt:cell.note,st:''}:{r:rid,pids:cell.groups.flatMap(g=>g.pids),q:{},txt:'',st:''};
 }
-const pServ=pid=>{const p=S.cat.pmap[pid];if(p)return p.serving||'';const c=S.sc&&S.sc.data&&S.sc.data.cellProducts&&S.sc.data.cellProducts[pid];return c?(c.serving||''):'';};
+const pServ=pid=>{const p=S.cat.pmap[pid];if(p)return p.serving||(p.dsets?p.dsets+'組':'');const c=S.sc&&S.sc.data&&S.sc.data.cellProducts&&S.sc.data.cellProducts[pid];return c?(c.serving||''):'';};      // 份量說明；材料單沒寫的，就用預設組數
 const athQty=(s,p)=>(s.q&&s.q[p]!==undefined)?s.q[p]:pServ(p);        // 沒自己填數量，就用材料單的份量說明
 const athLines=s=>s?[...(s.pids||[]).map(p=>{const q=athQty(s,p);return pTitle(p)+(q?`(${q})`:'');}),...(s.txt?[s.txt]:[])]:[];
 const athSlotStyle=s=>!s?'':(s.st==='y'?'background:#FFFF00;':'')+(s.st==='r'?'color:#C00000;':s.st==='p'?'color:#7030A0;':'');
@@ -2229,7 +2228,7 @@ function athLastFilled(t){
 }
 function athPrintOpts(p,t){
   const ws=tWeeks(t);if(p.from===undefined){p.from=ws[0]?ws[0].mon:'';p.to=(athLastFilled(t)||{}).mon||'';p.per=3;}
-  return `<b style="display:block;margin-top:8px">要印哪幾週（排到哪就印到哪）</b><div class="rgrow"><label>從 <input class="in" type="date" data-ath="prFrom" value="${esc(p.from)}"></label><label>到 <input class="in" type="date" data-ath="prTo" value="${esc(p.to)}"></label><label>一頁放 <select class="in" data-ath="prPer" style="width:auto">${[1,2,3,4].map(n=>`<option value="${n}" ${(+p.per||3)===n?'selected':''}>${n} 週</option>`).join('')}</select></label></div><p class="mut" style="margin:4px 0 0">格式跟 Word 版一樣（A4 橫式）。按「列印／存成 PDF」後，在列印視窗選「另存為 PDF」或直接印。</p>`;
+  return `<b style="display:block;margin-top:8px">要印哪幾週（排到哪就印到哪）</b><div class="rgrow"><label>從 <input class="in" type="date" data-ath="prFrom" value="${esc(p.from)}"></label><label>到 <input class="in" type="date" data-ath="prTo" value="${esc(p.to)}"></label><label>一頁放 <select class="in" data-ath="prPer" style="width:auto">${[1,2,3,4].map(n=>`<option value="${n}" ${(+p.per||3)===n?'selected':''}>${n} 週</option>`).join('')}</select></label></div><p class="mut" style="margin:4px 0 0">格式跟 Word 版一樣（A4 橫式，時間列、週一到週五）。</p>`;
 }
 function athApply(E,clear){
   const t=schedTable(E.tid),c=t.classes[0],rows=athRowsFor(t,E.w),xs=E.all?athDays(t,E.w):[E.x];
@@ -2269,8 +2268,8 @@ function athPrintHTML(t,from,to,per){
 async function athPrintDoc(t,from,to,per){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(f);
   const d=f.contentDocument,title=String(t.title||t.course).replace(/[<>&]/g,'');
-  d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>@page{size:A4 landscape;margin:.35in}html,body{margin:0;padding:0}body{font-family:'標楷體','DFKai-SB','BiauKai','Times New Roman',serif;color:#000}
-.pg{page-break-after:always}.pg:last-child{page-break-after:auto}table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{border:1px solid #000;text-align:center;vertical-align:middle;font-weight:700;font-size:13pt;padding:2px 3px;line-height:1.25}
+  d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>@page{size:A4 landscape;margin:.35in}html,body{margin:0;padding:0}body{font-family:'標楷體','DFKai-SB','BiauKai','Times New Roman',serif;color:#000;box-sizing:border-box;padding-right:6px}
+.pg{page-break-after:always}.pg:last-child{page-break-after:auto}table{width:98.5%;border-collapse:collapse;table-layout:fixed}td,th{border:1px solid #000;text-align:center;vertical-align:middle;font-weight:700;font-size:13pt;padding:2px 3px;line-height:1.25}
 th.tt{font-size:14pt;background:#fff}th.tm,td.tm{width:8.5%;font-size:12pt}tr.wh th{background:#DAEEF3;border-top:2.5px solid #000}</style></head><body>${athPrintHTML(t,from,to,per)}</body></html>`);d.close();
   await new Promise(r=>setTimeout(r,300));
   const oldT=document.title;document.title=title;

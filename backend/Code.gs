@@ -1273,7 +1273,8 @@ function syncSchedule_(tableId, weekN, cls, day, force) {
 /* 教學進度表先匯出列印（拿去跟老師們討論）：不用送給技士，也不用先儲存——畫面上還沒儲存的修改（overlay）也會印進去。
  * tableIds：要哪幾張（不給 = 你看得到的全部）；overlay：{表ID: [{week, cls, day, cell（null = 清除）}]}；mine = true 就把「你開單」的格子標黃色；
  * blank = true：印空白的格式（週次、日期、班級、分組都在，格子是空的、列高比較高），拿去用紙本討論、手寫。 */
-function apiExportScheduleTables(tableIds, overlay, mine, blank, fmt) {
+function apiExportScheduleTables(tableIds, overlay, mine, blank, a5, a6) {
+  var opts = a6 === undefined ? null : a5, fmt = a6 === undefined ? a5 : a6;       // 技藝競賽選手可以多帶 {from, to, per}（選哪幾週、一頁幾週）
   var me = whoami_(), term = setting_('目前學年學期', ''), want = Array.isArray(tableIds) ? tableIds.map(String) : [];
   var tables = schedTables_(term).filter(function (t) { return canSeeTable_(me, t) && (!want.length || want.indexOf(t.id) >= 0) && tableWeeks_(t).length; })
     .sort(function (a, b) { return (a.dept + a.course) < (b.dept + b.course) ? -1 : (a.dept + a.course) > (b.dept + b.course) ? 1 : 0; });
@@ -1291,8 +1292,9 @@ function apiExportScheduleTables(tableIds, overlay, mine, blank, fmt) {
       if (!ch.cell) { delete map[key]; return; }
       try { map[key] = L_cleanCell(ch.cell, t, cat.products, users, me.email, tablePids_(t.id)); } catch (e) { /* 這格的內容有問題，不印 */ }
     });
-    return L_docSchedule(t, tableWeeks_(t), map, { term: term, names: names, products: cat.products, highlight: blank !== true && mine === true ? me.email : '', printed: printed, rowH: blank === true ? 44 : 0, n: tables.length > 1 ? String(i + 1) : '' });
+    return L_docSchedule(t, tableWeeks_(t), map, { term: term, names: names, products: cat.products, highlight: blank !== true && mine === true ? me.email : '', printed: printed, rowH: blank === true ? 44 : 0, n: tables.length > 1 ? String(i + 1) : '', athRows: athRowsOf_((function (o) { o[t.id] = 1; return o; })({}))[t.id], from: opts && opts.from, to: opts && opts.to, per: opts && opts.per });
   });
+  docs = [].concat.apply([], docs);
   return buildXlsx_((blank === true ? '教學進度表（空白格式）_' : '教學進度表（討論用）_') + term, docs, fmt);
 }
 function schedDocs_(tableIds, highlight) {
@@ -1300,11 +1302,12 @@ function schedDocs_(tableIds, highlight) {
   var tables = schedTables_(term).filter(function (t) { return tableIds.indexOf(t.id) >= 0 && tableWeeks_(t).length; }), cells = schedCells_(), names = teacherNames_(), cat = loadCatalog_();
   var printed = Utilities.formatDate(new Date(), TZ, 'yyyy/MM/dd');
   if (!tables.length) return [];
-  return tables.map(function (t, i) {
+  var out = tables.map(function (t, i) {
     var map = {};
     cells.forEach(function (x) { if (x.tableId === t.id) map[L_cellKey(x.week, x.cls, x.day || 0)] = x.cell; });
-    return L_docSchedule(t, tableWeeks_(t), map, { term: term, names: names, products: cat.products, highlight: highlight, printed: printed, n: tables.length > 1 ? String(i + 1) : '' });
+    return L_docSchedule(t, tableWeeks_(t), map, { term: term, names: names, products: cat.products, highlight: highlight, printed: printed, n: tables.length > 1 ? String(i + 1) : '', athRows: athRowsOf_((function (o) { o[t.id] = 1; return o; })({}))[t.id] });
   });
+  return [].concat.apply([], out);
 }
 
 /* 教學進度表每一堂課，現在是「已送出」、「待確認」（排給老師了、老師還沒確認送出）還是「沒有人」（排課被刪掉了）。

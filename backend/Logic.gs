@@ -1006,6 +1006,7 @@ function L_daysText(days, short) {
 /* 進度表文件（匯出材料單的第一頁）：A4 直印、一頁放得下，一次呈現這個年級的兩個班 */
 function L_docSchedule(table, weeks, cells, ctx) {
   ctx = ctx || {};
+  if (L_isAthTable(table) && !ctx.noAth) return L_docSchedAth(table, weeks, cells, ctx);       // 技藝競賽選手：像 Word 檔的週格式（回傳好幾張）
   var names = ctx.names || {}, products = ctx.products || {}, hl = String(ctx.highlight || '').toLowerCase();
   var T = function (v, o) { return L_c(v, Object.assign({ ff: L_FONT, sz: 11, va: 'center' }, o)); };
   var TR = function (runs, o) { return L_c(runs.map(function (r) { return r.v; }).join(''), Object.assign({ ff: L_FONT, sz: 11, va: 'center', runs: runs }, o)); };   // 一格好幾種字（產品名稱粗體、老師名稱小字灰色）
@@ -1100,6 +1101,65 @@ function L_docSchedule(table, weeks, cells, ctx) {
   return { name: nm, group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18, page: Object.assign({}, L_PAGE, { fit: 'page', grow: true, m: { l: 0.3, r: 0.3, t: 0.3, b: 0.3, h: 0.1, f: 0.1 } }) };
 }
 
+
+/* 技藝競賽選手的進度表（匯出）：每一週一個區塊，左邊時間列、上面週一到週五，一頁放 ctx.per 週；ctx.from / ctx.to 選要印哪幾週 */
+var L_ATH_BG = { pk: '#FDE9D9', gr: '#EAF1DD', bl: '#DAEEF3' };
+function L_docSchedAth(table, weeks, cells, ctx) {
+  var products = ctx.products || {}, cl = L_sortClasses(table.classes)[0], regD = L_classDays(cl), BD = 'lrtb';
+  var st = ctx.athRows || {}, defRows = (st.def && st.def.length) ? st.def : [{ id: 'a1', t: '08:00-09:00', bg: '' }, { id: 'a2', t: '09:00-12:00', bg: '' }, { id: 'a3', t: '12:00-13:00', bg: 'pk' }, { id: 'a4', t: '13:00-16:00', bg: '' }, { id: 'a5', t: '16:00-18:00', bg: 'gr' }];
+  var rowsOf = function (w) { return (st.w && st.w[w.n] && st.w[w.n].length) ? st.w[w.n] : defRows; };
+  var dayKey = function (d) { return (regD.length === 1 && d === regD[0]) ? 0 : d; };
+  var cellAt = function (w, d) { return cells[L_cellKey(w.n, cl.cls, dayKey(d))]; };
+  var daysOf = function (w) { var out = regD.slice(); for (var d = 1; d <= 7; d++) if (regD.indexOf(d) < 0 && cellAt(w, d)) out.push(d); return out.sort(); };
+  var slotOf = function (cell, rid, rows) {
+    if (!cell) return null;
+    if (cell.slots) { for (var i = 0; i < cell.slots.length; i++) if (cell.slots[i].r === rid) return cell.slots[i]; return null; }
+    var lg = rows[1] || rows[0]; if (!lg || lg.id !== rid) return null;
+    if (cell.kind === 'note') return { pids: [], q: {}, txt: cell.note, st: '' };
+    var pids = []; cell.groups.forEach(function (g) { g.pids.forEach(function (p) { pids.push(p); }); });
+    return { pids: pids, q: {}, txt: '', st: '' };
+  };
+  var linesOf = function (s) {
+    if (!s) return [];
+    var out = (s.pids || []).map(function (p) { var q = (s.q && s.q[p] !== undefined) ? s.q[p] : ((products[p] && (products[p].serving || (products[p].dsets ? products[p].dsets + '組' : ''))) || ''); return (products[p] ? products[p].title : p) + (q ? '(' + q + ')' : ''); });
+    if (s.txt) out.push(s.txt);
+    return out;
+  };
+  var sig = function (s) { return s ? JSON.stringify([s.pids, s.q, s.txt, s.st]) : ''; };
+  var a = ctx.from ? L_weekStart(ctx.from) : '', b = ctx.to ? L_weekStart(ctx.to) : '9999-12-31', per = Math.max(1, Math.min(4, Number(ctx.per) || 3));
+  var ws = weeks.filter(function (w) { return (!a || w.mon >= a) && w.mon <= b; });
+  if (!ws.length) return [];
+  var WDN = '日一二三四五六', docs = [], title = table.title || (table.course || '技藝競賽選手');
+  var T = function (v, o) { return L_c(v, Object.assign({ ff: L_FONT, sz: 12, b: 1, al: 'c', va: 'center', bd: BD, wrap: 1 }, o)); };
+  for (var i = 0; i < ws.length; i += per) {
+    var chunk = ws.slice(i, i + per), nC = 1 + Math.max.apply(null, chunk.map(function (w) { return daysOf(w).length; })), rows = [], merges = [], heights = {};
+    var cw = [11]; for (var k = 1; k < nC; k++) cw.push(24);
+    var r0 = rows.push([T(title, { sz: 14 })]) - 1; for (k = 1; k < nC; k++) rows[r0][k] = T('', {}); merges.push([r0, 0, r0, nC - 1]); heights[r0] = 26;
+    chunk.forEach(function (w) {
+      var xs = daysOf(w), rr = rowsOf(w);
+      var hd = [T('時間/日期', { bg: '#DAEEF3' })]; xs.forEach(function (d) { hd.push(T(L_md2(L_addDays(w.mon, d - 1)).replace(/^0/, '') + '(' + WDN.charAt(d % 7) + ')', { bg: '#DAEEF3' })); });
+      while (hd.length < nC) hd.push(T('', { bg: '#DAEEF3' }));
+      var hi = rows.push(hd) - 1; heights[hi] = 20;
+      rr.forEach(function (row) {
+        var bg = row.bg ? L_ATH_BG[row.bg] : undefined, sl = xs.map(function (d) { return slotOf(cellAt(w, d), row.id, rr); });
+        var merged = xs.length > 1 && sl[0] && !(sl[0].pids || []).length && sl[0].txt && sl.every(function (s) { return sig(s) === sig(sl[0]); });
+        var line = [T(String(row.t || '').replace('-', '-\n'), { bg: bg })], need = 0;
+        var mk = function (s) {
+          var ls = linesOf(s), col = s && s.st === 'r' ? 'C00000' : s && s.st === 'p' ? '7030A0' : '000000';
+          need = Math.max(need, ls.length * 16 + 8);
+          return L_c(ls.join('\n'), { ff: L_FONT, sz: 12, b: 1, al: 'c', va: 'center', bd: BD, wrap: 1, bg: (s && s.st === 'y') ? '#FFFF00' : bg, color: col, runs: ls.map(function (t, q) { return { v: (q ? '\n' : '') + t, b: 1, sz: 12, color: col }; }) });
+        };
+        if (merged) { line.push(mk(sl[0])); for (var m = 1; m < nC - 1; m++) line.push(T('', { bg: bg })); }
+        else { sl.forEach(function (s) { line.push(mk(s)); }); while (line.length < nC) line.push(T('', { bg: bg })); }
+        var ri = rows.push(line) - 1; heights[ri] = Math.max(34, need);
+        if (merged) merges.push([ri, 1, ri, nC - 1]);
+      });
+    });
+    docs.push({ name: '進度表' + (ws.length > per ? String(i / per + 1) : ''), group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18,
+                page: Object.assign({}, L_PAGE, { fit: 'page', grow: true, orient: 'landscape', m: { l: 0.4, r: 0.4, t: 0.4, b: 0.4, h: 0.1, f: 0.1 } }) });
+  }
+  return docs;
+}
 
 /* 進度表排了、但老師還沒送出的課：進度表每一堂課現在是「已送出／待確認（老師還沒確認）／沒有人（排課被刪掉了）」哪一種
  * start、end 給空字串 = 整個學期 */
