@@ -315,7 +315,7 @@ function render(){
   if(!S.user){return;}
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
   if(S.trial)h+=`<div style="background:#E8590C;color:#fff;padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:700;text-align:center">⚠ 目前是「試用頁面」：這裡的資料是測試用的，怎麼改、刪都不會影響正式資料。${canTech()?'<button class="btn sm" style="margin-left:8px;background:#fff;color:#E8590C" data-a="trialOff">回到正式資料</button>':''}</div>`;
-  const views=S.asT?[['sched','教學進度表'],S.extraOpen&&['extra','額外材料單']].filter(Boolean):[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','送單狀況'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','以前學期'],isAdmin()&&['admin','後台']].filter(Boolean);
+  const views=S.asT?[['sched','教學進度表'],S.extraOpen&&['extra','額外材料單']].filter(Boolean):[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','教學進度表管理'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','查詢舊資料'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
   if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>老師模式（預覽）：你正在看 <b>${esc(uName(S.asT))}</b> 的教學進度表。只能看，不能修改。</span><button class="btn sm ghost" data-a="asTpick">換一位老師</button></div>`;
   if(S.pickT){const l=S.pickList;h+=`<div class="card" style="margin:10px 0"><div class="cb"><b>老師模式：要看哪一位老師的畫面？</b>${l?`<select class="in" id="asTsel" style="width:100%;margin:8px 0">${l.filter(x=>x.role==='老師').concat(l.filter(x=>x.role!=='老師')).map(x=>`<option value="${esc(x.email)}"${x.email===S.asT?' selected':''}>${esc(x.name)}（${esc(x.role)}）</option>`).join('')}</select><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-a="asTcancel">取消</button><button class="btn" data-a="asTgo">進入老師模式</button></div>`:'<p class="mut">載入名單中…</p>'}</div></div>`;}
@@ -714,7 +714,7 @@ async function archPick(term){
 }
 function archPageHTML(){
   const A=S.arch||{};
-  let h=`<h2 style="margin:0 0 4px">以前學期</h2><p class="mut" style="margin:0 0 8px">只有管理者、科主任、技士看得到，只能看、匯出，不能改。</p>`;
+  let h=`<h2 style="margin:0 0 4px">查詢舊資料</h2><p class="mut" style="margin:0 0 8px">只有管理者、科主任、技士看得到，只能看、匯出，不能改。</p>`;
   if(!A.terms)return h+`<p class="load">${S.err?'':'載入中…'}</p>`;
   if(!A.terms.length)return h+'<p class="mut">還沒有以前的學期。</p>';
   h+=`<div class="card"><div class="cb" style="padding-top:12px"><label class="lbl">選學期</label><select class="in" data-k="archTerm" style="width:auto"><option value="">請選學期</option>${A.terms.map(t=>`<option ${A.term===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
@@ -1802,7 +1802,7 @@ function schedHTML(){
   const pc=pendCount();
   if(pc)h+=`<div class="spill warn" style="flex-wrap:wrap;position:sticky;top:0;z-index:6"><span style="flex:1;min-width:11em">✎ 有 <b>${pc}</b> 格改了還沒儲存。<b>按「儲存進度表」才會生效</b>，排給老師的材料單才會出現。</span><button class="btn sm" data-a="scSave" ${S.busy?'disabled':''}>${S.busy||'儲存進度表'}</button><button class="btn ghost sm" data-a="scDiscard">放棄修改</button></div>`;
   if(!d.weeks.length&&!d.tables.some(x=>x.weeks&&x.weeks.length))return h;
-  if(!d.tables.length)return h+`<p class="sub">這學期還沒有進度表。${d.canConfig?'請到「送單狀況」分頁設定。':'請技士、科主任、管理者先設定這學期要有哪些進度表。'}</p>`;
+  if(!d.tables.length)return h+`<p class="sub">這學期還沒有進度表。${d.canConfig?'請到「教學進度表管理」分頁設定。':'請技士、科主任、管理者先設定這學期要有哪些進度表。'}</p>`;
   let t=schedTable(S.sc.tab)||d.tables[0];S.sc.tab=t.id;
   const dept=t.dept,list=d.tables.filter(x=>x.dept===dept);
   h+=`<div class="seg" role="group" aria-label="部別" style="margin-bottom:8px">${DEPTS.map(x=>`<button data-a="scDept" data-d="${x}" class="${dept===x?'on':''}">${x}</button>`).join('')}</div>
@@ -1999,7 +1999,7 @@ function ssHTML(){
   const depts=['日間部','夜間部'].map(dp=>{const l=rq.filter(x=>x.dept===dp);return l.length?`<div class="ssd">${dp}</div>${l.map(row).join('')}`:'';}).join('')+(()=>{const o=rq.filter(x=>x.dept!=='日間部'&&x.dept!=='夜間部');return o.length?`<div class="ssd">其他</div>${o.map(row).join('')}`:'';})();
   const pendRq=rq.filter(x=>x.state!=='done').length;
   const skipped=(d.required||[]).filter(x=>x.skip);
-  return `<div class="card"><div class="cb" style="padding-top:12px"><b style="font-size:17px">教學進度表送單狀況</b><small class="mut" style="display:block">${rq.length} 門課要排進度表${pendRq?`・<span style="color:var(--err)">${pendRq} 門還沒完成</span>`:'・全部完成 ✓'}　｜　已排 ${all.length} 堂，已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}</small>
+  return `<div class="card"><div class="cb" style="padding-top:12px"><b style="font-size:17px">教學進度表管理</b><small class="mut" style="display:block">${rq.length} 門課要排進度表${pendRq?`・<span style="color:var(--err)">${pendRq} 門還沒完成</span>`:'・全部完成 ✓'}　｜　已排 ${all.length} 堂，已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}</small>
     <div style="margin:8px 0"><button class="btn" data-a="rqNew">＋ 新增課程</button> <button class="btn" data-a="rqNewJr">＋ 新增國中技藝班（選國中）</button></div><p class="mut" style="margin:8px 0 6px">每一門要排進度表的課，授課老師有沒有送單。點一列可以看那張進度表；課程、班級、授課老師也在這裡設定，設定一次，以後每學期都照這份清單。</p>${depts||'<p class="mut">還沒設定哪些課要排進度表。</p>'}
     ${skipped.length?`<div class="ssd">這學期不開</div>${skipped.map(x=>`<div class="ssact" style="justify-content:space-between"><span class="mut">${esc(x.dept)}・${esc(x.course)}</span><button class="btn sm ghost" data-a="rqSkip" data-id="${esc(x.id)}" data-v="0" ${S.rqBusy?'disabled':''}>${S.rqBusy===x.id?'處理中…':'恢復（這學期要開）'}</button></div>`).join('')}`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}</div></div></div>`;

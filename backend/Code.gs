@@ -727,7 +727,7 @@ function apiTermArchive(term) {
   var terms = Object.keys(seen).filter(function (t) { return t !== cur; }).sort().reverse();
   term = String(term || '');
   if (!term) return { current: cur, terms: terms };
-  if (term === cur) throw new Error('這是目前的學期，請直接看「送單狀況」。');
+  if (term === cur) throw new Error('這是目前的學期，請直接看「教學進度表管理」。');
   var nm = teacherNames_(), plans = readPlans_().filter(function (e) { return e.term === term; }), cnt = {};
   plans.forEach(function (e) { var k = e.dept + '|' + e.course; var c = cnt[k] || (cnt[k] = { total: 0, sent: 0, extra: 0 }); c.total++; if (!e.draft) c.sent++; if (!e.sid) c.extra++; });
   var cells = schedCells_(), has = {}; cells.forEach(function (x) { has[x.tableId] = (has[x.tableId] || 0) + 1; });
