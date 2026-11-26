@@ -1705,7 +1705,7 @@ function scCellModal(){
   const step=e.step||'kind',isLesson=e.kind==='lesson';
   const nSteps=isLesson?(hasGroups?3:2):2,stepNo=step==='kind'?1:step==='mode'?2:(isLesson?(hasGroups?3:2):2);
   const big=(act,attr,on,text,sub)=>`<button class="opt ${on?'on':''}" data-a="${act}" ${attr} aria-pressed="${on}"><span class="rd">${on?'◉':'○'}</span><span><b>${text}</b>${sub?`<small>${sub}</small>`:''}</span></button>`;
-  const gBox=(g,i)=>`<div class="card" style="margin:10px 0"><div class="cb" style="padding-top:10px">${g.label?`<b style="font-size:16px">${esc(g.label)}</b>`:''}
+  const gBox=(g,i)=>`<div class="card" style="margin:16px 0;border:2px solid ${i%2?'#B65F00':'#1B6B54'};box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="padding:8px 14px;font-size:17px;font-weight:700;color:#fff;background:${i%2?'#B65F00':'#1B6B54'};border-radius:10px 10px 0 0">${g.label?esc(g.label):'上課內容'}</div><div class="cb" style="padding-top:10px">
     <label class="lbl">哪位老師開單？</label><select class="in" data-k="scteacher" data-g="${i}"><option value="">請選老師</option>${users.map(u=>`<option value="${esc(u.email)}" ${u.email===g.teacher?'selected':''}>${esc(u.name)}</option>`).join('')}</select>
     <label class="lbl" style="margin-top:8px">上什麼課程（產品）？可以選好幾個</label>
     <div>${g.pids.map(p=>`<span class="pchip2">${esc(pTitle(p))}<button data-a="scRemP" data-g="${i}" data-p="${esc(p)}" aria-label="拿掉">×</button></span>`).join('')||'<span class="mut">還沒選</span>'}</div>
@@ -1718,11 +1718,11 @@ function scCellModal(){
   }else if(step==='mode'){
     q='全部一起上，還是分組上課？';
     body=big('scMode','data-m="joint"',e.mode==='joint','全部一起上','一位老師開單')+big('scMode','data-m="split"',e.mode==='split','分組上課',esc((t.groups||[]).join('、'))+'各有自己的老師和課程');
-    foot=`<button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scNext">下一步 →</button>`;
+    foot=`<button class="btn ghost" data-a="scCellNo">取消</button><button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scNext">下一步 →</button>`;
   }else if(!isLesson){
     q='寫什麼？';
     body=`<input class="in" style="width:100%" data-k="scnote" maxlength="40" value="${esc(e.note)}" placeholder="例如：教師節放假"><div style="margin-top:8px">${SC_NOTES.map(n=>`<button class="pchip2" style="border:0;cursor:pointer" data-a="scChip" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
-    foot=`<button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scCellSave">儲存</button>`;
+    foot=`<button class="btn ghost" data-a="scCellNo">取消</button><button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scCellSave">儲存</button>`;
   }else{
     q=e.mode==='split'?'各組的老師和課程是？':(hasGroups?'老師和課程是？':'誰開單、上什麼課程？');
     body=`${pv?`<button class="btn sm" style="margin-bottom:6px" data-a="scSwapFill">⇄ 接上一次有實習的那週（單雙互換，老師跟著產品走）</button>`:''}${e.groups.map(gBox).join('')}
@@ -1730,7 +1730,7 @@ function scCellModal(){
         <label class="lbl" style="margin-top:6px">進度表上顯示的文字（不填就顯示課程名稱，例如「月餅週」）</label><input class="in" style="width:100%" data-k="sclabel" maxlength="30" value="${esc(e.label)}">
         ${e.has?`<div style="margin-top:10px"><b>複製這一格（用已儲存的內容）</b><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${t.classes.filter(x=>x.cls!==e.cl).map(x=>`<button class="btn sm ghost" data-a="scCopyTo" data-cl="${esc(x.cls)}">→ ${esc(x.cls)}（同一週）</button>`).join('')}<button class="btn sm ghost" data-a="scCopyClip">複製，再點別的格子貼上</button></div></div>`:''}
       </details>`;
-    foot=`${e.has?'<button class="btn ghost" data-a="scCellClear">清除這格</button>':''}<button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scCellSave">儲存</button>`;
+    foot=`${e.has?'<button class="btn ghost" data-a="scCellClear">清除這格</button>':''}<button class="btn ghost" data-a="scCellNo">取消</button><button class="btn ghost" data-a="scBack">← 上一步</button><button class="btn" data-a="scCellSave">儲存</button>`;
   }
   return `<div class="modal"><div class="mb"><div class="mut" style="font-size:13px">${wLabel(w)}　${esc(e.cl)}・${esc(t.course)}・${daysText([dayN])} ${md(date)}${clDays(c).includes(dayN)?'':'　<span class="tg">加練</span>'}</div>
     <h2 style="margin:4px 0 2px">${q}</h2><p class="mut" style="margin:0 0 6px;font-size:13px">第 ${stepNo}／${nSteps} 步</p>
