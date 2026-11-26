@@ -1543,7 +1543,7 @@ function buildXlsx_(name, docs, fmt, order) {
 function buildOne_(name, docs, fmt) {
   if (fmt === 'pdf') return { name: name + '.pdf', html: L_docsToHtml(docs) };   // PDF 由使用者的瀏覽器轉（用電腦上的標楷體；Google 伺服器沒有標楷體）
   var files = L_xlsxFiles(docs);
-  var blobs = files.map(function (f) { return Utilities.newBlob(f.xml, 'application/xml', f.name); });
+  var blobs = files.map(function (f) { return f.b64 ? Utilities.newBlob(Utilities.base64Decode(f.b64), 'image/jpeg', f.name) : Utilities.newBlob(f.xml, 'application/xml', f.name); });
   var zip = Utilities.zip(blobs, name + '.xlsx');
   return { name: name + '.xlsx', base64: Utilities.base64Encode(zip.getBytes()) };
 }
