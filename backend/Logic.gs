@@ -525,6 +525,51 @@ function L_docWeek(agg) {
   return [d1, d2, d3];
 }
 
+
+/* =====================================================================
+ * 估價單（報價單）：照廠商（金益昇食品原料行）的報價單格式，列出要請購的材料和器具，廠商自己填單價。
+ * rec = { date: 送貨日期 yyyy-mm-dd, today: 送單日期 yyyy-mm-dd, purpose: 用途備註, items: [{ name, qty, unit, note }] }
+ * ===================================================================== */
+var L_QUOTE = { vendor: '金益昇食品原料行', client: '員林農工', tax: '60004108', contact: '蘇修妍', phone: '傳真8385451', addr: '彰化縣員林鎮員水路二段313號',
+                vTel: '048-336-630', vFax: '048-318-385', vAddr: '彰化縣員林鎮員鹿路140號1F' };
+function L_docQuote(rec) {
+  var Q = L_QUOTE, T = function (v, o) { return L_c(v, Object.assign({ ff: L_FONT, sz: 12, va: 'center' }, o)); };
+  var d = L_parseDate(rec.today), roc = d ? '中華民國' + (d.y - 1911) + '年 ' + d.m + '月 ' + d.d + '日' : '';
+  var dv = L_parseDate(rec.date), rm = (rec.purpose ? String(rec.purpose) : '') + (dv ? '（' + L_pad(dv.m) + '/' + L_pad(dv.d) + '送貨）' : '');
+  var items = (rec.items || []).filter(function (x) { return x && x.name; });
+  var nRows = Math.max(21, items.length);
+  var rows = [], merges = [], heights = {};
+  var line = function (r, h) { heights[r] = h; };
+  rows.push([T(Q.vendor, { sz: 18, al: 'c' })]); merges.push([0, 0, 0, 6]); line(0, 30);
+  rows.push([T('報    價   單', { sz: 18, al: 'c' })]); merges.push([1, 0, 1, 6]); line(1, 26);
+  var info = function (a, b, c2, d2, bot) {
+    var r = rows.length, o = bot ? { bd: 'b' } : {};
+    var row = [T(a, Object.assign({ al: 'l' }, o)), T(b, Object.assign({ al: 'l' }, o)), T('', o), T(c2, Object.assign({ al: 'l' }, o)), T(d2, Object.assign({ al: 'l', fmt: '@' }, o)), T('', o), T('', o)];
+    rows.push(row); merges.push([r, 1, r, 2]); merges.push([r, 4, r, 6]); line(r, bot ? 26 : 20);
+  };
+  info('客戶名稱：', Q.client, '聯絡人：', Q.contact);
+  info('統一編號：', Q.tax, '聯絡電話：', Q.phone);
+  info('公司地址：', Q.addr, '送貨地址：', Q.addr);
+  info('送單日期：', roc, '備註：', rm, true);
+  var H = { sz: 14, al: 'c', bd: 'lrtb' };
+  rows.push([T('編號', H), T('品名', H), T('數量', H), T('單位規格', H), T('單價', H), T('總價', H), T('備註(克數)', H)]); line(rows.length - 1, 20);
+  var first = rows.length + 1;
+  for (var i = 0; i < nRows; i++) {
+    var x = items[i], r = rows.length + 1, B = { sz: 14, bd: 'lrtb', al: 'c' };
+    rows.push([T(i + 1, B), T(x ? x.name : '', Object.assign({}, B, { wrap: 1 })), T(x ? Number(x.qty) : '', B), T(x ? x.unit : '', B), T('', B),
+               T('', Object.assign({}, B, { f: 'IF(E' + r + '="","",C' + r + '*E' + r + ')' })), T(x ? (x.note || '') : '', B)]);
+    line(rows.length - 1, 20);
+  }
+  var last = rows.length, tr = rows.length + 1;
+  rows.push([T('', {}), T('', {}), T('', {}), T('', {}), T('合計:', { sz: 14, al: 'c', bd: 'lrtb' }), T('', { sz: 14, al: 'c', bd: 'lrtb', f: 'SUM(F' + first + ':F' + last + ')' }), T('', {})]); line(rows.length - 1, 20);
+  ['1.本報價單有效期間為15天', '2.以上報價皆含稅', '3.近日物價波動幅度大，故有價格異動則另行通知'].forEach(function (t) { rows.push([T(t, { ff: L_FONT })]); });
+  rows.push([]);
+  rows.push([T(Q.vendor, { al: 'l' })]); merges.push([rows.length - 1, 0, rows.length - 1, 6]);
+  rows.push([T('電話：' + Q.vTel)]); rows.push([T('傳真：' + Q.vFax)]); rows.push([T('地址：' + Q.vAddr)]);
+  return { name: '報價單', cw: [8, 26, 10, 14, 11, 12, 16], rows: rows, merges: merges, heights: heights, defH: 18,
+           page: { paper: 9, scale: 100, fit: 'width', orient: 'portrait', m: { l: 0.4, r: 0.4, t: 0.6, b: 0.6, h: 0.3, f: 0.3 } } };
+}
+
 /* 字體：中文用標楷體、英文和數字用 Times New Roman。
  * 同一格裡中英文混在一起的，拆成好幾段（xlsx 的「多種字體」格 / PDF 的 span），每一段各用各的字體。 */
 var L_FONT_EN = 'Times New Roman';

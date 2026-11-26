@@ -1500,6 +1500,18 @@ function apiExportTermOf(term, order, fmt) {
   if (!st || !en) throw new Error(term + ' 沒有設定開學日、結業式，請改用「每週材料總量」自己選日期範圍匯出。');
   return apiExportRangeSheets(st, en, '', null, order, fmt);
 }
+/* 匯出估價單：rec = { date: 送貨日期, purpose: 用途備註, items: [{name, qty, unit, note}] } */
+function apiExportQuote(rec, fmt) {
+  requireStaff_(); rec = rec || {};
+  if (!L_parseDate(rec.date)) throw new Error('請選送貨日期。');
+  var items = (Array.isArray(rec.items) ? rec.items : []).map(function (x) {
+    return { name: L_safeText(x && x.name, 40), qty: Number(x && x.qty), unit: L_safeText(x && x.unit, 8), note: L_safeText(x && x.note, 30) };
+  }).filter(function (x) { return x.name && isFinite(x.qty) && x.qty > 0; });
+  if (!items.length) throw new Error('請至少勾一項要請購的，數量要大於 0。');
+  var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+  var doc = L_docQuote({ date: rec.date, today: today, purpose: L_safeText(rec.purpose, 30), items: items });
+  return buildXlsx_('估價單_' + String(rec.date).replace(/-/g, ''), [doc], fmt);
+}
 function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_weekStart(anyDateInWeek); return apiExportRangeSheets(ws, L_addDays(ws, 6), teacherEmail, null, order); }
 
 /* 刪除老師開錯的課。技士、科主任、管理者都可以；會留一筆紀錄在「排課刪除紀錄」分頁。 */

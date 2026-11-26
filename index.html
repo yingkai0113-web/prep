@@ -43,7 +43,7 @@ h2{font-size:20px;margin:0 0 4px}
 .tile.on .box{background:var(--pri);border-color:var(--pri)}
 .tile.on .box::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
 .opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;margin:10px 0;font:inherit;font-size:18px;background:#fff;color:#1b2a22;border:2px solid #9DB8A9;border-radius:14px;cursor:pointer;box-shadow:0 2px 0 #C9D9CF}.opt:hover{border-color:var(--pri);background:#F3F8F5}.opt:active{transform:translateY(1px);box-shadow:none}.opt.on{border-color:var(--pri);background:#E3F1E9;box-shadow:0 0 0 2px var(--pri)}.opt .rd{font-size:26px;line-height:1;color:var(--pri)}.opt small{display:block;font-size:13px;font-weight:400;color:#5b6b62;margin-top:2px}
-.ssd{font-weight:700;margin:12px 0 4px;color:var(--pri)}.rqsec{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;background:#FBFCFB}.rqh{display:block;font-size:15px;color:var(--pri);margin-bottom:6px}.rqcls{border:2px solid;border-radius:12px;margin:8px 0;overflow:hidden;background:#fff}.rqct{color:#fff;font-weight:700;font-size:16px;padding:6px 12px}.rqcb{padding:8px 12px}.ssw{margin-bottom:10px}.ssact{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 4px 0}.ssrow{padding-right:9.5em!important;display:block;width:100%;text-align:left;background:#fff;border:2px solid #C9D9CF;border-radius:12px;padding:10px 12px;margin:6px 0;font:inherit;cursor:pointer;position:relative}.ssrow.todo{border-color:#F0A04B;background:#FFF8EE}.ssrow.done{border-color:#6DBB86;background:#F1FAF3}.ssrow:hover{box-shadow:0 0 0 2px var(--pri)}.ssrow:disabled{cursor:default;opacity:.8}.ssl{display:block;font-size:16px}.ssm{display:block;margin-top:4px;font-size:14px}.ssgo{position:absolute;right:12px;top:10px;font-size:13px;color:var(--pri);font-weight:600}
+.ssd{font-weight:700;margin:12px 0 4px;color:var(--pri)}.rqsec{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;background:#FBFCFB}.rqh{display:block;font-size:15px;color:var(--pri);margin-bottom:6px}.rqcls{border:2px solid;border-radius:12px;margin:8px 0;overflow:hidden;background:#fff}.rqct{color:#fff;font-weight:700;font-size:16px;padding:6px 12px}.rqcb{padding:8px 12px}.qrow{display:grid;grid-template-columns:minmax(8em,1fr) 6.5em 2.4em 7em;gap:6px;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line)}.qrow .qn{display:flex;gap:6px;align-items:center}.qrow:not(.on){opacity:.75}.qq{text-align:right}.qu{color:var(--mut);font-size:13px}.ssw{margin-bottom:10px}.ssact{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 4px 0}.ssrow{padding-right:9.5em!important;display:block;width:100%;text-align:left;background:#fff;border:2px solid #C9D9CF;border-radius:12px;padding:10px 12px;margin:6px 0;font:inherit;cursor:pointer;position:relative}.ssrow.todo{border-color:#F0A04B;background:#FFF8EE}.ssrow.done{border-color:#6DBB86;background:#F1FAF3}.ssrow:hover{box-shadow:0 0 0 2px var(--pri)}.ssrow:disabled{cursor:default;opacity:.8}.ssl{display:block;font-size:16px}.ssm{display:block;margin-top:4px;font-size:14px}.ssgo{position:absolute;right:12px;top:10px;font-size:13px;color:var(--pri);font-weight:600}
 .card.todo{background:#FFF1E0;border-color:#F0A04B}.card.todo .ch{background:#FFF1E0}.gh.todo{background:#E8820C;color:#fff}.gh.done{background:#2E9E5B;color:#fff}.card.seen{background:#E6F4EA;border-color:#6DBB86}.card.seen .ch{background:#E6F4EA}.okbox{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;margin-top:10px;border:2px solid #6DBB86;border-radius:12px;background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:#1d5a35;text-align:left}.okbox.on{background:#2E9E5B;color:#fff;border-color:#2E9E5B}.okbox b{font-size:22px;line-height:1}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;overflow:hidden}
 .ch{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;padding:12px;text-align:left}
@@ -322,7 +322,7 @@ function render(){
   h+=S.view==='arch'?archPageHTML():S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
   if(S.preview)h+=`<div class="modal"><div class="mb"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>匯出內容預覽</b><button class="btn sm ghost" data-a="closePrev">關閉</button></div>${S.preview}</div></div>`;
   if(S.confirmSend)h+=confirmHTML();
-  if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.archView)h+=archViewModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
+  if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.qd)h+=quoteModal();if(S.archView)h+=archViewModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
   if(S.sc.tableEd)h+=scTableModal();
   if(S.hu)h+=histModal();
   if(S.remind)h+=remindModal();
@@ -721,6 +721,27 @@ function archPageHTML(){
   if(!A.term)return h;
   return h+techHTML();
 }
+/* 估價單：勾選要請購的材料、器具，數量預設帶上面的總量，可以改 */
+function quoteList(){
+  const t=S.tech;if(!t)return [];
+  const out=t.materials.map(m=>({key:'m|'+m.std+'|'+m.unit,kind:'材料',name:m.std,qty:m.total,unit:m.unit==='g'?'克':m.unit}));
+  const tm={};
+  (t.tools||[]).forEach(d=>d.items.forEach(x=>{if(x.n===null)return;const k='t|'+x.name+'|'+x.unit;(tm[k]=tm[k]||{key:k,kind:'器具',name:x.name,qty:0,unit:x.unit}).qty+=x.n;}));
+  return out.concat(Object.values(tm));
+}
+function quoteModal(){
+  const Q=S.qd,l=quoteList(),sel=l.filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).length;
+  const sec=(kind)=>{const L=l.filter(x=>x.kind===kind);if(!L.length)return '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px"><b>${kind}</b><span><button class="btn sm ghost" data-a="qdAll" data-k="${kind}" data-v="1">全選</button> <button class="btn sm ghost" data-a="qdAll" data-k="${kind}" data-v="0">全不選</button></span></div>`+
+    L.map(x=>{const v=Q.sel[x.key]||{},on=!!v.on;return `<div class="qrow ${on?'on':''}"><label class="qn"><input type="checkbox" data-k="qdOn" data-key="${esc(x.key)}" ${on?'checked':''}> <span>${esc(x.name)}</span></label><input class="in qq" type="number" min="0" step="any" inputmode="decimal" data-k="qdQty" data-key="${esc(x.key)}" value="${v.qty!==undefined?esc(v.qty):esc(String(x.qty))}" ${on?'':'disabled'}><span class="qu">${esc(x.unit)}</span><input class="in qno" data-k="qdNote" data-key="${esc(x.key)}" maxlength="30" placeholder="備註" value="${esc(v.note||'')}" ${on?'':'disabled'}></div>`;}).join('');};
+  return `<div class="modal"><div class="mb" style="max-width:min(96vw,720px)"><h2 style="margin:0 0 4px">匯出估價單</h2>
+    <p class="mut" style="margin:0 0 6px">範圍：${rangeText()}。勾選要請購的，數量預設是上面統計的總量，可以直接改。已勾 <b>${sel}</b> 項。</p>
+    <div class="rgrow"><label>送貨日期 <input class="in" type="date" data-k="qdDate" value="${esc(Q.date)}"></label><label style="flex:1;min-width:12em">用途備註（可不填） <input class="in" style="width:100%" data-k="qdPurpose" maxlength="30" placeholder="例如：技藝競賽選手訓練用" value="${esc(Q.purpose)}"></label></div>
+    <div class="qlist" style="max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px">${sec('材料')||''}${sec('器具')||''}${l.length?'':'<p class="mut">這段日期沒有材料或器具。</p>'}</div>
+    ${Q.err?`<div class="err" style="margin-top:8px">${esc(Q.err)}</div>`:''}
+    <b style="display:block;margin-top:8px">檔案格式</b><div style="display:flex;gap:14px;flex-wrap:wrap">${[['xlsx','Excel'],['pdf','PDF'],['both','兩個都要']].map(([v,n])=>`<label><input type="radio" name="qdf" data-k="dlfmt" value="${v}" ${(S.dlfmt||'xlsx')===v?'checked':''}> ${n}</label>`).join('')}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="qdNo">取消</button><button class="btn" data-a="qdGo" ${S.busy?'disabled':''}>${S.busyA==='quote'?'匯出中…':'匯出'}</button></div></div></div>`;
+}
 function termBlockHTML(){
   const [ty,th]=S.term.split('-').map(Number);
   const prevTerm=th===2?`${ty}-1`:`${ty-1}-2`;
@@ -769,7 +790,7 @@ function techHTML(){
   ${t.others.length?`<div class="oth">另計，不加總：${t.others.map(o=>esc(o.std)+'（'+esc(o.text)+'，'+o.uses.map(u=>md0(u.date)+' '+esc(u.course)+(u.teacher?'（'+esc(u.teacher)+'）':'')).join('、')+'）').join('；')}</div>`:''}</div></div>`;
   const tdays=t.tools.filter(d=>d.items&&d.items.length);
   if(tdays.length)h+=`<div class="card"><div class="cb" style="padding-top:12px"><b>技士要備的器具</b>${tdays.map(d=>`<div class="mclk" data-a="mtoggle" data-m="T|${d.date}" role="button" tabindex="0" style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${md0(d.date)}（${d.wd}）</b> <small class="mar">${S.mOpen&&S.mOpen['T|'+d.date]?'▲':'▼'}</small> <span class="mut">${d.items.map(x=>esc(x.name)+' '+(x.n===null?esc(x.rest):x.n+esc(x.unit))).join('、')}</span>${S.mOpen&&S.mOpen['T|'+d.date]?`<div class="mdet" style="margin-top:6px;font-weight:400">${d.items.map(x=>`<div style="margin-top:4px"><b>${esc(x.name)}</b> ${x.n===null?esc(x.rest):x.n+esc(x.unit)}${(x.uses||[]).map(u=>`<div style="padding-left:1em">${esc(u.course||'')}${u.teacher?'（'+esc(u.teacher)+'）':''}${u.cls?' ｜ '+esc(u.cls):''} ｜ <b>${esc(u.title||'（未命名產品）')}</b> ｜ ${esc(u.qty||'')}</div>`).join('')}</div>`).join('')}</div>`:''}</div>`).join('')}</div></div>`;
-  return h+bar(`${t.classes.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">${S.busyA==='exportTerm'?'處理中…':'匯出整個學期（全部老師）'}</button> <button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busyA==='exportWeek'?'處理中…':'匯出總表'}</button>`);
+  return h+bar(`${t.classes.length} 堂課`,`<button class="btn ghost" data-a="exportTerm" ${S.busy?'disabled':''} title="整個學期、所有老師的進度表加材料單">${S.busyA==='exportTerm'?'處理中…':'匯出整個學期（全部老師）'}</button> <button class="btn ghost" data-a="quoteOpen" ${S.busy?'disabled':''}>匯出估價單</button> <button class="btn" data-a="exportWeek" ${S.busy?'disabled':''}>${S.busyA==='exportWeek'?'處理中…':'匯出總表'}</button>`);
 }
 async function loadRange(){
   S.tech=null;S.err='';S.tOpen=new Set();render();
@@ -999,6 +1020,17 @@ document.addEventListener('click',async ev=>{
   if(!f.id&&!f.groups&&f.dept==='日間部'&&!['國中技藝班','技藝競賽選手'].includes(f.course))f.groups='單數組、雙數組';f.busy=true;f.err='';render();
     try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));const dr=S.rq.direct;S.rq.form=null;if(dr)S.rq=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}if(S.view==='status'){render();loadStatus();return;}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
+  if(a==='quoteOpen'){const d=addDays(today(),1);S.qd={sel:{},date:d,purpose:'',err:''};return render();}
+  if(a==='qdNo'){S.qd=null;return render();}
+  if(a==='qdAll'){const on=b.dataset.v==='1';quoteList().filter(x=>x.kind===b.dataset.k).forEach(x=>{const v=S.qd.sel[x.key]||(S.qd.sel[x.key]={});v.on=on;});const sc=(document.querySelector('.qlist')||{}).scrollTop||0;render();const q=document.querySelector('.qlist');if(q)q.scrollTop=sc;return;}
+  if(a==='qdGo'){
+    const Q=S.qd;Q.err='';
+    if(!Q.date){Q.err='請選送貨日期。';return render();}
+    const items=quoteList().filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).map(x=>{const v=Q.sel[x.key];return {name:x.name,qty:v.qty!==undefined&&v.qty!==''?Number(v.qty):x.qty,unit:x.unit,note:v.note||''};}).filter(x=>x.qty>0);
+    if(!items.length){Q.err='請至少勾一項，數量要大於 0。';return render();}
+    S.busy='製作估價單…';S.busyA='quote';render();
+    try{await runFmt('apiExportQuote',{date:Q.date,purpose:Q.purpose,items});S.qd=null;}catch(e){Q.err=e.message;}
+    S.busy='';S.busyA='';return render();}
   if(a==='archSched'){S.archView={busy:true};render();try{const d=await run('apiScheduleHistoryTable',b.dataset.id);S.archView={data:d};}catch(e){S.archView=null;S.err=e.message;}return render();}
   if(a==='archViewClose'){S.archView=null;return render();}
   if(a==='ssDelAsk'){S.ssDel=b.dataset.id;return render();}
@@ -1469,6 +1501,11 @@ document.addEventListener('change',ev=>{
     if(k.endsWith('From')){f=+t.value;if(to<f)to=f;}else{to=+t.value;if(to<f)f=to;}
     c.days=[];for(let n=f;n<=to;n++)c.days.push(n);return render();}
   if(k==='archTerm'){archPick(t.value);return;}
+  if(k==='qdOn'){const v=S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={});v.on=t.checked;const sc=(document.querySelector('.qlist')||{}).scrollTop||0;render();const q=document.querySelector('.qlist');if(q)q.scrollTop=sc;return;}
+  if(k==='qdQty'){(S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={})).qty=t.value;return;}
+  if(k==='qdNote'){(S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={})).note=t.value;return;}
+  if(k==='qdDate'){S.qd.date=t.value;return;}
+  if(k==='qdPurpose'){S.qd.purpose=t.value;return;}
   if(k==='scXFrom'||k==='scXTo'){S.sc.extraEd[k==='scXFrom'?'from':'to']=t.value;return;}
   if(k==='tfCourse'||k==='tfCls'||k==='tfQ'){S.tFilter={course:k==='tfCourse'?t.value:S.tFilter.course,cls:k==='tfCls'?t.value:S.tFilter.cls,q:k==='tfQ'?t.value.trim():S.tFilter.q,id:''};return loadRange();}
   if(k==='rqcourse'){const f=S.rq.form,j0=f.course==='國中技藝班';f.course=t.value.trim();const j=f.course==='國中技藝班';if(j!==j0){f.classes=f.classes.filter(c=>j?/國中$/.test(c.cls):!/國中$/.test(c.cls));if(j&&f.classes.length>1)f.classes=[f.classes[0]];render();const el=document.querySelector('[data-k="rqcourse"]');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}return;}
