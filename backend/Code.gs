@@ -708,6 +708,27 @@ function apiScheduleHistory() {
   }).filter(function (x) { return x.tables.length; });
   return { current: cur, terms: terms };
 }
+/* 以前學期的全部資料（只有技士、科主任、管理者能看）：有哪些學期；選了學期就回傳那學期的每一門課、班級、授課老師、送單堂數 */
+function apiTermArchive(term) {
+  requireStaff_(); ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
+  var cur = setting_('目前學年學期', ''), seen = {};
+  readTable_('教學進度表').forEach(function (r) { var t = str_(r['學年學期']); if (t) seen[t] = 1; });
+  readPlans_().forEach(function (e) { if (e.term) seen[e.term] = 1; });
+  var terms = Object.keys(seen).filter(function (t) { return t !== cur; }).sort().reverse();
+  term = String(term || '');
+  if (!term) return { current: cur, terms: terms };
+  if (term === cur) throw new Error('這是目前的學期，請直接看「送單狀況」。');
+  var nm = teacherNames_(), plans = readPlans_().filter(function (e) { return e.term === term; }), cnt = {};
+  plans.forEach(function (e) { var k = e.dept + '|' + e.course; var c = cnt[k] || (cnt[k] = { total: 0, sent: 0, extra: 0 }); c.total++; if (!e.draft) c.sent++; if (!e.sid) c.extra++; });
+  var cells = schedCells_(), has = {}; cells.forEach(function (x) { has[x.tableId] = (has[x.tableId] || 0) + 1; });
+  var tables = schedTables_(term).map(function (t) {
+    var c = cnt[t.dept + '|' + t.course] || { total: 0, sent: 0, extra: 0 };
+    return { id: t.id, dept: t.dept, course: t.course, groups: t.groups, cells: has[t.id] || 0, lessons: c.total, sent: c.sent,
+             classes: t.classes.map(function (k) { return { cls: k.cls, teachers: (k.teachers && k.teachers.length ? k.teachers : t.teachers || []).map(function (em) { return nm[em] || em.split('@')[0]; }) }; }) };
+  }).sort(function (a, b) { return (a.dept + a.course) < (b.dept + b.course) ? -1 : 1; });
+  var extra = 0; plans.forEach(function (e) { if (!e.sid && !e.draft) extra++; });
+  return { term: term, start: setting_('開學日 ' + term, ''), end: setting_('結業式 ' + term, ''), tables: tables, plans: plans.length, extra: extra, terms: terms };
+}
 function apiScheduleHistoryTable(id) {
   whoami_(); ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   var row = readTable_('教學進度表').filter(function (r) { return str_(r['表ID']) === String(id); })[0];

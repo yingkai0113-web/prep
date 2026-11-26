@@ -322,7 +322,7 @@ function render(){
   h+=S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
   if(S.preview)h+=`<div class="modal"><div class="mb"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>匯出內容預覽</b><button class="btn sm ghost" data-a="closePrev">關閉</button></div>${S.preview}</div></div>`;
   if(S.confirmSend)h+=confirmHTML();
-  if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
+  if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.archView)h+=archViewModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
   if(S.sc.tableEd)h+=scTableModal();
   if(S.hu)h+=histModal();
   if(S.remind)h+=remindModal();
@@ -760,7 +760,22 @@ function statusHTML(){
   const de=S.sc.datesEd;
   h+=`<div class="card"><div class="cb" style="padding-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span>${d.canConfig&&!de?'<button class="btn sm ghost" data-a="scDates">設定日期</button>':''}</div>
     ${de?`<div class="rgrow" style="margin-top:8px"><label>開學日 <input class="in" type="date" data-k="scStart" value="${esc(de.start)}"></label><label>結業式 <input class="in" type="date" data-k="scEnd" value="${esc(de.end)}"></label></div><p class="mut" style="margin:4px 0 8px">開學日選那一週的任何一天都可以，從那一週的週一開始排。</p><button class="btn sm" data-a="scDatesSave">儲存</button> <button class="btn sm ghost" data-a="scDatesNo">取消</button>`:''}</div></div>`;
-  return h+ssHTML();
+  return h+ssHTML()+archHTML();
+}
+function archHTML(){
+  const A=S.arch||{};
+  let h=`<div class="card"><div class="cb" style="padding-top:12px"><b style="font-size:17px">查看以前學期的資料</b><small class="mut" style="display:block">只有管理者、科主任、技士看得到。只能看，不能改。</small>`;
+  if(!A.terms)return h+`<div style="margin-top:8px"><button class="btn ghost" data-a="archOpen">${A.busy?'載入中…':'打開'}</button></div></div></div>`;
+  if(!A.terms.length)return h+'<p class="mut">還沒有以前的學期。</p></div></div>';
+  h+=`<div class="rgrow" style="margin-top:8px"><label>學期 <select class="in" data-k="archTerm"><option value="">請選學期</option>${A.terms.map(t=>`<option ${A.term===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><button class="btn sm ghost" data-a="archClose">收起</button></div>`;
+  const D=A.data;
+  if(A.busy)h+='<p class="load">載入中…</p>';
+  else if(D){
+    h+=`<p class="mut" style="margin:8px 0">${esc(D.term)}　${D.start&&D.end?fullDate(D.start)+' ～ '+fullDate(D.end):''}　共 ${D.plans} 堂課（已送出的額外材料單 ${D.extra} 張）</p>
+    <button class="btn sm" data-a="archTech">看這學期的每週材料總量、逐張材料單</button>
+    ${D.tables.length?D.tables.map(x=>`<div class="ssrow ${x.sent>=x.lessons&&x.lessons?'done':'todo'}" style="padding-right:12px!important"><div><b>${esc(x.course)}</b> <span class="mut">${esc(x.dept)}</span> <span class="tg">${x.sent}／${x.lessons} 堂已送</span></div>${x.classes.map(c=>`<div style="margin:3px 0"><span class="tg" style="background:#E3EDE8;color:#1B4D3E;font-weight:700">${esc(c.cls)}</span> ${c.teachers.length?esc(c.teachers.join('、')):'<span class="mut">沒指定老師</span>'}</div>`).join('')}${x.cells?`<button class="btn sm ghost" style="margin-top:4px" data-a="archSched" data-id="${esc(x.id)}">看這張進度表</button>`:'<span class="mut">沒有排進度表內容</span>'}</div>`).join(''):'<p class="mut">這學期沒有進度表資料。</p>'}`;
+  }
+  return h+'</div></div>';
 }
 const setRange=(a,b)=>{S.rgFrom=a;S.rgTo=b;return loadRange();};
 
@@ -965,6 +980,11 @@ document.addEventListener('click',async ev=>{
   if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;f.busy=true;f.err='';render();
     try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));const dr=S.rq.direct;S.rq.form=null;if(dr)S.rq=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}if(S.view==='status'){render();loadStatus();return;}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
+  if(a==='archOpen'){S.arch={busy:true};render();try{const r=await run('apiTermArchive','');S.arch={terms:r.terms,term:'',data:null};}catch(e){S.arch=null;S.err=e.message;}return render();}
+  if(a==='archClose'){S.arch=null;S.archView=null;return render();}
+  if(a==='archTech'){const D=S.arch.data;if(!D.start||!D.end){S.err='這個學期沒有設定開學日和結業式，請到「每週材料總量」自己選日期範圍。';return render();}S.rgFrom=D.start;S.rgTo=D.end;S.view='tech';window.scrollTo(0,0);return loadRange();}
+  if(a==='archSched'){S.archView={busy:true};render();try{const d=await run('apiScheduleHistoryTable',b.dataset.id);S.archView={data:d};}catch(e){S.archView=null;S.err=e.message;}return render();}
+  if(a==='archViewClose'){S.archView=null;return render();}
   if(a==='ssDelAsk'){S.ssDel=b.dataset.id;return render();}
   if(a==='ssDelNo'){S.ssDel='';return render();}
   if(a==='ssDelYes'){S.rqBusy=b.dataset.id;render();try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.ss=await run('apiScheduleStatus','','');S.ssDel='';S.info='已刪除這門課的進度表設定。';}catch(e){S.err=e.message;}S.rqBusy='';return render();}
@@ -1434,6 +1454,7 @@ document.addEventListener('change',ev=>{
     c.days=[];for(let n=f;n<=to;n++)c.days.push(n);return render();}
   if(k==='scXFrom'||k==='scXTo'){S.sc.extraEd[k==='scXFrom'?'from':'to']=t.value;return;}
   if(k==='tfCourse'||k==='tfCls'||k==='tfQ'){S.tFilter={course:k==='tfCourse'?t.value:S.tFilter.course,cls:k==='tfCls'?t.value:S.tFilter.cls,q:k==='tfQ'?t.value.trim():S.tFilter.q,id:''};return loadRange();}
+  if(k==='archTerm'){S.arch.term=t.value;S.arch.data=null;if(!t.value)return render();S.arch.busy=true;render();run('apiTermArchive',t.value).then(r=>{S.arch.data=r;}).catch(e=>{S.err=e.message;}).then(()=>{S.arch.busy=false;render();});return;}
   if(k==='hTerm'){const H=S.sc.hist,tm=H.terms.find(x=>x.term===t.value),t0=schedTable(S.sc.tab);H.term=t.value;const x=tm.tables.find(y=>y.dept===t0.dept&&y.course===t0.course)||tm.tables[0];return loadHistTable(x.id);}
   if(k==='hTable'){return loadHistTable(t.value);}
   if(k==='hFrom'){S.sc.hist.a=+t.value;if(S.sc.hist.b<S.sc.hist.a)S.sc.hist.b=S.sc.hist.a;return render();}
@@ -1556,6 +1577,14 @@ async function loadHistTable(id){
   const H=S.sc.hist;H.busy=true;H.data=null;render();
   try{H.data=await run('apiScheduleHistoryTable',id);H.tid=id;H.a=0;H.b=Math.max(0,H.data.weeks.length-1);H.c=0;}catch(er){S.err=er.message;}
   H.busy=false;render();
+}
+function archViewModal(){
+  const V=S.archView;
+  if(V.busy)return `<div class="modal"><div class="mb"><p class="load">載入中…</p></div></div>`;
+  const d=V.data,cm={};d.cells.forEach(x=>{cm[x.week+'|'+x.cls+'|'+(x.day||0)]=x.cell;});
+  const view={table:d.table,weeks:d.weeks,cell:(w,cl,day)=>cm[w+'|'+cl+'|'+(day||0)]||null,cells:d.cells};
+  const g=gridHTML(d.table,view).replace(/data-a="hCopyCell"/g,'').replace(/<button class="ad"[^>]*>[^<]*<\/button>/g,'');
+  return `<div class="modal"><div class="mb" style="max-width:min(96vw,900px)"><h2 style="margin:0 0 6px">${esc(d.table.term)}　${esc(d.table.dept)}・${esc(d.table.course)}</h2><p class="mut" style="margin:0 0 6px">只能看，不能修改。</p>${g}<div style="text-align:right;margin-top:10px"><button class="btn ghost" data-a="archViewClose">關閉</button></div></div></div>`;
 }
 function histSchedModal(){
   const H=S.sc.hist,t=schedTable(S.sc.tab);
