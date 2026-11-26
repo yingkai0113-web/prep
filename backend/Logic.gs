@@ -1045,7 +1045,7 @@ function L_docSchedule(table, weeks, cells, ctx) {
           row[col] = T(cell.note, { al: 'c', bd: BD, bg: '#FCE4D6', wrap: 1 });
           if (gN > 1) merges.push([ri, col, ri, col + gN - 1]);
         } else if (cell.mode === 'joint' || gN === 1) {
-          var g0 = cell.groups[0]; row[col] = TR(runsFor(g0, gN), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g0.teacher) });
+          var g0 = cell.groups[0]; row[col] = TR(runsFor(g0, gN), { al: 'c', bd: BD, wrap: 1 });                    // 不分組（全班一起上）：白色底
           if (gN > 1) merges.push([ri, col, ri, col + gN - 1]);
         } else {
           cell.groups.forEach(function (g, gi) { row[col + gi] = g.pids.length ? TR(runsFor(g, 1), { al: 'c', bd: BD, wrap: 1, bg: bgFor(g.teacher) }) : T('', { al: 'c', bd: BD, wrap: 1 }); });
