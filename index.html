@@ -776,8 +776,8 @@ function termBlockHTML(){
   return `<div class="adm"><b>學年學期：${esc(S.term)}</b><p class="mut" style="margin:4px 0 8px">換學期時在這裡切換。老師打開來是新學期的空白排課，舊學期排過的課都還留著。</p>
     <div class="tctl" style="margin:0"><select class="in" id="termSel" style="width:auto" aria-label="切換到哪個學期">${termOpts.map((t,i)=>`<option${i===1?' selected':''}>${t}</option>`).join('')}</select>
     ${S.confirmTerm?`<button class="btn danger" data-a="termGo">確定切換到 ${esc(S.confirmTerm)}</button><button class="btn ghost" data-a="termCancel">取消</button>`:'<button class="btn" data-a="termAsk">切換</button>'}</div>
-    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #ddd"><b>試用頁面</b><p class="mut" style="margin:4px 0 8px">${S.trial?'<b style="color:#E8590C">目前所有人都在試用頁面。</b>這裡的資料是從正式資料複製來的，怎麼改、刪都不會動到正式資料。':'切換成試用頁面後，<b>所有人（包含老師）</b>都會跟著看到試用資料（複製自目前的正式資料），可以放心測試；正式資料完全不會被動到。測完切回來就好。'}</p>
-    <div class="tctl" style="margin:0">${S.trial?`<button class="btn" data-a="trialOff">回到正式資料</button>${S.trialAsk==='reset'?'<button class="btn danger" data-a="trialReset">確定重新複製（試用資料會被換掉）</button><button class="btn ghost" data-a="trialCancel">取消</button>':'<button class="btn ghost" data-a="trialResetAsk">重新複製正式資料</button>'}`:(S.trialAsk==='on'?'<button class="btn danger" data-a="trialOn">確定切換（所有人都會跟著過去）</button><button class="btn ghost" data-a="trialCancel">取消</button>':'<button class="btn" data-a="trialOnAsk">切換成試用頁面</button>')}</div></div></div>`;
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #ddd"><b>試用頁面</b><p class="mut" style="margin:4px 0 8px">${S.trial?'<b style="color:#E8590C">目前所有人都在試用頁面。</b>這裡的資料是從正式資料複製來的，怎麼改、刪都不會動到正式資料。':'切換成試用頁面後，<b>所有人（包含老師）</b>都會跟著看到試用資料，你可以選要「有資料（複製目前的正式資料）」還是「空白」，放心測試；正式資料完全不會被動到。測完切回來就好。'}</p>
+    <div class="tctl" style="margin:0">${S.trial?`<button class="btn" data-a="trialOff">回到正式資料</button>${S.trialAsk==='reset'?'<button class="btn danger" data-a="trialResetCopy">換成最新的正式資料</button><button class="btn danger" data-a="trialResetBlank">換成空白</button><button class="btn ghost" data-a="trialCancel">取消</button>':'<button class="btn ghost" data-a="trialResetAsk">重新建立試用資料</button>'}`:(S.trialAsk==='on'?'<button class="btn" data-a="trialOnCopy">有資料（複製目前的正式資料）</button><button class="btn" data-a="trialOnBlank">空白（只留材料單和使用者名單）</button><button class="btn ghost" data-a="trialCancel">取消</button>':'<button class="btn" data-a="trialOnAsk">切換成試用頁面</button>')}</div></div></div>`;
 }
 function switchHTML(){
   const on=S.accepting!==false;
@@ -1355,9 +1355,9 @@ document.addEventListener('click',async ev=>{
   if(a==='trialOnAsk'){S.trialAsk='on';return render();}
   if(a==='trialResetAsk'){S.trialAsk='reset';return render();}
   if(a==='trialCancel'){S.trialAsk='';return render();}
-  if(a==='trialOn'||a==='trialOff'||a==='trialReset'){
-    S.busy=a==='trialOff'?'切換回正式資料…':'準備試用資料（第一次要複製，約十幾秒）…';S.busyA='trial';S.trialAsk='';render();
-    try{await run('apiTrialSet',a!=='trialOff',a==='trialReset');try{localStorage.removeItem('prep_cache');}catch(e){}location.reload();return;}catch(e){S.err=e.message;}
+  if(['trialOnCopy','trialOnBlank','trialOff','trialResetCopy','trialResetBlank'].includes(a)){
+    S.busy=a==='trialOff'?'切換回正式資料…':'準備試用資料（約十幾秒）…';const tmode=/Blank$/.test(a)?'blank':'copy';S.busyA='trial';S.trialAsk='';render();
+    try{await run('apiTrialSet',a!=='trialOff',a==='trialOff'?'':tmode);try{localStorage.removeItem('prep_cache');}catch(e){}location.reload();return;}catch(e){S.err=e.message;}
     S.busy='';S.busyA='';return render();}
   if(a==='termAsk'){S.confirmTerm=$('#termSel').value;return render();}
   if(a==='termCancel'){S.confirmTerm='';return render();}

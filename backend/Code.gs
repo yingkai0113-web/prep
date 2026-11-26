@@ -1933,15 +1933,21 @@ function apiScheduleBulk(rec) {
 
 /* 試用頁面開關（技士、科主任、管理者）。on = true 開（所有人都改用試用資料）、false 關（回到正式資料）；
  * reset = true 重新從正式資料複製一份新的試用資料。正式資料永遠不會被動到。 */
-function apiTrialSet(on, reset) {
+function apiTrialSet(on, mode) {
   requireStaff_();
+  mode = mode === 'blank' ? 'blank' : (mode === 'copy' || mode === true ? 'copy' : '');
   var pr = PropertiesService.getScriptProperties(), id = pr.getProperty('TRIAL_ID');
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
-    if (on && (!id || reset)) {
+    if (on && (!id || mode)) {
       var real = SpreadsheetApp.getActiveSpreadsheet();
       var cp = real.copy('員林農工材料單系統（試用資料）');
       try { cp.setSpreadsheetTimeZone(TZ); } catch (e) {}
+      if (mode === 'blank') {                                                          // 空白：留下材料單目錄、使用者名單、設定、課程清單；老師排的課、進度表、備份全部清空
+        ['排課', '教學進度表', '教學進度內容', '刪除前備份', '刪除紀錄'].forEach(function (n) {
+          var sh = cp.getSheetByName(n); if (sh && sh.getLastRow() > 1) sh.deleteRows(2, sh.getLastRow() - 1);
+        });
+      }
       if (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e2) {} }
       id = cp.getId(); pr.setProperty('TRIAL_ID', id);
     }
@@ -1950,7 +1956,6 @@ function apiTrialSet(on, reset) {
   } finally { lock.releaseLock(); }
   return { ok: true, trial: !!on };
 }
-
 /* 量一下各分頁讀取要多久（找哪裡慢）。只有技士、科主任、管理者能呼叫。 */
 function apiProfile() {
   requireAdmin_();
