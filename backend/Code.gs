@@ -67,8 +67,16 @@ function curEmail_() {
 }
 
 /* ---------------- 讀寫試算表 ---------------- */
-var SS_ = null;
-function ss_() { return SS_ || (SS_ = SpreadsheetApp.getActiveSpreadsheet()); }
+var SS_ = null, TRIAL_ = false;
+/* 試用頁面：管理者開了之後，所有人都改用另一份「試用」試算表（複製自正式資料），正式資料完全不動 */
+function ss_() {
+  if (SS_) return SS_;
+  try {
+    var pr = PropertiesService.getScriptProperties(), id = pr.getProperty('TRIAL_ID');
+    if (id && pr.getProperty('TRIAL_ON') === '1') { SS_ = SpreadsheetApp.openById(id); TRIAL_ = true; return SS_; }
+  } catch (e) { TRIAL_ = false; }
+  return (SS_ = SpreadsheetApp.getActiveSpreadsheet());
+}
 
 var RT_ = {}, RT_OK_ = { '設定': 1, '使用者': 1, '排課': 1, '教學進度表': 1, '教學進度內容': 1, '應有進度表': 1, '產品': 1, '配方明細': 1, '器具': 1, '自創材料單': 1, '預設材料單修改': 1, '材料單分類指定': 1, '名稱對照': 1 };   // 這幾個分頁：同一次請求讀過就不再重讀，跨請求也用快取（最多 5 分鐘；系統自己寫入時會立刻作廢）
 var RT_VER_ = null, RT_TTL_ = 300, RT_SV_ = null;
@@ -107,6 +115,7 @@ function rtClear_(names) {
 function rtJson_(rows) { return JSON.stringify(rows, function (k, v) { return (this[k] instanceof Date) ? { __d: this[k].getTime() } : v; }); }
 function rtParse_(txt) { return JSON.parse(txt, function (k, v) { return (v && typeof v === 'object' && v.__d !== undefined && Object.keys(v).length === 1) ? new Date(v.__d) : v; }); }
 function rtCacheGet_(name) {
+  ss_(); if (TRIAL_) return null;                                                // 試用頁面不用跨請求快取（不跟正式資料混在一起）
   try {
     var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + rtSV_(name) + '|' + name, n = Number(c.get(base + '|n'));
     if (!n) return null;
@@ -117,6 +126,7 @@ function rtCacheGet_(name) {
   } catch (e) { return null; }
 }
 function rtCachePut_(name, rows) {
+  ss_(); if (TRIAL_) return;
   try {
     var c = CacheService.getScriptCache(), base = 'rt|' + rtVer_() + '|' + rtSV_(name) + '|' + name, txt = rtJson_(rows), size = 25000, put = {}, n = Math.ceil(txt.length / size) || 1;
     if (n > 40) return;
@@ -478,7 +488,7 @@ function apiBootstrap(asEmail) {
   var admin = isStaff_(me), hist = {};
   all.forEach(function (e) { if (e.teacher === me.email && e.term !== term && !e.draft && L_customized(e)) hist[e.pid] = (hist[e.pid] || 0) + 1; });
   return { user: me, term: term, catalog: L_catalogForClient(cat, me.email, mine.map(function (e) { return e.pid; }), admin), entries: workingCopies_(mine), hist: hist,
-           adminUrl: '', open: submissionOpen_(), openNote: setting_('開放老師送單更新', ''), extraOpen: extraOpen_(), extraNote: setting_('開放額外材料單更新', '') };
+           adminUrl: '', open: submissionOpen_(), openNote: setting_('開放老師送單更新', ''), extraOpen: extraOpen_(), extraNote: setting_('開放額外材料單更新', ''), trial: (ss_(), TRIAL_) };
 }
 
 /* mode：'draft' = 只存草稿（技士看不到）；'sched' = 匯出教學進度表的課；'extra' = 匯出額外材料單；不給 = 全部匯出。
@@ -1919,6 +1929,26 @@ function apiScheduleBulk(rec) {
     }
     return { ok: true, cells: newRows.length, sent: sent };
   } finally { rtClear_(); lock.releaseLock(); }
+}
+
+/* 試用頁面開關（技士、科主任、管理者）。on = true 開（所有人都改用試用資料）、false 關（回到正式資料）；
+ * reset = true 重新從正式資料複製一份新的試用資料。正式資料永遠不會被動到。 */
+function apiTrialSet(on, reset) {
+  requireStaff_();
+  var pr = PropertiesService.getScriptProperties(), id = pr.getProperty('TRIAL_ID');
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    if (on && (!id || reset)) {
+      var real = SpreadsheetApp.getActiveSpreadsheet();
+      var cp = real.copy('員林農工材料單系統（試用資料）');
+      try { cp.setSpreadsheetTimeZone(TZ); } catch (e) {}
+      if (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e2) {} }
+      id = cp.getId(); pr.setProperty('TRIAL_ID', id);
+    }
+    pr.setProperty('TRIAL_ON', on ? '1' : '0');
+    try { CacheService.getScriptCache().put('rtver', String(Date.now()), 21600); } catch (e3) {}
+  } finally { lock.releaseLock(); }
+  return { ok: true, trial: !!on };
 }
 
 /* 量一下各分頁讀取要多久（找哪裡慢）。只有技士、科主任、管理者能呼叫。 */

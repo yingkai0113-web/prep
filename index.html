@@ -314,6 +314,7 @@ const dirty=()=>sigOf(S.entries)!==S.savedSig;
 function render(){
   if(!S.user){return;}
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
+  if(S.trial)h+=`<div style="background:#E8590C;color:#fff;padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:700;text-align:center">⚠ 目前是「試用頁面」：這裡的資料是測試用的，怎麼改、刪都不會影響正式資料。${canTech()?'<button class="btn sm" style="margin-left:8px;background:#fff;color:#E8590C" data-a="trialOff">回到正式資料</button>':''}</div>`;
   const views=S.asT?[['sched','教學進度表'],S.extraOpen&&['extra','額外材料單']].filter(Boolean):[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','送單狀況'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','以前學期'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
   if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>老師模式（預覽）：你正在看 <b>${esc(uName(S.asT))}</b> 的教學進度表。只能看，不能修改。</span><button class="btn sm ghost" data-a="asTpick">換一位老師</button></div>`;
@@ -774,7 +775,9 @@ function termBlockHTML(){
   const termOpts=[prevTerm].concat(nx.slice(1).map(([y,h])=>`${y}-${h}`));
   return `<div class="adm"><b>學年學期：${esc(S.term)}</b><p class="mut" style="margin:4px 0 8px">換學期時在這裡切換。老師打開來是新學期的空白排課，舊學期排過的課都還留著。</p>
     <div class="tctl" style="margin:0"><select class="in" id="termSel" style="width:auto" aria-label="切換到哪個學期">${termOpts.map((t,i)=>`<option${i===1?' selected':''}>${t}</option>`).join('')}</select>
-    ${S.confirmTerm?`<button class="btn danger" data-a="termGo">確定切換到 ${esc(S.confirmTerm)}</button><button class="btn ghost" data-a="termCancel">取消</button>`:'<button class="btn" data-a="termAsk">切換</button>'}</div></div>`;
+    ${S.confirmTerm?`<button class="btn danger" data-a="termGo">確定切換到 ${esc(S.confirmTerm)}</button><button class="btn ghost" data-a="termCancel">取消</button>`:'<button class="btn" data-a="termAsk">切換</button>'}</div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid #ddd"><b>試用頁面</b><p class="mut" style="margin:4px 0 8px">${S.trial?'<b style="color:#E8590C">目前所有人都在試用頁面。</b>這裡的資料是從正式資料複製來的，怎麼改、刪都不會動到正式資料。':'切換成試用頁面後，<b>所有人（包含老師）</b>都會跟著看到試用資料（複製自目前的正式資料），可以放心測試；正式資料完全不會被動到。測完切回來就好。'}</p>
+    <div class="tctl" style="margin:0">${S.trial?`<button class="btn" data-a="trialOff">回到正式資料</button>${S.trialAsk==='reset'?'<button class="btn danger" data-a="trialReset">確定重新複製（試用資料會被換掉）</button><button class="btn ghost" data-a="trialCancel">取消</button>':'<button class="btn ghost" data-a="trialResetAsk">重新複製正式資料</button>'}`:(S.trialAsk==='on'?'<button class="btn danger" data-a="trialOn">確定切換（所有人都會跟著過去）</button><button class="btn ghost" data-a="trialCancel">取消</button>':'<button class="btn" data-a="trialOnAsk">切換成試用頁面</button>')}</div></div></div>`;
 }
 function switchHTML(){
   const on=S.accepting!==false;
@@ -1349,6 +1352,13 @@ document.addEventListener('click',async ev=>{
     try{await run('apiDeletePlanEntry',b.dataset.id);S.info=l?`已刪除 ${l.teacher} 的「${l.title}」（${md0(l.date)}）。系統有留刪除紀錄。`:'已刪除。';}
     catch(e){S.err=e.message;}
     return loadRange();}
+  if(a==='trialOnAsk'){S.trialAsk='on';return render();}
+  if(a==='trialResetAsk'){S.trialAsk='reset';return render();}
+  if(a==='trialCancel'){S.trialAsk='';return render();}
+  if(a==='trialOn'||a==='trialOff'||a==='trialReset'){
+    S.busy=a==='trialOff'?'切換回正式資料…':'準備試用資料（第一次要複製，約十幾秒）…';S.busyA='trial';S.trialAsk='';render();
+    try{await run('apiTrialSet',a!=='trialOff',a==='trialReset');try{localStorage.removeItem('prep_cache');}catch(e){}location.reload();return;}catch(e){S.err=e.message;}
+    S.busy='';S.busyA='';return render();}
   if(a==='termAsk'){S.confirmTerm=$('#termSel').value;return render();}
   if(a==='termCancel'){S.confirmTerm='';return render();}
   if(a==='termGo'){
@@ -2063,7 +2073,7 @@ function denyScreen(msg){
 const jwtEmail=t=>{try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email||'';}catch(e){return '';}};
 const fixTab=()=>{const d=S.sc.data;if(d&&d.tables&&(!S.sc.tab||!d.tables.some(t=>t.id===S.sc.tab)))S.sc.tab=(d.tables[0]||{}).id||'';};
 function applyBoot(d,first){
-  S.user=d.user;S.term=d.term;S.cat=d.catalog;S.classes=d.catalog.classes||S.classes;S.courses=d.catalog.courses||{'日間部':[],'夜間部':[]};S.cat.pmap={};S.cat.products.forEach(p=>S.cat.pmap[p.pid]=p);
+  S.trial=!!d.trial;S.user=d.user;S.term=d.term;S.cat=d.catalog;S.classes=d.catalog.classes||S.classes;S.courses=d.catalog.courses||{'日間部':[],'夜間部':[]};S.cat.pmap={};S.cat.products.forEach(p=>S.cat.pmap[p.pid]=p);
   refreshStd();S.adminUrl=d.adminUrl||'';S.accepting=d.open!==false;S.openNote=d.openNote||'';
   S.extraOpen=d.extraOpen===true;S.extraNote=d.extraNote||'';
   if(!first&&dirty())return;                       // 已經動手改了就不要蓋掉
