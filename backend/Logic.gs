@@ -563,10 +563,10 @@ function L_docQuote(rec) {
   }
   var last = rows.length, tr = rows.length + 1;
   rows.push([T('', {}), T('', {}), T('', {}), T('', {}), T('合計:', { sz: 14, al: 'c', bd: 'lrtb' }), T('', { sz: 14, al: 'c', bd: 'lrtb', f: 'SUM(F' + first + ':F' + last + ')' }), T('', {})]); line(rows.length - 1, 20);
-  ['1.本報價單有效期間為15天', '2.以上報價皆含稅', '3.近日物價波動幅度大，故有價格異動則另行通知'].forEach(function (t) { rows.push([T(t, { ff: L_FONT })]); });
+  ['1.本報價單有效期間為15天', '2.以上報價皆含稅', '3.近日物價波動幅度大，故有價格異動則另行通知'].forEach(function (t) { rows.push([T(t, { ff: L_FONT })]); merges.push([rows.length - 1, 0, rows.length - 1, 6]); });
   rows.push([]);
   rows.push([T(Q.vendor, { al: 'l' })]); merges.push([rows.length - 1, 0, rows.length - 1, 6]);
-  rows.push([T('電話：' + Q.vTel)]); rows.push([T('傳真：' + Q.vFax)]); rows.push([T('地址：' + Q.vAddr)]);
+  [T('電話：' + Q.vTel), T('傳真：' + Q.vFax), T('地址：' + Q.vAddr)].forEach(function (c) { rows.push([c]); merges.push([rows.length - 1, 0, rows.length - 1, 3]); });
   var img = { b64: L_STAMP_B64, ext: 'jpeg', col: 3, colOff: 760320, row: tr + 2, rowOff: 104760, cx: 2421000, cy: 1247760 };
   return { name: '報價單', img: img, cw: [12.74, 23.74, 10.37, 14.37, 10.99, 11.87, 16.5], rows: rows, merges: merges, heights: heights, defH: 18,
            page: { paper: 9, scale: 100, fit: 'width', orient: 'portrait', m: { l: 0.4, r: 0.4, t: 0.6, b: 0.6, h: 0.3, f: 0.3 } } };
