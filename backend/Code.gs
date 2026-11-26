@@ -683,7 +683,7 @@ function jparse_(v, d) { try { var x = JSON.parse(v); return x === null || x ===
 function schedTables_(term) {
   ensureSheetFast_('教學進度表', SCHED_TABLE_HEAD);
   return readTable_('教學進度表').filter(function (r) { return str_(r['學年學期']) === term; }).map(function (r) {
-    var cl = L_sortClasses(jparse_(r['班級'], []).map(function (x) { var d = L_classDays(x); return { cls: x.cls, wd: d[0], days: d }; }));      // 班級依星期排，星期一的放前面
+    var cl = L_sortClasses(jparse_(r['班級'], []).map(function (x) { return clT_(x, L_classDays(x)); }));      // 班級依星期排，星期一的放前面
     return { id: str_(r['表ID']), term: str_(r['學年學期']), dept: str_(r['部別']), course: str_(r['課程']), classes: cl, groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [],
              title: str_(r['標題']), creator: str_(r['建立者']).toLowerCase(), updated: str_(r['最後修改']), ext: extOf_(jparse_(r['額外日期'], null)), teachers: teachersOf_(r['授課老師']) };
   });
@@ -691,7 +691,7 @@ function schedTables_(term) {
 /* 每個學期各自有自己的進度表；歷年的進度表都還留在試算表裡，可以叫出來看、複製 */
 function tableFromRow_(r) {
   return { id: str_(r['表ID']), term: str_(r['學年學期']), dept: str_(r['部別']), course: str_(r['課程']),
-           classes: L_sortClasses(jparse_(r['班級'], []).map(function (x) { var d = L_classDays(x); return { cls: x.cls, wd: d[0], days: d }; })),
+           classes: L_sortClasses(jparse_(r['班級'], []).map(function (x) { return clT_(x, L_classDays(x)); })),
            groups: str_(r['組別']) ? str_(r['組別']).split(/[、,，\s]+/).filter(Boolean) : [], ext: extOf_(jparse_(r['額外日期'], null)), teachers: teachersOf_(r['授課老師']) };
 }
 function tableWeeksOf_(t) { var s = setting_('開學日 ' + t.term, ''), e = setting_('結業式 ' + t.term, ''); return L_weeksExt(s, e, t.ext); }     // 那個學期自己的開學日、結業式
@@ -716,6 +716,9 @@ function apiScheduleHistoryTable(id) {
   return { table: t, weeks: tableWeeksOf_(t), cells: schedCells_().filter(function (x) { return x.tableId === t.id; }) };
 }
 /* 這學期這門課的授課老師（信箱清單）。進度表只能排這幾位，也只會出現在這幾位老師的教學進度表；還沒指定的（空的）就是所有老師都可以。 */
+/* 班級物件：每個班可以有自己的授課老師（teachers 是信箱清單） */
+function clT_(x, d) { var o = { cls: x.cls, wd: d[0], days: d }; if (Array.isArray(x.teachers)) o.teachers = x.teachers.map(function (e) { return String(e).toLowerCase().trim(); }).filter(Boolean); return o; }
+function unionT_(classes) { var u = []; (classes || []).forEach(function (c) { (c.teachers || []).forEach(function (e) { if (u.indexOf(e) < 0) u.push(e); }); }); return u; }
 function teachersOf_(v) { return str_(v) ? str_(v).split(/[、,，\s]+/).map(function (x) { return x.toLowerCase(); }).filter(Boolean) : []; }
 function tablePids_(tableId) {                                                        // 這張進度表已經在用的材料單（別人自創的，留著沒問題）
   var seen = {}; schedCells_().forEach(function (x) { if (x.tableId === tableId && x.cell.kind === 'lesson') x.cell.groups.forEach(function (g) { g.pids.forEach(function (p) { seen[p] = 1; }); }); });
@@ -751,7 +754,7 @@ function schedEmails_() { return readTable_('使用者').map(function (u) { retu
  * 每學期直接用這份清單對照「教學進度表」，就知道哪些課還沒建進度表、哪些還沒送單。 */
 var REQ_HEAD = ['編號', '部別', '課程', '班級', '學期別', '備註', '建立者', '建立時間', '最後修改', '組別', '授課老師'];
 function reqClasses_(v) {                                  // 班級欄：舊的寫法是班級名稱的清單，新的是 [{cls, days}]；依星期排
-  return L_sortClasses((Array.isArray(v) ? v : []).map(function (x) { var cls = typeof x === 'string' ? x : x && x.cls; return cls ? { cls: cls, days: L_classDays(typeof x === 'string' ? {} : x) } : null; }).filter(Boolean));
+  return L_sortClasses((Array.isArray(v) ? v : []).map(function (x) { var cls = typeof x === 'string' ? x : x && x.cls; if (!cls) return null; var o = { cls: cls, days: L_classDays(typeof x === 'string' ? {} : x) }; if (typeof x !== 'string' && Array.isArray(x.teachers)) o.teachers = x.teachers.map(function (e) { return String(e).toLowerCase().trim(); }).filter(Boolean); return o; }).filter(Boolean));
 }
 function requiredAll_() {
   var fresh = !ensKnown_('應有進度表', REQ_HEAD) && !ss_().getSheetByName('應有進度表');
@@ -779,9 +782,9 @@ function reconcileTables_(oldE, e) {
   var mine = schedTables_(term).filter(function (t) { return t.dept === e.dept && t.course === e.course && t.classes.some(function (c) { return names[c.cls]; }); });
   if (!mine.length) return;
   var t = mine[0], cells = schedCells_().filter(function (x) { return x.tableId === t.id; });
-  var cls = e.classes.map(function (c) { var ex = t.classes.filter(function (x) { return x.cls === c.cls; })[0], d = L_classDays(c); return ex ? { cls: ex.cls, wd: ex.wd, days: ex.days } : { cls: c.cls, wd: d[0], days: d }; });
+  var cls = e.classes.map(function (c) { var ex = t.classes.filter(function (x) { return x.cls === c.cls; })[0], d = L_classDays(c); var o = ex ? { cls: ex.cls, wd: ex.wd, days: ex.days } : { cls: c.cls, wd: d[0], days: d }; if (c.teachers) o.teachers = c.teachers; else if (ex && ex.teachers) o.teachers = ex.teachers; return o; });
   t.classes.forEach(function (x) { if (!e.classes.some(function (c) { return c.cls === x.cls; }) && cells.some(function (k) { return k.cls === x.cls; })) cls.push(x); });
-  if (cls.length > 1) cls = cls.map(function (x) { return x.days.length > 1 ? { cls: x.cls, wd: x.days[0], days: [x.days[0]] } : x; });      // 好幾個班的進度表，每個班一天
+  if (cls.length > 1) cls = cls.map(function (x) { return x.days.length > 1 ? (function () { var o = { cls: x.cls, wd: x.days[0], days: [x.days[0]] }; if (x.teachers) o.teachers = x.teachers; return o; })() : x; });      // 好幾個班的進度表，每個班一天
   cls = L_sortClasses(cls);
   var groups = cells.some(function (k) { return k.cell.kind === 'lesson' && k.cell.mode === 'split'; }) ? t.groups : (e.groups || []);
   var old = readTable_('教學進度表').filter(function (r) { return str_(r['表ID']) === t.id; })[0];
@@ -798,10 +801,12 @@ function applyReqTeachers_(e) {
   var term = setting_('目前學年學期', ''), names = {}; e.classes.forEach(function (c) { names[c.cls] = 1; });
   var mine = schedTables_(term).filter(function (t) { return t.dept === e.dept && t.course === e.course && t.classes.some(function (c) { return names[c.cls]; }); });
   if (!mine.length) return;
-  var t = mine[0]; if ((t.teachers || []).join('、') === (e.teachers || []).join('、')) return;
+  var t = mine[0], ct = {}; e.classes.forEach(function (c) { if (c.teachers) ct[c.cls] = c.teachers; });
+  var ncl = t.classes.map(function (c) { var o = { cls: c.cls, wd: c.wd, days: c.days }; if (ct[c.cls]) o.teachers = ct[c.cls]; else if (c.teachers && !Object.keys(ct).length) o.teachers = c.teachers; return o; });
+  if ((t.teachers || []).join('、') === (e.teachers || []).join('、') && JSON.stringify(ncl) === JSON.stringify(t.classes)) return;
   var old = readTable_('教學進度表').filter(function (r) { return str_(r['表ID']) === t.id; })[0];
   var rows = allTableRows_().filter(function (r) { return r[0] !== t.id; });
-  rows.push(tableRow_(Object.assign({}, t, { teachers: e.teachers || [] }), old ? str_(old['建立時間']) : ''));
+  rows.push(tableRow_(Object.assign({}, t, { teachers: e.teachers || [], classes: ncl }), old ? str_(old['建立時間']) : ''));
   writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
 }
 function apiRequiredSave(rec) {
@@ -816,7 +821,7 @@ function apiRequiredSave(rec) {
   (Array.isArray(rec.classes) ? rec.classes : []).forEach(function (x) {
     var name = L_safeText(typeof x === 'string' ? x : x && x.cls, 10); if (!name || cl.some(function (c) { return c.cls === name; })) return;
     if ((classes[dept] || []).indexOf(name) < 0 && !oldClsOk[name]) throw new Error('「' + name + '」不在' + dept + '的班級清單裡。');
-    cl.push({ cls: name, days: L_classDays(typeof x === 'string' ? {} : x) });
+    cl.push({ cls: name, days: L_classDays(typeof x === 'string' ? {} : x), teachers: (typeof x === 'object' && x && Array.isArray(x.teachers)) ? x.teachers : null });
   });
   if (!cl.length) throw new Error('請選這門課有哪些班。');
   if (cl.length > 1 && cl.some(function (c) { return c.days.length > 1; })) throw new Error('每天上課（一週好幾天）的班，一門課只能設這一個班。');
@@ -829,6 +834,12 @@ function apiRequiredSave(rec) {
     if (known.indexOf(x) < 0) throw new Error('找不到這位老師：' + x);
     teachers.push(x);
   });
+  var anyCT = cl.some(function (c) { return c.teachers; });
+  cl.forEach(function (c) {
+    if (!c.teachers) { if (anyCT) c.teachers = []; else delete c.teachers; return; }
+    var u = []; c.teachers.forEach(function (x) { x = String(x).toLowerCase().trim(); if (!x || u.indexOf(x) >= 0) return; if (known.indexOf(x) < 0) throw new Error('找不到這位老師：' + x); u.push(x); }); c.teachers = u;
+  });
+  if (anyCT) teachers = unionT_(cl);
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var list = requiredAll_(), id = String(rec.id || '');
@@ -843,7 +854,8 @@ function apiRequiredSave(rec) {
     var oldE = list.filter(function (x) { return x.id === id; })[0] || null;
     list = list.filter(function (x) { return x.id !== id; }); list.push(e);
     writeRequired_(list, me.email);
-    var sameShape = oldE && JSON.stringify(oldE.classes) === JSON.stringify(e.classes) && oldE.groups.join('、') === e.groups.join('、');
+    var shp = function (l) { return JSON.stringify(l.map(function (c) { return [c.cls, c.days]; })); };
+    var sameShape = oldE && shp(oldE.classes) === shp(e.classes) && oldE.groups.join('、') === e.groups.join('、');
     if (oldE && !sameShape) reconcileTables_(oldE, e);
     applyReqTeachers_(e);
   } finally { rtClear_(['應有進度表', '教學進度表', '教學進度內容', '排課']); lock.releaseLock(); }
@@ -890,7 +902,7 @@ function ensureTables_() {
       var best = null; rows.forEach(function (x) { if (x[2] === dept && x[3] === course && x[1] < term && x[10] !== undefined && x[11] && (!best || x[1] > best[1])) best = x; }); return best ? teachersOf_(best[11]) : [];
     };
     need().forEach(function (r) {
-      var t = { id: Utilities.getUuid().slice(0, 8), term: term, dept: r.dept, course: r.course, classes: r.classes.map(function (c) { var d = L_classDays(c); return { cls: c.cls, wd: d[0], days: d }; }), groups: r.groups || [], title: '', creator: '系統', teachers: (r.teachers && r.teachers.length) ? r.teachers : lastTeachers(r.dept, r.course) };
+      var t = { id: Utilities.getUuid().slice(0, 8), term: term, dept: r.dept, course: r.course, classes: r.classes.map(function (c) { return clT_(c, L_classDays(c)); }), groups: r.groups || [], title: '', creator: '系統', teachers: (r.teachers && r.teachers.length) ? r.teachers : lastTeachers(r.dept, r.course) };
       rows.push(tableRow_(t, ''));
     });
     writeSched_('教學進度表', SCHED_TABLE_HEAD, rows);
@@ -991,7 +1003,7 @@ function apiScheduleSaveTable(rec) {
       if (rec.groups != null && (Array.isArray(rec.groups) ? rec.groups.join('、') : String(rec.groups)).replace(/[\s,，、]+/g, '、').replace(/^、|、$/g, '') !== t.groups.join('、')) throw new Error('分組要請技士、科主任或管理者改。');
     }
     var inc = Array.isArray(rec.classes) ? rec.classes : [];
-    var classes = L_sortClasses(t.classes.map(function (tc) { var x = inc.filter(function (i) { return i && i.cls === tc.cls; })[0], d = L_classDays(x || tc); return { cls: tc.cls, wd: d[0], days: d }; }));
+    var classes = L_sortClasses(t.classes.map(function (tc) { var x = inc.filter(function (i) { return i && i.cls === tc.cls; })[0], d = L_classDays(x || tc); return clT_({ cls: tc.cls, teachers: tc.teachers }, d); }));
     if (classes.length > 1 && classes.some(function (c) { return c.days.length > 1; })) throw new Error('每天上課（一週好幾天）的班，一張進度表只能有這一個班。');
     var groups = (Array.isArray(rec.groups) ? rec.groups.join('、') : String(rec.groups == null ? t.groups.join('、') : rec.groups)).split(/[、,，\s]+/).map(function (g) { return L_safeText(g, 6); }).filter(Boolean);
     if (groups.length === 1 || groups.length > 3) throw new Error('分組要填 2 到 3 組，例如：單數組、雙數組。');
