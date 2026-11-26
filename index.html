@@ -365,8 +365,8 @@ function schedMissing(){
 function flowHTML(){
   const st=[[0,'進度表'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
   const nn=sc().length,wDone=nn>0&&sc().every(e=>S.seen.has(eKey(e))),tDone=nn>0&&sc().every(e=>S.seen4.has(eKey(e)));
-  const miss=schedMissing(),stat=n=>n===0?((pendCount()||miss>0)?'todo':(miss===0&&nn>0?'done':'')):n===3?(nn?(wDone?'done':'todo'):''):n===4?(nn?(tDone?'done':'todo'):''):(nn&&wDone&&tDone?'done':'');   // 橘色＝還沒做完，綠色＝做完了
-  let h=`<div class="steps">${st.map(([n,l],i)=>{const k=stat(n);return `<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''} ${k?'st-'+k:''}">${i+1} ${l}${k==='done'?' ✓':''}${n===0&&miss>0?`（還有 ${miss} 格空白）`:''}</button>`;}).join('')}</div>`;
+  const unsent=sc().filter(e=>e.draft||e.pend).length,miss=schedMissing(),stat=n=>n===0?((pendCount()||miss>0)?'todo':(miss===0&&nn>0?'done':'')):n===3?(nn?(wDone?'done':'todo'):''):n===4?(nn?(tDone?'done':'todo'):''):(nn&&unsent>0?'todo':(nn&&wDone&&tDone?'done':''));   // 橘色＝還沒做完，綠色＝做完了
+  let h=`<div class="steps">${st.map(([n,l],i)=>{const k=stat(n);return `<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''} ${k?'st-'+k:''}">${i+1} ${l}${k==='done'?' ✓':''}${n===0&&miss>0?`（還有 ${miss} 格空白）`:''}${n===5&&unsent>0?`（${unsent} 堂還沒匯出）`:''}</button>`;}).join('')}</div>`;
   if(S.step===0){
     const n=sc().length,dr=sc().filter(e=>e.draft).length;
     return h+schedHTML()+((n||pendCount())?bar(pendCount()?`有 ${pendCount()} 格還沒儲存`:dr?`進度表排給你 ${dr} 堂，等你確認`:`${n} 堂課`,`<button class="btn" data-a="step" data-n="3">${pendCount()?'儲存並下一步：確認重量':'下一步：確認重量'}</button>`):'');
