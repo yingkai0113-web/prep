@@ -356,8 +356,8 @@ function extraHTML(){
 /* 進度表還有幾格沒排（只算跟自己有關的進度表，寒暑假不算；平常上課的每一週、每個班都要有「上實習」或「不排實習」） */
 function schedMissing(){
   const d=S.sc&&S.sc.data;if(!d||!d.tables)return null;const me=S.user.email;
-  let ts=d.tables.filter(t=>(t.teachers||[]).includes(me)||d.cells.some(c=>c.tableId===t.id&&c.cell&&c.cell.kind==='lesson'&&(c.cell.groups||[]).some(g=>g.teacher===me)));
-  if(!ts.length){const cur=d.tables.find(t=>t.id===S.sc.tab);ts=cur?[cur]:[];}
+  let ts=d.tables.filter(t=>t.canEdit);                                                    // 只算我是授課老師的進度表（管理員看得到別人的，不算進去）
+  if(!ts.length)ts=d.tables.filter(t=>d.cells.some(c=>c.tableId===t.id&&c.cell&&c.cell.kind==='lesson'&&(c.cell.groups||[]).some(g=>g.teacher===me)));
   let n=0;
   ts.forEach(t=>tWeeks(t).filter(w=>!w.vac).forEach(w=>t.classes.forEach(c=>{const ds=clDays(c);(ds.length===1?[0]:ds).forEach(x=>{if(!schedCell(t.id,w.n,c.cls,x))n++;});})));
   return n;
@@ -1609,7 +1609,8 @@ function schedHTML(){
   let t=schedTable(S.sc.tab)||d.tables[0];S.sc.tab=t.id;
   const dept=t.dept,list=d.tables.filter(x=>x.dept===dept);
   h+=`<div class="seg" role="group" aria-label="部別" style="margin-bottom:8px">${DEPTS.map(x=>`<button data-a="scDept" data-d="${x}" class="${dept===x?'on':''}">${x}</button>`).join('')}</div>
-  <select class="in" style="width:100%;margin-bottom:8px;font-weight:700" data-k="scTabSel" aria-label="哪一門課的進度表">${list.map(x=>`<option value="${esc(x.id)}" ${x.id===t.id?'selected':''}>${esc(x.title||x.course)}（${x.classes.map(c=>esc(c.cls)).join('、')}）</option>`).join('')}</select>
+  <select class="in" style="width:100%;margin-bottom:8px;font-weight:700" data-k="scTabSel" aria-label="哪一門課的進度表">${list.map(x=>`<option value="${esc(x.id)}" ${x.id===t.id?'selected':''}>${x.canEdit&&d.tables.some(y=>!y.canEdit)?'★ 我的｜':''}${esc(x.title||x.course)}（${x.classes.map(c=>esc(c.cls)).join('、')}）</option>`).join('')}</select>
+  ${t.canEdit&&d.tables.some(y=>!y.canEdit)?'<div style="margin:0 0 8px"><span class="tg">★ 這是我的進度表</span></div>':''}
   ${!t.canEdit&&!S.asT?'<div class="err" style="margin:0 0 8px">這張進度表你不是授課老師，只能看，不能編輯。（要編輯：到「每學期要有哪些進度表」把自己加成這門課的授課老師）</div>':''}
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><span class="mut" style="font-size:13px">${t.classes.map(c=>`${esc(c.cls)}：${daysText(clDays(c))}`).join('　')}${t.groups.length?`　分組：${esc(t.groups.join('、'))}`:''}</span>${d.canConfig?(S.sc.delAsk===t.id?`<span><button class="btn sm danger" data-a="scDelYes">確定刪除這張</button> <button class="btn sm ghost" data-a="scDelNo">取消</button></span>`:`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日、分組、授課老師</button> <button class="btn sm ghost" data-a="scDelAsk">刪除</button></span>`):(t.classes.length===1?`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日</button></span>`:'')}</div>
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${t.ext?`寒暑假加課：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}`:'寒暑假也要上課？'}</span><span><button class="btn sm ghost" data-a="hOpen">叫出以前的進度表</button> <button class="btn sm ghost" data-a="scExtra">${t.ext?'修改寒暑假的週':'＋ 加寒暑假的週'}</button></span></div>
