@@ -1813,6 +1813,74 @@ function apiResetRestore(stamp, mode) {
   } finally { rtClear_(); lock.releaseLock(); }
 }
 
+/* ---------------- 代老師匯入紙本（只有技士、科主任、管理者）----------------
+ * 把以前紙本的材料申請單「用老師的名義」補進系統：進度表格子填好（授課老師要先設定好）、材料單已送出。
+ * rec.items[i] = { teacher(信箱), dept, course, cls, date, sets, pid | custom:{title,serving,dsets,rows:[{raw,per,unit}]}, ov, omit, extra, tools, title }
+ * dry = true：只檢查（找得到進度表、週次、老師），不寫入。 */
+function apiPaperImport(rec) {
+  var me = requireStaff_(); rec = rec || {};
+  var items = Array.isArray(rec.items) ? rec.items : [], dry = !!rec.dry;
+  if (!items.length || items.length > 60) throw new Error('一次匯入 1 到 60 張。');
+  var term = setting_('目前學年學期', ''), emails = schedEmails_(), log = [];
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    items.forEach(function (it, ix) {
+      var tag = '第 ' + (ix + 1) + ' 張（' + (it.date || '') + ' ' + (it.cls || '') + '）：';
+      var teacher = String(it.teacher || '').toLowerCase().trim();
+      if (emails.indexOf(teacher) < 0) throw new Error(tag + '找不到老師 ' + teacher);
+      var t = schedTables_(term).filter(function (x) { return x.dept === it.dept && x.course === it.course && x.classes.some(function (c) { return c.cls === it.cls; }); })[0];
+      if (!t) throw new Error(tag + '找不到「' + it.dept + ' ' + it.course + ' ' + it.cls + '」的進度表（請先在送單狀況新增）。');
+      if ((t.teachers || []).indexOf(teacher) < 0) throw new Error(tag + '這位老師還不是這門課的授課老師，請先在送單狀況設定。');
+      var d = L_parseDate(it.date); if (!d) throw new Error(tag + '日期不正確');
+      var wk = tableWeeks_(t).filter(function (w) { return it.date >= w.mon && it.date <= L_addDays(w.mon, 6); })[0];
+      if (!wk) throw new Error(tag + '這個日期不在這張進度表的週次裡（學期 ' + semDates_().start + ' ~ ' + semDates_().end + '）。');
+      var tc = t.classes.filter(function (c) { return c.cls === it.cls; })[0], days = L_classDays(tc), wd = d.t.getUTCDay() || 7, day = 0;
+      if (days.length > 1) day = wd; else if (days[0] !== wd) { if (t.classes.length === 1) day = wd; else throw new Error(tag + '這個班的上課日是週' + L_WD[days[0] % 7] + '，但這張紙是週' + L_WD[wd % 7] + '。'); }
+      log.push({ ix: ix, table: t.id, week: wk.n, day: day, weekLabel: wk.label });
+      it._t = t; it._wk = wk; it._day = day; it._teacher = teacher;
+    });
+    if (dry) return { ok: true, log: log };
+    var cat = loadCatalog_(), done = [];
+    items.forEach(function (it, ix) {
+      var t = it._t, pid = String(it.pid || '');
+      if (!pid && it.custom) {                                                           // 目錄裡沒有的產品：用這位老師的名義建一張自創材料單
+        var c = it.custom, sh = customSheet_(), vals = sh.getDataRange().getValues(), found = '';
+        for (var i = 1; i < vals.length; i++) if (str_(vals[i][1]).toLowerCase() === it._teacher && str_(vals[i][2]) === String(c.title) && str_(vals[i][8]) !== '是') { found = str_(vals[i][0]); break; }
+        if (!found) {
+          var clean = L_cleanCustom({ title: c.title, serving: c.serving, dsets: c.dsets, rows: (c.rows || []).map(function (r) { return { raw: r.raw, per: r.per, unit: r.unit || 'g', mode: 'per' }; }) }, nameMap_());
+          clean.pid = '自-' + Utilities.getUuid().replace(/-/g, '').slice(0, 8);
+          L_assignRowIds(clean.pid, clean.items);
+          sh.getRange(Math.max(vals.length, 1) + 1, 1, 1, CUSTOM_HEAD.length).setValues([[clean.pid, it._teacher, clean.title, clean.serving || String(c.serving || ''), clean.dsets, JSON.stringify(clean.items), JSON.stringify(clean.tools || []), '', '', nowStr_()]]);
+          found = clean.pid; rtClear_(); CAT_ = null; cat = loadCatalog_();
+        }
+        pid = found;
+      }
+      if (!cat.products[pid]) throw new Error('第 ' + (ix + 1) + ' 張：找不到材料單 ' + pid);
+      var cells = schedCells_(), ex = cells.filter(function (x) { return x.tableId === t.id && x.week === it._wk.n && x.cls === it.cls && (x.day || 0) === it._day; })[0];
+      var raw = ex && ex.cell.kind === 'lesson' ? JSON.parse(JSON.stringify(ex.cell)) : { kind: 'lesson', mode: 'joint', groups: [{ teacher: it._teacher, pids: [] }] };
+      if (raw.mode !== 'joint') throw new Error('第 ' + (ix + 1) + ' 張：這一格是分組的，請手動處理。');
+      if (raw.groups[0].teacher && raw.groups[0].teacher !== it._teacher) throw new Error('第 ' + (ix + 1) + ' 張：這一格已經有別的老師開單。');
+      raw.groups[0].teacher = it._teacher;
+      if (raw.groups[0].pids.indexOf(pid) < 0) raw.groups[0].pids.push(pid);
+      var cell = L_cleanCell(raw, t, cat.products, emails, it._teacher, tablePids_(t.id));
+      var rows = schedCells_().filter(function (x) { return !(x.tableId === t.id && x.week === it._wk.n && x.cls === it.cls && (x.day || 0) === it._day); }).map(cellRow_);
+      rows.push(cellRow_({ tableId: t.id, week: it._wk.n, cls: it.cls, day: it._day, cell: cell, by: it._teacher, at: nowStr_() }));
+      writeSched_('教學進度內容', SCHED_CELL_HEAD, rows);
+      syncSchedule_(t.id, it._wk.n, it.cls, it._day);
+      rtClear_(['教學進度內容', '排課']);
+      var plans = readPlans_(), pre = t.id + '|' + it._wk.n + '|' + it.cls + '|', now = nowStr_(), hit = null;
+      plans.forEach(function (e) { if (!hit && e.term === term && e.sid && e.sid.indexOf(pre) === 0 && e.pid === pid && e.teacher === it._teacher) hit = e; });
+      if (!hit) throw new Error('第 ' + (ix + 1) + ' 張：進度表格子填好了，但沒有產生對應的排課。');
+      var cl = L_cleanEntry({ id: hit.id, pid: pid, date: hit.date, cls: hit.cls, course: hit.course, sets: it.sets || hit.sets, ov: it.ov || {}, omit: it.omit || [], extra: it.extra || [], tools: Array.isArray(it.tools) ? it.tools : null, title: it.title || '', yFrom: it.yFrom, yTo: it.yTo, yUnit: it.yUnit }, cat);
+      ['sets', 'scale', 'yFrom', 'yTo', 'yUnit', 'ov', 'omit', 'extra', 'tools', 'title', 'conv'].forEach(function (k) { hit[k] = cl[k]; });
+      hit.draft = false; hit.pending = null; hit.updated = now;
+      flushPlanRows_(ss_().getSheetByName('排課'), plans.map(function (e) { return planRow_(e, e.created, e.updated); }));
+      done.push({ date: it.date, cls: it.cls, pid: pid, id: hit.id });
+    });
+    return { ok: true, done: done };
+  } finally { rtClear_(); lock.releaseLock(); }
+}
+
 /* 量一下各分頁讀取要多久（找哪裡慢）。只有技士、科主任、管理者能呼叫。 */
 function apiProfile() {
   requireAdmin_();
