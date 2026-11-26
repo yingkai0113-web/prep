@@ -566,7 +566,7 @@ function L_docQuote(rec) {
   rows.push([]);
   rows.push([T(Q.vendor, { al: 'l' })]); merges.push([rows.length - 1, 0, rows.length - 1, 6]);
   rows.push([T('電話：' + Q.vTel)]); rows.push([T('傳真：' + Q.vFax)]); rows.push([T('地址：' + Q.vAddr)]);
-  return { name: '報價單', cw: [8, 26, 10, 14, 11, 12, 16], rows: rows, merges: merges, heights: heights, defH: 18,
+  return { name: '報價單', cw: [12.74, 23.74, 10.37, 14.37, 10.99, 11.87, 12.74], rows: rows, merges: merges, heights: heights, defH: 18,
            page: { paper: 9, scale: 100, fit: 'width', orient: 'portrait', m: { l: 0.4, r: 0.4, t: 0.6, b: 0.6, h: 0.3, f: 0.3 } } };
 }
 
