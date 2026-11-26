@@ -609,13 +609,14 @@ function L_docxSplitFiles(model) {
   var W = [988, 3827, 1417, 3828];
   var bd = '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(function (k) { return '<w:' + k + ' w:val="single" w:sz="4" w:space="0" w:color="auto"/>'; }).join('') + '</w:tblBorders>';
   var cell = function (i, t, jc) { return '<w:tc><w:tcPr><w:tcW w:w="' + W[i] + '" w:type="dxa"/></w:tcPr>' + para(t, 28, false, { jc: jc }) + '</w:tc>'; };
-  var row = function (a, hdr) { return '<w:tr><w:trPr><w:cantSplit/>' + (hdr ? '<w:tblHeader/>' : '') + '</w:trPr>' + cell(0, a[0], 'center') + cell(1, a[1], hdr ? 'center' : null) + cell(2, a[2], 'center') + cell(3, a[3], hdr ? 'center' : null) + '</w:tr>'; };
+  var noteCell = function (t, hdr, vm) { return '<w:tc><w:tcPr><w:tcW w:w="' + W[3] + '" w:type="dxa"/>' + (vm === 'start' ? '<w:vMerge w:val="restart"/>' : vm === 'cont' ? '<w:vMerge/>' : '') + (vm ? '<w:vAlign w:val="center"/>' : '') + '</w:tcPr>' + para(vm === 'cont' ? '' : t, 28, false, { jc: 'center' }) + '</w:tc>'; };
+  var row = function (a, hdr, vm) { return '<w:tr><w:trPr><w:cantSplit/>' + (hdr ? '<w:tblHeader/>' : '') + '</w:trPr>' + cell(0, a[0], 'center') + cell(1, a[1], hdr ? 'center' : null) + cell(2, a[2], 'center') + noteCell(a[3], hdr, vm) + '</w:tr>'; };
   var body = para('員林農工食品加工科', 44, false);
   model.forEach(function (d, i) {
     var p = L_parseDate(d.date);
     body += para('上課日期：' + (p.y - 1911) + '.' + p.m + '.' + p.d + '(' + L_weekday(d.date) + ')', 44, true, { keep: 1, before: i ? 240 : 0 });
     body += '<w:tbl><w:tblPr><w:tblW w:w="' + W.reduce(function (a, b) { return a + b; }, 0) + '" w:type="dxa"/>' + bd + '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' + W.map(function (w) { return '<w:gridCol w:w="' + w + '"/>'; }).join('') + '</w:tblGrid>' +
-      row(['項目', '品名', '全班總計', '備註'], true) + d.rows.map(function (r) { return row(['', r.name, L_num(r.total), r.note]); }).join('') + '</w:tbl>';
+      row(['項目', '品名', '全班總計', '備註'], true) + d.rows.map(function (r, k) { return row(['', r.name, L_num(r.total), r.note], false, r.note === '' && k > 0 ? 'cont' : (d.rows[k + 1] && d.rows[k + 1].note === '' ? 'start' : '')); }).join('') + '</w:tbl>';
   });
   body += para('', 28, false);
   var doc = X + '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="851" w:footer="992" w:gutter="0"/></w:sectPr></w:body></w:document>';
