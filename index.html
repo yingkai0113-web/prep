@@ -353,11 +353,20 @@ function extraHTML(){
   return h+(S.step===1?step1():S.step===2?step2():S.step===3?step3():S.step===4?stepTools():step5());
 }
 /* 教學進度表 → 確認重量 → 準備器具 → 匯出：進度表排好之後，直接接著做下去 */
+/* 進度表還有幾格沒排（只算跟自己有關的進度表，寒暑假不算；平常上課的每一週、每個班都要有「上實習」或「不排實習」） */
+function schedMissing(){
+  const d=S.sc&&S.sc.data;if(!d||!d.tables)return null;const me=S.user.email;
+  let ts=d.tables.filter(t=>(t.teachers||[]).includes(me)||d.cells.some(c=>c.tableId===t.id&&c.cell&&c.cell.kind==='lesson'&&(c.cell.groups||[]).some(g=>g.teacher===me)));
+  if(!ts.length){const cur=d.tables.find(t=>t.id===S.sc.tab);ts=cur?[cur]:[];}
+  let n=0;
+  ts.forEach(t=>tWeeks(t).filter(w=>!w.vac).forEach(w=>t.classes.forEach(c=>{const ds=clDays(c);(ds.length===1?[0]:ds).forEach(x=>{if(!schedCell(t.id,w.n,c.cls,x))n++;});})));
+  return n;
+}
 function flowHTML(){
   const st=[[0,'進度表'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
   const nn=sc().length,wDone=nn>0&&sc().every(e=>S.seen.has(eKey(e))),tDone=nn>0&&sc().every(e=>S.seen4.has(eKey(e)));
-  const stat=n=>n===0?(pendCount()?'todo':nn>0?'done':''):n===3?(nn?(wDone?'done':'todo'):''):n===4?(nn?(tDone?'done':'todo'):''):(nn&&wDone&&tDone?'done':'');   // 橘色＝還沒做完，綠色＝做完了
-  let h=`<div class="steps">${st.map(([n,l],i)=>{const k=stat(n);return `<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''} ${k?'st-'+k:''}">${i+1} ${l}${k==='done'?' ✓':''}</button>`;}).join('')}</div>`;
+  const miss=schedMissing(),stat=n=>n===0?((pendCount()||miss>0)?'todo':(miss===0&&nn>0?'done':'')):n===3?(nn?(wDone?'done':'todo'):''):n===4?(nn?(tDone?'done':'todo'):''):(nn&&wDone&&tDone?'done':'');   // 橘色＝還沒做完，綠色＝做完了
+  let h=`<div class="steps">${st.map(([n,l],i)=>{const k=stat(n);return `<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''} ${k?'st-'+k:''}">${i+1} ${l}${k==='done'?' ✓':''}${n===0&&miss>0?`（還有 ${miss} 格空白）`:''}</button>`;}).join('')}</div>`;
   if(S.step===0){
     const n=sc().length,dr=sc().filter(e=>e.draft).length;
     return h+schedHTML()+((n||pendCount())?bar(pendCount()?`有 ${pendCount()} 格還沒儲存`:dr?`進度表排給你 ${dr} 堂，等你確認`:`${n} 堂課`,`<button class="btn" data-a="step" data-n="3">${pendCount()?'儲存並下一步：確認重量':'下一步：確認重量'}</button>`):'');
