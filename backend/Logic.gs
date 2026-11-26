@@ -309,8 +309,8 @@ function L_entryMatches(e, f, cat) {
 function L_mergeUses(uses) {
   var out = [], idx = {};
   (uses || []).forEach(function (u) {
-    var k = u.date + '|' + (u.course || u.title);
-    if (idx[k] === undefined) { idx[k] = out.length; out.push({ date: u.date, course: u.course || u.title, qty: typeof u.qty === 'number' ? u.qty : null }); }
+    var k = u.date + '|' + (u.course || u.title) + '|' + (u.teacher || '');
+    if (idx[k] === undefined) { idx[k] = out.length; out.push({ date: u.date, course: u.course || u.title, teacher: u.teacher || '', qty: typeof u.qty === 'number' ? u.qty : null }); }
     else if (typeof u.qty === 'number') out[idx[k]].qty = (out[idx[k]].qty || 0) + u.qty;
   });
   return out.map(function (u) { if (typeof u.qty === 'number') u.qty = L_round(u.qty); return u; });
@@ -492,7 +492,7 @@ function L_docWeek(agg) {
   var first = rows.length + 1;
   agg.materials.forEach(function (m) {
     var r = rows.length + 1;
-    var uses = m.uses.map(function (u) { return L_md(u.date) + ' ' + u.course + (u.qty === null || u.qty === undefined ? '' : ' ' + L_num(u.qty) + (m.unit === 'g' ? '克' : m.unit)); }).join('；');
+    var uses = m.uses.map(function (u) { return L_md(u.date) + ' ' + u.course + (u.teacher ? '（' + u.teacher + '）' : '') + (u.qty === null || u.qty === undefined ? '' : ' ' + L_num(u.qty) + (m.unit === 'g' ? '克' : m.unit)); }).join('；');
     rows.push([T(m.std, BD), T(m.total, Object.assign({ al: 'r' }, BD)), T(m.unit, Object.assign({ al: 'c' }, BD)),
                m.unit === 'g' ? T('', Object.assign({ al: 'r', f: 'ROUND(B' + r + '/1000,2)' }, BD)) : T('', BD), T(uses, Object.assign({ wrap: 1, va: 'top' }, BD))]);
   });
@@ -504,7 +504,7 @@ function L_docWeek(agg) {
     rows.push([T('另計（不加總）', HD), T('內容', HD), T('', HD), T('', HD), T('用於', HD)]);
     merges.push([rows.length - 1, 1, rows.length - 1, 3]);
     agg.others.forEach(function (o) {
-      rows.push([T(o.std, BD), T(o.text, BD), T('', BD), T('', BD), T(o.uses.map(function (u) { return L_md(u.date) + ' ' + u.course; }).join('；'), Object.assign({ wrap: 1 }, BD))]);
+      rows.push([T(o.std, BD), T(o.text, BD), T('', BD), T('', BD), T(o.uses.map(function (u) { return L_md(u.date) + ' ' + u.course + (u.teacher ? '（' + u.teacher + '）' : ''); }).join('；'), Object.assign({ wrap: 1 }, BD))]);
       merges.push([rows.length - 1, 1, rows.length - 1, 3]);
     });
   }
