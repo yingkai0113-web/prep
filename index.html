@@ -572,7 +572,7 @@ function step5(){
   return `<h2>確認並送出</h2>${sb}${locked()?`<p class="sub">${lockMsg()}要下載之前已經送出的材料單，按下面的按鈕。</p>`:`<p class="sub"><b>匯出之後，技士才看得到。</b>按「確認並匯出」，先核對一次日期和產品，再選要不要下載檔案（只匯出／進度表／進度表加材料單），沒問題就送給技士。還沒匯出的都只是草稿（已自動存起來），技士看不到、也不算。</p>`}
   <div class="card"><div class="cb" style="padding-top:12px">${list}<p class="mut" style="margin:10px 0 0">${sc().length} 堂課，跨 ${weeks} 週。</p></div></div>
   ${locked()?fmtPick()+bar(S.busy||'',`<button class="btn" data-a="dlSent" ${S.busy?'disabled':''}>${S.busy?'處理中…':'下載已送出的材料單'}</button>`)
-    :bar(S.busy||'',`<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
+    :(S.sentAt?fmtPick():'')+bar(S.busy||'',`${S.sentAt?`<button class="btn ghost" data-a="dlSent" ${S.busy?'disabled':''} title="不重新送出，只把已匯出的材料單下載成檔案">只下載檔案（不重新送出）</button> `:''}<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
 }
 
 /* ---------- 材料單編輯（自創、共用、預設模板都用這個） ---------- */
