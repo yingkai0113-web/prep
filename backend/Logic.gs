@@ -572,6 +572,63 @@ function L_docQuote(rec) {
            page: { paper: 9, scale: 100, fit: 'width', orient: 'portrait', m: { l: 0.4, r: 0.4, t: 0.6, b: 0.6, h: 0.3, f: 0.3 } } };
 }
 
+/* ---------------- 分配單（附給廠商：每個上課日期各一張表，品名、全班總計、備註＝哪位老師做什麼） ----------------
+ * rec.items[i].uses = [{ date, teacher, titles[], qty }]（qty 已經是最後要給廠商的數量） */
+function L_splitModel(items) {
+  var by = {}, dates = [];
+  (items || []).forEach(function (it, ix) {
+    var perDate = {};
+    (it.uses || []).forEach(function (u) {
+      if (!L_parseDate(u.date) || !isFinite(Number(u.qty)) || Number(u.qty) <= 0) return;
+      (perDate[u.date] = perDate[u.date] || []).push(u);
+    });
+    Object.keys(perDate).forEach(function (d) {
+      var us = perDate[d], total = 0;
+      us.forEach(function (u) { total += Number(u.qty); });
+      var parts = us.map(function (u) {
+        var t = (u.titles || []).filter(Boolean).join('、'), who = String(u.teacher || '');
+        return (who + (t ? '(' + t + ')' : '')) + (us.length > 1 ? ' ' + L_num(Number(u.qty)) + (it.unit || '') : '');
+      });
+      if (!by[d]) { by[d] = []; dates.push(d); }
+      by[d].push({ name: it.name + (it.unit ? '/' + it.unit : ''), total: L_round(total), note: parts.join('、'), key: String(us[0].teacher || ''), ix: ix });
+    });
+  });
+  dates.sort();
+  return dates.map(function (d) {
+    var rows = by[d].slice().sort(function (a, b) { return a.key < b.key ? -1 : a.key > b.key ? 1 : a.ix - b.ix; });
+    var prev = null;
+    rows.forEach(function (r) { var n = r.note; r.note = n === prev ? '' : n; prev = n; });
+    return { date: d, rows: rows };
+  });
+}
+function L_docxSplitFiles(model) {
+  var X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  var rf = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="' + L_FONT + '" w:cs="Times New Roman" w:hint="eastAsia"/>';
+  var run = function (t, sz, b) { return '<w:r><w:rPr>' + rf + (b ? '<w:b/>' : '') + '<w:sz w:val="' + sz + '"/><w:szCs w:val="' + sz + '"/></w:rPr><w:t xml:space="preserve">' + L_xmlEsc(t) + '</w:t></w:r>'; };
+  var para = function (t, sz, b, o) { return '<w:p><w:pPr>' + (o && o.keep ? '<w:keepNext/>' : '') + '<w:spacing w:before="' + ((o && o.before) || 0) + '" w:after="0"/>' + (o && o.jc ? '<w:jc w:val="' + o.jc + '"/>' : '') + '</w:pPr>' + (t ? run(t, sz, b) : '') + '</w:p>'; };
+  var W = [988, 3827, 1417, 3828];
+  var bd = '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(function (k) { return '<w:' + k + ' w:val="single" w:sz="4" w:space="0" w:color="auto"/>'; }).join('') + '</w:tblBorders>';
+  var cell = function (i, t, jc) { return '<w:tc><w:tcPr><w:tcW w:w="' + W[i] + '" w:type="dxa"/></w:tcPr>' + para(t, 28, false, { jc: jc }) + '</w:tc>'; };
+  var row = function (a, hdr) { return '<w:tr><w:trPr><w:cantSplit/>' + (hdr ? '<w:tblHeader/>' : '') + '</w:trPr>' + cell(0, a[0], 'center') + cell(1, a[1], hdr ? 'center' : null) + cell(2, a[2], 'center') + cell(3, a[3], hdr ? 'center' : null) + '</w:tr>'; };
+  var body = para('員林農工食品加工科', 44, false);
+  model.forEach(function (d, i) {
+    var p = L_parseDate(d.date);
+    body += para('上課日期：' + (p.y - 1911) + '.' + p.m + '.' + p.d + '(' + L_weekday(d.date) + ')', 44, true, { keep: 1, before: i ? 240 : 0 });
+    body += '<w:tbl><w:tblPr><w:tblW w:w="' + W.reduce(function (a, b) { return a + b; }, 0) + '" w:type="dxa"/>' + bd + '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' + W.map(function (w) { return '<w:gridCol w:w="' + w + '"/>'; }).join('') + '</w:tblGrid>' +
+      row(['項目', '品名', '全班總計', '備註'], true) + d.rows.map(function (r) { return row(['', r.name, L_num(r.total), r.note]); }).join('') + '</w:tbl>';
+  });
+  body += para('', 28, false);
+  var doc = X + '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="851" w:footer="992" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  var styles = X + '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr>' + rf + '<w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="en-US" w:eastAsia="zh-TW"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>';
+  return [
+    { name: '[Content_Types].xml', xml: X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>' },
+    { name: '_rels/.rels', xml: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+    { name: 'word/_rels/document.xml.rels', xml: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+    { name: 'word/document.xml', xml: doc },
+    { name: 'word/styles.xml', xml: styles }
+  ];
+}
+
 /* 字體：中文用標楷體、英文和數字用 Times New Roman。
  * 同一格裡中英文混在一起的，拆成好幾段（xlsx 的「多種字體」格 / PDF 的 span），每一段各用各的字體。 */
 var L_FONT_EN = 'Times New Roman';

@@ -727,12 +727,30 @@ function archPageHTML(){
 /* 估價單：勾選要請購的材料、器具，數量預設帶上面的總量，可以改 */
 function quoteList(){
   const t=S.tech;if(!t)return [];
-  const out=t.materials.map(m=>({key:'m|'+m.std+'|'+m.unit,kind:'材料',name:m.std,qty:m.total,unit:m.unit==='g'?'克':m.unit}));
+  const addU=(arr,date,teacher,title,qty)=>{let u=arr.find(z=>z.date===date&&z.teacher===teacher);if(!u){u={date,teacher,titles:[],qty:0};arr.push(u);}if(title&&!u.titles.includes(title))u.titles.push(title);if(qty===null||u.qty===null)u.qty=null;else u.qty+=qty;};
+  const out=t.materials.map(m=>{const us=[];(m.uses||[]).forEach(u=>{const ts=(u.items||[]).map(i=>i.title).filter(Boolean);if(!ts.length&&u.course)ts.push(u.course);addU(us,u.date,u.teacher||'',ts[0]||'',typeof u.qty==='number'?u.qty:null);const x=us.find(z=>z.date===u.date&&z.teacher===(u.teacher||''));ts.forEach(q=>{if(!x.titles.includes(q))x.titles.push(q);});});return {key:'m|'+m.std+'|'+m.unit,kind:'材料',name:m.std,qty:m.total,unit:m.unit==='g'?'克':m.unit,uses:us};});
   const tm={};
-  (t.tools||[]).forEach(d=>d.items.forEach(x=>{if(x.n===null)return;const k='t|'+x.name+'|'+x.unit;(tm[k]=tm[k]||{key:k,kind:'器具',name:x.name,qty:0,unit:x.unit}).qty+=x.n;}));
+  (t.tools||[]).forEach(d=>d.items.forEach(x=>{if(x.n===null)return;const k='t|'+x.name+'|'+x.unit;const o=tm[k]=tm[k]||{key:k,kind:'器具',name:x.name,qty:0,unit:x.unit,uses:[]};o.qty+=x.n;(x.uses||[]).forEach(u=>{const mm=String(u.qty||'').match(/[\d.]+/);addU(o.uses,d.date,u.teacher||'',u.title||u.course||'',mm?Number(mm[0]):null);});}));
   return out.concat(Object.values(tm));
 }
+function allocModal(){
+  const Q=S.qd,A=Q.alloc;
+  const rows=A.list.map((x,i)=>`<div class="qrow2" style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0"><b>${esc(x.name)}</b>　<span class="mut">原本 ${esc(String(x.qty0))} ${esc(x.unit0)}，現在要買 <b>${esc(String(x.qty))} ${esc(x.unit)}</b></span>
+    ${x.uses.map((u,j)=>`<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><span style="flex:1;min-width:11em">${esc(md0(u.date))}　<b>${esc(u.teacher||'（沒有老師）')}</b>${u.titles.length?'（'+esc(u.titles.join('、'))+'）':''}<small class="mut">　原本 ${u.orig===null?'—':esc(String(u.orig))}</small></span><input class="in" style="width:7em;text-align:right" type="number" min="0" step="any" inputmode="decimal" data-k="qdAl" data-i="${i}" data-j="${j}" value="${esc(u.val)}"> <span class="mut">${esc(x.unit)}</span></div>`).join('')}
+    <div id="qdsum${i}" style="margin-top:6px;font-size:14px"></div></div>`).join('');
+  return `<div class="modal"><div class="mb" style="max-width:min(96vw,720px)"><h2 style="margin:0 0 4px">怎麼分配給老師？</h2>
+    <p class="mut" style="margin:0 0 6px">這幾項你改過數量（或單位），請告訴廠商每位老師各分多少，合計要剛好等於你要買的數量。分配單會一起匯出，給廠商看。</p>
+    <div style="max-height:52vh;overflow:auto">${rows}</div>
+    ${Q.err?`<div class="err" style="margin-top:8px">${esc(Q.err)}</div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="qdBack">返回修改</button><button class="btn" data-a="qdGo2" ${S.busy?'disabled':''}>${S.busyA==='quote'?'匯出中…':'匯出'}</button></div></div></div>`;
+}
+function allocSum(i){
+  const A=S.qd.alloc;if(!A)return;const x=A.list[i],el=document.getElementById('qdsum'+i);if(!el)return;
+  const sum=Math.round(x.uses.reduce((a,u)=>a+(Number(u.val)||0),0)*1000)/1000,ok=Math.abs(sum-Number(x.qty))<0.0005;
+  el.innerHTML=`已分配 <b>${sum}</b> ／ 要買 <b>${esc(String(x.qty))}</b> ${esc(x.unit)}　`+(ok?'<span style="color:var(--pri)">✓ 剛好</span>':`<span style="color:var(--err)">${sum>Number(x.qty)?'多了':'還差'} ${Math.round(Math.abs(sum-Number(x.qty))*1000)/1000}</span>`);
+}
 function quoteModal(){
+  if(S.qd&&S.qd.alloc){setTimeout(()=>S.qd&&S.qd.alloc&&S.qd.alloc.list.forEach((_,i)=>allocSum(i)),0);return allocModal();}
   const Q=S.qd,l=quoteList(),sel=l.filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).length;
   const sec=(kind)=>{const L=l.filter(x=>x.kind===kind);if(!L.length)return '';
     return `<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px"><b>${kind}</b><span><button class="btn sm ghost" data-a="qdAll" data-k="${kind}" data-v="1">全選</button> <button class="btn sm ghost" data-a="qdAll" data-k="${kind}" data-v="0">全不選</button></span></div>`+
@@ -1026,14 +1044,28 @@ document.addEventListener('click',async ev=>{
   if(a==='quoteOpen'){const d=addDays(today(),1);S.qd={sel:{},date:d,purpose:'',err:''};return render();}
   if(a==='qdNo'){S.qd=null;return render();}
   if(a==='qdAll'){const on=b.dataset.v==='1';quoteList().filter(x=>x.kind===b.dataset.k).forEach(x=>{const v=S.qd.sel[x.key]||(S.qd.sel[x.key]={});v.on=on;});const sc=(document.querySelector('.qlist')||{}).scrollTop||0;render();const q=document.querySelector('.qlist');if(q)q.scrollTop=sc;return;}
-  if(a==='qdGo'){
+  if(a==='qdGo'||a==='qdGo2'){
     const Q=S.qd;Q.err='';
     if(!Q.date){Q.err='請選送貨日期。';return render();}
-    const items=quoteList().filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).map(x=>{const v=Q.sel[x.key];return {name:(v.name!==undefined&&v.name.trim()?v.name.trim():x.name),qty:v.qty!==undefined&&v.qty!==''?Number(v.qty):x.qty,unit:(v.unit!==undefined&&v.unit.trim()?v.unit.trim():x.unit),note:v.note||''};}).filter(x=>x.qty>0);
+    const L=quoteList();
+    const items=L.filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).map(x=>{const v=Q.sel[x.key];return {src:x,name:(v.name!==undefined&&v.name.trim()?v.name.trim():x.name),qty:v.qty!==undefined&&v.qty!==''?Number(v.qty):x.qty,unit:(v.unit!==undefined&&v.unit.trim()?v.unit.trim():x.unit),note:v.note||''};}).filter(x=>x.qty>0);
     if(!items.length){Q.err='請至少勾一項，數量要大於 0。';return render();}
+    const r3=n=>Math.round(n*1000)/1000;
+    if(a==='qdGo'){
+      const need=items.filter(x=>x.src.uses.length&&(x.src.uses.some(u=>u.qty===null)||Math.abs(x.qty-x.src.qty)>1e-9||x.unit!==x.src.unit));
+      if(need.length){
+        Q.alloc={items,list:need.map(x=>{const us=x.src.uses,tot=us.reduce((a,u)=>a+(u.qty||0),0),keep=x.unit===x.src.unit&&us.length&&us.every(u=>u.qty!==null)&&tot>0;let left=x.qty;
+          return {key:x.src.key,name:x.name,qty:x.qty,unit:x.unit,qty0:x.src.qty,unit0:x.src.unit,uses:us.map((u,j)=>{let val='';if(keep){val=j===us.length-1?r3(left):r3(x.qty*u.qty/tot);left-=Number(val);}return {date:u.date,teacher:u.teacher,titles:u.titles,orig:u.qty===null?null:r3(u.qty),val:val===''?'':String(val)};})};})};
+        return render();}
+    }else{
+      for(const x of Q.alloc.list){const sum=r3(x.uses.reduce((a,u)=>a+(Number(u.val)||0),0));if(Math.abs(sum-Number(x.qty))>=0.0005){Q.err=`「${x.name}」分配的合計是 ${sum}，要剛好等於 ${x.qty} ${x.unit}。`;return render();}}
+    }
+    const al={};if(Q.alloc)Q.alloc.list.forEach(x=>{al[x.key]=x;});
+    const payload=items.map(x=>{const A=al[x.src.key];const us=A?A.uses.map(u=>({date:u.date,teacher:u.teacher,titles:u.titles,qty:Number(u.val)||0})):x.src.uses.map(u=>({date:u.date,teacher:u.teacher,titles:u.titles,qty:u.qty}));return {name:x.name,qty:x.qty,unit:x.unit,note:x.note,uses:us.filter(u=>u.qty>0)};});
     S.busy='製作估價單…';S.busyA='quote';render();
-    try{await runFmt('apiExportQuote',{date:Q.date,purpose:Q.purpose,items});S.qd=null;}catch(e){Q.err=e.message;}
+    try{await runFmt('apiExportQuote',{date:Q.date,purpose:Q.purpose,items:payload,both:(S.dlfmt||'xlsx')==='both'});S.qd=null;}catch(e){Q.err=e.message;}
     S.busy='';S.busyA='';return render();}
+  if(a==='qdBack'){S.qd.alloc=null;S.qd.err='';return render();}
   if(a==='archSched'){S.archView={busy:true};render();try{const d=await run('apiScheduleHistoryTable',b.dataset.id);S.archView={data:d};}catch(e){S.archView=null;S.err=e.message;}return render();}
   if(a==='archViewClose'){S.archView=null;return render();}
   if(a==='ssDelAsk'){S.ssDel=b.dataset.id;return render();}
@@ -1518,6 +1550,7 @@ document.addEventListener('change',ev=>{
   if(k==='qdOn'){const v=S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={});v.on=t.checked;const sc=(document.querySelector('.qlist')||{}).scrollTop||0;render();const q=document.querySelector('.qlist');if(q)q.scrollTop=sc;return;}
   if(k==='qdQty'){(S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={})).qty=t.value;return;}
   if(k==='qdName'){(S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={})).name=t.value;return;}
+  if(k==='qdAl'){const A=S.qd.alloc;if(A){A.list[+t.dataset.i].uses[+t.dataset.j].val=t.value;allocSum(+t.dataset.i);}return;}
   if(k==='qdUnit'){(S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={})).unit=t.value;return;}
   if(k==='qdNote'){(S.qd.sel[t.dataset.key]||(S.qd.sel[t.dataset.key]={})).note=t.value;return;}
   if(k==='qdDate'){S.qd.date=t.value;return;}

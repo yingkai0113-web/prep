@@ -1505,12 +1505,19 @@ function apiExportQuote(rec, fmt) {
   requireStaff_(); rec = rec || {};
   if (!L_parseDate(rec.date)) throw new Error('請選送貨日期。');
   var items = (Array.isArray(rec.items) ? rec.items : []).map(function (x) {
-    return { name: L_safeText(x && x.name, 40), qty: Number(x && x.qty), unit: L_safeText(x && x.unit, 8), note: L_safeText(x && x.note, 30) };
+    var uses = (x && Array.isArray(x.uses) ? x.uses : []).map(function (u) { return { date: String(u && u.date || ''), teacher: L_safeText(u && u.teacher, 20), titles: (Array.isArray(u && u.titles) ? u.titles : []).slice(0, 12).map(function (t) { return L_safeText(t, 30); }), qty: Number(u && u.qty) }; });
+    return { name: L_safeText(x && x.name, 40), qty: Number(x && x.qty), unit: L_safeText(x && x.unit, 8), note: L_safeText(x && x.note, 30), uses: uses };
   }).filter(function (x) { return x.name && isFinite(x.qty) && x.qty > 0; });
   if (!items.length) throw new Error('請至少勾一項要請購的，數量要大於 0。');
   var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
   var doc = L_docQuote({ date: rec.date, today: today, purpose: L_safeText(rec.purpose, 30), items: items });
-  return buildXlsx_('估價單_' + String(rec.date).replace(/-/g, ''), [doc], fmt);
+  var out = buildXlsx_('估價單_' + String(rec.date).replace(/-/g, ''), [doc], fmt);
+  var model = L_splitModel(items);
+  if (!model.length || (rec.both && fmt === 'pdf')) return out;       // 兩種格式都要時，分配單只在第一次（xlsx）附上
+  var sname = '分配單_' + String(rec.date).replace(/-/g, '');         // 附給廠商的分配單（Word）：每個上課日期一張表
+  var blobs = L_docxSplitFiles(model).map(function (f) { return Utilities.newBlob(f.xml, 'application/xml', f.name); });
+  var dx = { name: sname + '.docx', base64: Utilities.base64Encode(Utilities.zip(blobs, sname + '.docx').getBytes()) };
+  return { files: (out.files || [out]).concat([dx]) };
 }
 function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_weekStart(anyDateInWeek); return apiExportRangeSheets(ws, L_addDays(ws, 6), teacherEmail, null, order); }
 
