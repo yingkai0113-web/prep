@@ -959,7 +959,7 @@ function apiScheduleGet(asEmail) {
   return { term: term, half: L_termHalf(term), start: start, end: end, weeks: weeks, tables: visible.map(function (t) { return Object.assign({}, t, { weeks: tableWeeks_(t), canEdit: isTeacherOf_(me, t) }); }), cells: allCells.filter(function (x) { return ids[x.tableId]; }),
            required: isStaff_(me) ? requiredStatus_(term, tables, allCells, weeks) : [], requiredAll: isStaff_(me) ? requiredAll_() : [],       // 有沒有建進度表，只有技士、科主任、管理者看得到
            users: readTable_('使用者').map(function (u) { return { email: str_(u['信箱']).toLowerCase().trim(), name: str_(u['姓名']) || str_(u['信箱']).split('@')[0] }; }).filter(function (u) { return u.email; }),
-           canConfig: isStaff_(me), me: me.email, cellProducts: cellProducts_(allCells.filter(function (x) { return ids[x.tableId]; })) };
+           canConfig: isStaff_(me), me: me.email, cellProducts: cellProducts_(allCells.filter(function (x) { return ids[x.tableId]; })), athRows: athRowsOf_(ids) };
 }
 /* 進度表格子裡用到的材料單名稱（別人自創的，這邊的目錄裡沒有，也要能顯示名稱） */
 function cellProducts_(cells) {
@@ -2048,4 +2048,25 @@ function apiAthDelete(id) {
     athSheet_().deleteRow(hit.row);
     return { ok: true };
   } finally { lock.releaseLock(); }
+}
+
+/* 選手進度表的時間列（每一週可以不一樣）：{def:[{id,t,bg}], w:{週次:[…]}}，存在「設定」分頁 */
+function athRowsOf_(ids) {
+  var out = {};
+  Object.keys(ids).forEach(function (id) { var v = setting_('選手時段 ' + id, ''); if (v) { try { out[id] = JSON.parse(v); } catch (e) {} } });
+  return out;
+}
+function apiAthRowsSave(tableId, rows) {
+  var me = whoami_(); schedGuard_(me);
+  var term = setting_('目前學年學期', ''), t = schedTables_(term).filter(function (x) { return x.id === String(tableId); })[0];
+  if (!t) throw new Error('找不到這張進度表。');
+  assertCanEditTable_(me, t);
+  var clean = function (l) { return (Array.isArray(l) ? l : []).slice(0, 10).map(function (r) { return { id: L_safeText(r && r.id, 10) || Utilities.getUuid().slice(0, 6), t: L_safeText(r && r.t, 20), bg: ['pk', 'gr', 'bl'].indexOf(r && r.bg) >= 0 ? r.bg : '' }; }); };
+  var out = { def: clean(rows && rows.def), w: {} };
+  Object.keys((rows && rows.w) || {}).slice(0, 60).forEach(function (k) { out.w[String(Number(k) || k)] = clean(rows.w[k]); });
+  var json = JSON.stringify(out);
+  if (json.length > 40000) throw new Error('時間列太多，存不下。');
+  setSetting_('選手時段 ' + t.id, json);
+  rtClear_(['設定']);
+  return out;
 }

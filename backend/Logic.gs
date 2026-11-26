@@ -900,12 +900,26 @@ function L_cellSummary(cell, products, names) {
   return cell.groups.map(function (g) { return g.pids.map(function (p) { return products[p] ? products[p].title : p; }).join('、') + (g.teacher ? '（' + ((names && names[g.teacher]) || g.teacher.split('@')[0]) + '）' : ''); }).filter(function (x) { return x; }).join('／');
 }
 /* me / okPids：自己自創、還沒分享的材料單，自己可以排進進度表（排給哪位老師都可以）；已經在這張進度表裡用著的（okPids），別人編輯這一格時也能留著 */
+/* 選手進度表的「時段」：一天的格子裡，每個時段（時間列）各自的產品、數量、文字、樣式；產品是這格全部產品的子集合 */
+function L_cleanSlots(raw, allPids) {
+  var out = [];
+  (Array.isArray(raw) ? raw : []).slice(0, 10).forEach(function (s) {
+    s = s || {};
+    var pids = (Array.isArray(s.pids) ? s.pids : []).map(String).filter(function (p, i, a) { return a.indexOf(p) === i && (!allPids || allPids.indexOf(p) >= 0); });
+    var q = {}; pids.forEach(function (p) { var v = L_safeText(s.q && s.q[p], 14); if (v) q[p] = v; });
+    var txt = L_safeText(s.txt, 30), st = ['r', 'p', 'y'].indexOf(s.st) >= 0 ? s.st : '', r = L_safeText(s.r, 10);
+    if (r && (pids.length || txt)) out.push({ r: r, pids: pids, q: q, txt: txt, st: st });
+  });
+  return out;
+}
 function L_cleanCell(raw, table, products, emails, me, okPids) {
   raw = raw || {};
   if (raw.kind === 'note') {
     var note = L_safeText(raw.note, 40);
     if (!note) throw new Error('請填內容，例如：教師節放假、考前複習');
-    return { kind: 'note', note: note };
+    var nc = { kind: 'note', note: note }, ns = L_cleanSlots(raw.slots, []);
+    if (ns.length) nc.slots = ns;
+    return nc;
   }
   if (raw.kind !== 'lesson') throw new Error('格子的類型不正確。');
   var labels = table.groups || [], split = raw.mode === 'split' && labels.length >= 2;
@@ -927,7 +941,10 @@ function L_cleanCell(raw, table, products, emails, me, okPids) {
     groups.push({ label: label, teacher: pids.length ? teacher : '', pids: pids });
   });
   if (!groups.some(function (g) { return g.pids.length; })) throw new Error('至少要選一個產品。');
-  return { kind: 'lesson', mode: split ? 'split' : 'joint', label: L_safeText(raw.label, 30), groups: groups };
+  var lc = { kind: 'lesson', mode: split ? 'split' : 'joint', label: L_safeText(raw.label, 30), groups: groups };
+  var allP = []; groups.forEach(function (g) { g.pids.forEach(function (p) { allP.push(p); }); });
+  var ls = L_cleanSlots(raw.slots, allP); if (ls.length) lc.slots = ls;
+  return lc;
 }
 /* 一個班每週哪幾天上課：一般一天（例如週一）；技藝競賽選手這類每天訓練的，可以是每天（一到五）或幾到幾 */
 function L_classDays(c) {

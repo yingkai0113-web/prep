@@ -165,7 +165,7 @@ h3.hh{font-size:15px;margin:14px 0 6px;color:var(--mut);font-weight:500}
 .wr .g{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
 .mclk{cursor:pointer}.wr.mclk{cursor:pointer}.wr.mclk:hover{background:#F4F8F6}.mar{color:var(--mut);font-size:10px}.mdet{grid-column:1/-1;font-size:13px;background:#F4F8F6;border-radius:8px;padding:6px 10px;line-height:1.7}.wr .use{grid-column:1/-1;font-size:12px;color:var(--mut);margin-top:-4px}
 .load{text-align:center;color:var(--mut);padding:60px 0}
-.athtb{width:100%;border-collapse:collapse;table-layout:fixed;min-width:760px}.athtb th,.athtb td{border:1px solid #444;text-align:center;vertical-align:middle;padding:4px;font-weight:700}.athh th{background:#DAEEF3;border-top:3px solid #444}.athtime{width:96px}.athtime .in{padding:3px 4px;font-size:13px;text-align:center}.athrc{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:2px}.athrc .linkb{font-size:11px}.athc{cursor:pointer;height:44px}.athc:hover{outline:2px solid var(--pri);outline-offset:-2px}.athplus{color:#B8C7C1;font-weight:400}.athq{font-weight:700}
+.athtb{width:100%;border-collapse:collapse;table-layout:fixed;min-width:760px}.athtb th,.athtb td{border:1px solid #444;text-align:center;vertical-align:middle;padding:4px;font-weight:700}.athh th{background:#DAEEF3;border-top:3px solid #444}.athtime{width:96px}.athtime .in{padding:3px 4px;font-size:13px;text-align:center}.athrc{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:2px}.athrc .linkb{font-size:11px}.athc{cursor:pointer;height:44px}.athc.pd{box-shadow:inset 0 0 0 2px #E8A200}.athc:hover{outline:2px solid var(--pri);outline-offset:-2px}.athplus{color:#B8C7C1;font-weight:400}.athq{font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(20,48,43,.5);display:grid;place-items:center;padding:12px;z-index:50}
 .modal .mb{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:14px}
 @media(min-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}.ctl{grid-template-columns:auto 1fr auto;align-items:end}.ctl .wide{grid-column:auto}.er{grid-template-columns:2fr 6em 5em auto 3fr 2.4em}.er .nm,.er .nt{grid-column:auto}}
@@ -254,7 +254,6 @@ const K=(d,c,p)=>d+'||'+c+'||'+p, kd=k=>k.split('||')[0], kc=k=>k.split('||')[1]
 const UNITS=['g','ml','顆','個','條','包','罐','瓶','支','片','束','公分'];
 const DEPTS=['日間部','夜間部'];
 const S={user:null,term:'',cat:null,classes:{'日間部':[],'夜間部':[]},stdNames:[],ed:null,view:'sched',step:0,extraOpen:false,extraNote:'',estep:1,dept:'日間部',course:'',courses:{'日間部':[],'夜間部':[]},tab:'一',atab:'一',confirmTerm:'',adminUrl:'',
-  ath:{list:null,cur:'',ed:null,pr:{from:'',to:'',per:3},saved:'',delAsk:''},
   expWhat:'all',expOrder:'date',tOrder:'date',tTeacher:'',tFilter:{course:'',cls:'',q:'',id:''},tMode:'stats',tOpen:new Set(),tDel:'',open4:new Set(),xf:null,gOpen:{},confirmSend:'',accepting:true,openNote:'',confirmClose:false,sub:null,um:{list:null,busy:false,err:'',ed:null,bulk:null,del:''},rs:{open:false,txt:'',busy:false},subOpen:true,catAdd:null,catDel:'',ren:null,cv:null,ss:null,ssOpen:true,ssAll:true,remind:'',rq:null,pstep:1,sstep:0,seen:new Set(),seen4:new Set(),sc:{data:null,tab:'',cellEd:null,tableEd:null,datesEd:null,delAsk:'',busy:false},hu:null,hist:{},appUrl:'',sel:new Set(),entries:[],open:new Set(),
   err:'',info:'',busy:'',done:null,sent:null,savedSig:'[]',sentAt:'',preview:'',rgFrom:'',rgTo:'',tech:null};
 const P=pid=>S.cat.pmap[pid];
@@ -319,13 +318,13 @@ function render(){
   if(!S.user){return;}
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
   if(S.trial)h+=`<div style="background:#E8590C;color:#fff;padding:8px 12px;border-radius:8px;margin:8px 0;font-weight:700;text-align:center">⚠ 目前是「試用頁面」：這裡的資料是測試用的，怎麼改、刪都不會影響正式資料。${canTech()?'<button class="btn sm" style="margin-left:8px;background:#fff;color:#E8590C" data-a="trialOff">回到正式資料</button>':''}</div>`;
-  const views=S.asT?[['sched','教學進度表'],S.extraOpen&&['extra','額外材料單']].filter(Boolean):[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canPlan()&&['ath','選手進度表'],canTech()&&['status','教學進度表管理'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','查詢舊資料'],isAdmin()&&['admin','後台']].filter(Boolean);
+  const views=S.asT?[['sched','教學進度表'],S.extraOpen&&['extra','額外材料單']].filter(Boolean):[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','教學進度表管理'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','查詢舊資料'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
   if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>老師模式（預覽）：${actAs()?`你正在代 <b>${esc(uName(S.asT))}</b> 操作（技士）：可以編輯、確認、匯出，都算在這位老師名下。`:`你正在看 <b>${esc(uName(S.asT))}</b> 的教學進度表。只能看，不能修改。`}</span><button class="btn sm ghost" data-a="asTpick">換一位老師</button></div>`;
   if(S.pickT){const l=S.pickList;h+=`<div class="card" style="margin:10px 0"><div class="cb"><b>老師模式：要${S.user.role==='技士'?'代哪一位老師操作':'看哪一位老師的畫面'}？</b>${l?`<select class="in" id="asTsel" style="width:100%;margin:8px 0">${l.filter(x=>x.role==='老師').concat(l.filter(x=>x.role!=='老師')).map(x=>`<option value="${esc(x.email)}"${x.email===S.asT?' selected':''}>${esc(x.name)}（${esc(x.role)}）</option>`).join('')}</select><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-a="asTcancel">取消</button><button class="btn" data-a="asTgo">進入老師模式</button></div>`:'<p class="mut">載入名單中…</p>'}</div></div>`;}
   if(S.err)h+=`<div class="err">${esc(S.err)}</div>`;
   if(S.info)h+=`<div class="ok-msg">${esc(S.info)}</div>`;
-  h+=S.view==='ath'?athHTML():S.view==='arch'?archPageHTML():S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
+  h+=S.view==='arch'?archPageHTML():S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
   if(S.preview)h+=`<div class="modal"><div class="mb"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>匯出內容預覽</b><button class="btn sm ghost" data-a="closePrev">關閉</button></div>${S.preview}</div></div>`;
   if(S.confirmSend)h+=confirmHTML();
   if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.qd)h+=quoteModal();if(S.archView)h+=archViewModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
@@ -341,7 +340,7 @@ function render(){
   if(S.dlFiles&&S.dlFiles.length)h+=dlFilesModal();
   if(S.rq)h+=rqModal();
   if(S.ed)h+=editorHTML();
-  if(S.ath&&S.ath.ed)h+=athCellModal();
+  if(S.sc&&S.sc.athEd)h+=athSlotModal();
   h+=`<datalist id="toollist">${[...new Set(Object.values(S.cat.tools).flat().map(t=>t.name))].sort().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
   h+=`<datalist id="stdlist">${S.stdNames.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
   const sc=$('.modal .mb'),top=sc?sc.scrollTop:0;
@@ -953,7 +952,7 @@ document.addEventListener('click',ev=>{
 document.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;S.err='';S.info='';
   if(a==='signout')return signOut();
-  if(a.startsWith('ath')&&a!=='athResX'){return athAct(a,b);}
+  if(a.startsWith('ath')){return athAct(a,b);}
   if(a==='asT'){if(S.asT){S.asT='';S.pickT=false;S.view='sched';S.step=0;S.sstep=0;S.info='';S.sc.data=null;S.sc.tab='';await Promise.all([loadEntriesOf(''),loadSched()]);return render();}S.pickT=true;S.view='admin';return pickLoad();}
   if(a==='asTpick'){S.pickT=true;return pickLoad();}
   if(a==='asTcancel'){S.pickT=false;if(!S.asT)S.view='sched';return render();}
@@ -966,7 +965,6 @@ document.addEventListener('click',async ev=>{
     if(S.view==='arch'&&v!=='arch'){const w0=weekStart(today());S.rgFrom=w0;S.rgTo=addDays(w0,6);S.tech=null;}
     S.view=v;
     if(v==='arch')return archInit();
-    if(v==='ath')return athLoad();
     if(v==='sched'){S.step=[0,3,4,5].includes(S.sstep)?S.sstep:0;return S.step===0?loadSched():render();}
     if(v==='extra'){S.step=[1,2,3,4,5].includes(S.estep)?S.estep:1;return render();}
     if(v==='tech')return loadRange();
@@ -1121,6 +1119,7 @@ document.addEventListener('click',async ev=>{
   if(a==='pNo'){S.sc.print=null;return render();}
   if(a==='pGo'){
     const p=S.sc.print,t=schedTable(S.sc.tab),ids=p.scope==='one'?[t.id]:[],ov={};
+    if(isAth(t)&&p.scope==='one'&&!p.blank){S.sc.print=null;render();await athPrintDoc(t,p.from,p.to,p.per||3);return;}
     Object.values(pendMap()).forEach(x=>{if(p.scope==='one'&&x.tid!==t.id)return;(ov[x.tid]=ov[x.tid]||[]).push({week:x.week,cls:x.cls,day:x.day,cell:x.cell});});
     S.sc.print=null;S.busy='製作中…';render();
     try{await runFmt('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);}catch(er){S.err=er.message;}
@@ -1836,7 +1835,7 @@ function schedHTML(){
   if(!tw.length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>這張進度表還沒有週</b><p class="mut" style="margin:6px 0 0">${d.weeks.length?'':'這學期的開學日和結業式還沒設定。'}只想開寒暑假的單，按上面的「＋ 加寒暑假的週」，選寒暑假要上課的那一段日期就可以了，不用設定學期日期。</p></div></div>`;
   const clip=S.sc.clip&&S.sc.clip.tid===t.id?S.sc.clip:null;
   const cb=clip?`<div class="spill warn" style="flex-wrap:wrap;position:sticky;top:0;z-index:5"><span style="flex:1;min-width:10em">已複製「${esc(clip.desc)}」。${clip.kind==='week'?'點要貼上的那一週（左邊的週次，或那一週的任何一格），可以連續貼好幾週。':'點要貼上的格子，可以連續貼好幾格。'}</span><button class="btn ghost sm" data-a="scClipEnd">結束複製</button></div>`:`<p class="mut" style="margin:0 0 6px;font-size:12.5px">複製格子：點格子右上角的「⧉」再點要貼的格子；電腦上也可以直接把格子拖到別的格子。</p>`;
-  return h+filt+cb+gridHTML(t)+`<p class="mut" style="font-size:12.5px;margin:8px 0 0">排好之後可以先按「匯出列印進度表」拿去跟老師們討論，不用送給技士。</p>`;
+  return h+filt+cb+(isAth(t)?athGridHTML(t):gridHTML(t))+`<p class="mut" style="font-size:12.5px;margin:8px 0 0">排好之後可以先按「匯出列印進度表」拿去跟老師們討論，不用送給技士。</p>`;
 }
 function mkGroups(t,mode,me0){
   const me=(!(t.teachers&&t.teachers.length)||t.teachers.includes(me0))?me0:'';
@@ -1887,8 +1886,8 @@ function printModal(){
     <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="one" ${p.scope==='one'?'checked':''}> <span>只有這一張（${esc(t.dept)}・${esc(t.course)}）</span></label>
     <label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="radio" name="pscope" data-k="pScope" value="all" ${p.scope==='all'?'checked':''}> <span>全部進度表（你看得到的每一張，每張一頁）</span></label>
     ${p.blank?'':`<label style="display:flex;gap:8px;align-items:center;padding:8px 0 0"><input type="checkbox" data-k="pMine" ${p.mine?'checked':''}> <span>把我開單的格子標黃色</span></label>`}
-    ${fmtPick()}
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="pNo">取消</button><button class="btn" data-a="pGo">匯出</button></div></div></div>`;
+    ${isAth(t)&&p.scope==='one'&&!p.blank?athPrintOpts(p,t):fmtPick()}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="pNo">取消</button><button class="btn" data-a="pGo">${isAth(t)&&p.scope==='one'&&!p.blank?'列印／存成 PDF':'匯出'}</button></div></div></div>`;
 }
 function pasteAskModal(){
   const a=S.sc.pasteAsk;
@@ -2134,167 +2133,166 @@ async function runDiag(){
   o.textContent=L.join('\n');
   const b=document.createElement('button');b.textContent='關閉';b.style.cssText='display:block;margin:12px 0;padding:8px 16px';b.onclick=()=>o.remove();o.appendChild(b);
 }
-/* ---------- 選手進度表：一週一格，時間可以自己調，產品用點的、後面可以寫數量，列印時自己選日期 ---------- */
+/* ---------- 技藝競賽選手的進度表：跟 Word 檔一樣，一週一個區塊，左邊時間可以改，點格子加產品（後面可寫數量）或文字 ---------- */
+const isAth=t=>!!t&&t.classes.length===1&&/技藝競賽|選手/.test((t.course||'')+(t.title||''));
 const ATH_BG={pk:'#FDE9D9',gr:'#EAF1DD',bl:'#DAEEF3'};
 const ATH_ST=[['','一般'],['r','紅字（放假、旅行…）'],['p','紫字（新產品）'],['y','黃底（考試）']];
 const athClone=o=>JSON.parse(JSON.stringify(o));
-const athDefRows=()=>[{t:'08:00-09:00',bg:'',span:false,cells:[]},{t:'09:00-12:00',bg:'',span:false,cells:[]},{t:'12:00-13:00',bg:'pk',span:true,cells:[{it:[{n:'午休',q:''}],st:''}]},{t:'13:00-16:00',bg:'',span:false,cells:[]},{t:'16:00-18:00',bg:'gr',span:false,cells:[]}];
-const athNewWeek=(mon,from)=>({mon,rows:(from?from.rows:athDefRows()).map(r=>({t:r.t,bg:r.bg||'',span:!!r.span,cells:r.span?athClone(r.cells):[]}))});
-const athDayLbl=(mon,i)=>{const d=addDays(mon,i);return `${md0(d)}(${WD[pd(d).getUTCDay()]})`;};
-const athCur=()=>((S.ath.list||[]).find(x=>x.id===S.ath.cur))||null;
-const athCellOf=(w,r,c)=>{const row=w.rows[r];return (row.span?row.cells[0]:row.cells[c])||null;};
-const athItemTxt=i=>esc(i.n)+(i.q?`<span class="athq">(${esc(i.q)})</span>`:'');
-const athItemPlain=i=>(i.n||'')+(i.q?`(${i.q})`:'');
-const athCellStyle=c=>!c?'':(c.st==='y'?'background:#FFFF00;':'')+(c.st==='r'?'color:#C00000;':c.st==='p'?'color:#7030A0;':'');
-const athHasContent=w=>w.rows.some(r=>r.cells.some(c=>c&&c.it&&c.it.length)&&!(r.span&&r.cells[0]&&r.cells[0].it.length===1&&r.cells[0].it[0].n==='午休'));
-let athTimer=null;
-function athDirty(){const t=athCur();if(!t)return;S.ath.saved='儲存中…';clearTimeout(athTimer);athTimer=setTimeout(athFlush,700);const el=$('#athSaved');if(el)el.textContent='儲存中…';}
-async function athFlush(){
-  const t=athCur();if(!t)return;
-  try{const r=await run('apiAthSave',{id:t.id,name:t.name,data:t.data});S.ath.saved='已自動儲存 '+String(r.at||'').slice(11,16);}catch(e){S.ath.saved='';S.err=e.message;}
-  const el=$('#athSaved');if(el)el.textContent=S.ath.saved;if(S.err)render();
+const athDefRows=()=>[{id:'a1',t:'08:00-09:00',bg:''},{id:'a2',t:'09:00-12:00',bg:''},{id:'a3',t:'12:00-13:00',bg:'pk'},{id:'a4',t:'13:00-16:00',bg:''},{id:'a5',t:'16:00-18:00',bg:'gr'}];
+const athStore=tid=>{const D=S.sc.data;D.athRows=D.athRows||{};return D.athRows[tid]||null;};
+const athRowsFor=(t,wn)=>{const st=athStore(t.id);return (st&&st.w&&st.w[wn])||(st&&st.def&&st.def.length?st.def:athDefRows());};
+const athDays=(t,wn)=>{const c=t.classes[0],reg=clDays(c),out=reg.slice();for(let x=1;x<=7;x++)if(!reg.includes(x)&&schedCell(t.id,wn,c.cls,x))out.push(x);return out.sort((a,b)=>a-b);};
+const athDayKey=(t,x)=>{const rd=clDays(t.classes[0]);return rd.length===1&&x===rd[0]?0:x;};
+const athDayLbl=(mon,x)=>{const d=addDays(mon,x-1);return `${md0(d)}(${WD[pd(d).getUTCDay()]})`;};
+const athDefTeacher=t=>{const me=S.user.email;return (!(t.teachers&&t.teachers.length)||t.teachers.includes(me))?me:t.teachers[0];};
+/* 這一格某一個時間列裡的內容；舊的（沒分時段的）格子，內容放在第二列（上午實習）或第一列 */
+function athSlotOf(cell,rid,rows){
+  if(!cell)return null;
+  if(cell.slots)return cell.slots.find(s=>s.r===rid)||null;
+  const lg=rows[1]||rows[0];if(!lg||lg.id!==rid)return null;
+  return cell.kind==='note'?{r:rid,pids:[],q:{},txt:cell.note,st:''}:{r:rid,pids:cell.groups.flatMap(g=>g.pids),q:{},txt:'',st:''};
 }
-async function athLoad(){
-  try{S.ath.list=await run('apiAthList');if(!athCur())S.ath.cur=(S.ath.list[0]||{}).id||'';athPrInit();}catch(e){S.err=e.message;S.ath.list=S.ath.list||[];}
-  render();
+const athLines=s=>s?[...(s.pids||[]).map(p=>pTitle(p)+((s.q&&s.q[p])?`(${s.q[p]})`:'')),...(s.txt?[s.txt]:[])]:[];
+const athSlotStyle=s=>!s?'':(s.st==='y'?'background:#FFFF00;':'')+(s.st==='r'?'color:#C00000;':s.st==='p'?'color:#7030A0;':'');
+function athRowCells(t,w,row,rows,xs){
+  const c=t.classes[0],sl=xs.map(x=>athSlotOf(schedCell(t.id,w.n,c.cls,athDayKey(t,x)),row.id,rows));
+  const key=s=>s?JSON.stringify([s.pids,s.q,s.txt,s.st]):'';
+  const merged=xs.length>1&&sl[0]&&!sl[0].pids.length&&sl[0].txt&&sl.every(s=>key(s)===key(sl[0]));
+  return {sl,merged};
 }
-function athPrInit(){
-  const t=athCur();if(!t)return;const ws=t.data.weeks||[];if(!ws.length)return;
-  const filled=ws.filter(athHasContent);
-  S.ath.pr.from=ws[0].mon;S.ath.pr.to=(filled.length?filled[filled.length-1]:ws[0]).mon;
+let athRowTimer=null;
+function athRowsDirty(t){clearTimeout(athRowTimer);athRowTimer=setTimeout(async()=>{try{await run('apiAthRowsSave',t.id,athStore(t.id));}catch(e){S.err=e.message;render();}},800);}
+function athEditRows(t,wn,fn){
+  const D=S.sc.data;D.athRows=D.athRows||{};const st=D.athRows[t.id]=D.athRows[t.id]||{def:athDefRows(),w:{}};st.w=st.w||{};
+  if(!st.w[wn])st.w[wn]=athClone(athRowsFor(t,wn));
+  fn(st.w[wn],st);athRowsDirty(t);render();
 }
-function athHTML(){
-  const A=S.ath;
-  if(!A.list)return `<div class="card"><div class="cb"><p class="mut">載入選手進度表中…</p></div></div>`;
-  const t=athCur();
-  const tabs=A.list.map(x=>`<button class="btn sm ${x.id===A.cur?'':'ghost'}" data-a="athPick" data-id="${esc(x.id)}">${esc(x.name)}${x.owner!==(S.user.email||'')&&A.list.some(y=>y.owner!==x.owner)?'（'+esc(x.ownerName)+'）':''}</button>`).join(' ');
-  let h=`<h2>選手進度表</h2><p class="sub">給技藝競賽選手的訓練時段表。時間可以自己改；點格子加產品，產品後面可以寫數量；排到哪就列印到哪，列印時自己選日期。</p>
-  <div class="card"><div class="cb" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${tabs}<button class="btn sm" data-a="athNew">＋ 新增選手進度表</button></div></div>`;
-  if(!t)return h+`<div class="card"><div class="cb"><p class="mut">還沒有選手進度表。按上面的「新增選手進度表」開始。</p></div></div>`;
-  const ws=t.data.weeks||[];
-  h+=`<div class="card"><div class="cb"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label style="flex:1;min-width:14em">名稱（印在表的最上面）<input class="in" data-ath="name" value="${esc(t.name)}"></label><span class="mut" id="athSaved" style="align-self:end">${esc(A.saved||'')}</span></div></div></div>`;
-  ws.forEach((w,wi)=>{
-    h+=`<div class="card" style="overflow-x:auto"><table class="athtb"><thead><tr class="athh"><th style="width:96px">時間／日期<br><input class="in" type="date" style="font-size:12px;padding:3px" data-ath="mon" data-w="${wi}" value="${esc(w.mon)}" title="這一週的星期一"></th>${[0,1,2,3,4].map(i=>`<th>${athDayLbl(w.mon,i)}</th>`).join('')}</tr></thead><tbody>`;
-    w.rows.forEach((r,ri)=>{
-      const bg=r.bg?`background:${ATH_BG[r.bg]};`:'';
-      h+=`<tr><td class="athtime" style="${bg}"><input class="in" data-ath="time" data-w="${wi}" data-r="${ri}" value="${esc(r.t)}" aria-label="時間"><div class="athrc"><button class="linkb" data-a="athRowSpan" data-w="${wi}" data-r="${ri}" title="整列合併成一格（午休、上課…）">${r.span?'拆開':'合併'}</button><button class="linkb" data-a="athRowBg" data-w="${wi}" data-r="${ri}" title="換底色">底色</button><button class="linkb" data-a="athRowUp" data-w="${wi}" data-r="${ri}" title="上移">↑</button><button class="linkb" data-a="athRowDel" data-w="${wi}" data-r="${ri}" title="刪除這一列">✕</button></div></td>`;
-      const cell=(c,span)=>{const cc=athCellOf(w,ri,c);return `<td class="athc" ${span?'colspan="5"':''} style="${bg}${athCellStyle(cc)}" data-a="athCell" data-w="${wi}" data-r="${ri}" data-c="${c}">${cc&&cc.it&&cc.it.length?cc.it.map(i=>`<div>${athItemTxt(i)}</div>`).join(''):'<span class="athplus">＋</span>'}</td>`;};
-      h+=r.span?cell(0,true):[0,1,2,3,4].map(c=>cell(c,false)).join('');
+function athGridHTML(t){
+  const wf=S.sc.wf||'all',canE=t.canEdit&&S.sc.data.canEditCells!==false,c=t.classes[0];
+  let h=`<div class="sgw">`;
+  tWeeks(t).filter(w=>wf==='all'||(wf==='vac'?w.vac:!w.vac)).forEach(w=>{
+    const rows=athRowsFor(t,w.n),xs=athDays(t,w.n);
+    h+=`<table class="athtb"><thead><tr class="athh"><th style="width:104px">${w.vac?'寒暑假':'第 '+w.n+' 週'}<br><small>時間/日期</small></th>${xs.map(x=>`<th>${athDayLbl(w.mon,x)}</th>`).join('')}</tr></thead><tbody>`;
+    rows.forEach((row,ri)=>{
+      const bg=row.bg?`background:${ATH_BG[row.bg]};`:'';
+      const {sl,merged}=athRowCells(t,w,row,rows,xs);
+      h+=`<tr><td class="athtime" style="${bg}"><input class="in" data-ath="time" data-w="${w.n}" data-rid="${esc(row.id)}" value="${esc(row.t)}" aria-label="時間"${canE?'':' disabled'}>${canE?`<div class="athrc"><button class="linkb" data-a="athRowBg" data-w="${w.n}" data-rid="${esc(row.id)}" title="換底色">底色</button><button class="linkb" data-a="athRowUp" data-w="${w.n}" data-rid="${esc(row.id)}" title="上移">↑</button><button class="linkb" data-a="athRowDel" data-w="${w.n}" data-rid="${esc(row.id)}" title="刪除這一列">✕</button></div>`:''}</td>`;
+      const td=(x,s,span)=>{const pd=pendMap()[pkey(t.id,w.n,c.cls,athDayKey(t,x))]?' pd':'';const ln=athLines(s);return `<td class="athc${pd}" ${span?`colspan="${xs.length}"`:''} style="${bg}${athSlotStyle(s)}" ${canE?`data-a="athSlot" data-w="${w.n}" data-x="${x}" data-rid="${esc(row.id)}"`:''}>${ln.length?ln.map(l=>`<div>${esc(l)}</div>`).join(''):(canE?'<span class="athplus">＋</span>':'')}</td>`;};
+      h+=merged?td(xs[0],sl[0],true):xs.map((x,i)=>td(x,sl[i],false)).join('');
       h+='</tr>';
     });
-    h+=`</tbody></table><div class="cb" style="padding:6px 10px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm ghost" data-a="athRowAdd" data-w="${wi}">＋ 加一列</button><button class="btn sm ghost" data-a="athWeekCopy" data-w="${wi}">複製這週（含內容）到下一週</button><button class="btn sm ghost" data-a="athWeekDel" data-w="${wi}">刪除這一週</button></div></div>`;
+    h+=`</tbody></table>${canE?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px"><button class="btn sm ghost" data-a="athRowAdd" data-w="${w.n}">＋ 加一列時間</button><button class="btn sm ghost" data-a="athRowsAll" data-w="${w.n}" title="把這一週的時間列，套用到所有週">這週的時間套用到全部週</button></div>`:'<div style="height:12px"></div>'}`;
   });
-  const last=ws[ws.length-1];
-  h+=`<div class="card"><div class="cb" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-a="athWeekAdd">＋ 加一週</button><button class="btn ghost danger" data-a="athDel">${A.delAsk===t.id?'確定刪除整份？':'刪除這份進度表'}</button></div></div>`;
-  const p=A.pr,cnt=athPrWeeks(t).length;
-  h+=`<div class="card"><div class="cb"><b>列印</b><p class="mut" style="margin:4px 0 8px">選要印哪幾週（排到哪就印到哪）。A4 橫式。</p><div class="rgrow"><label>從 <input class="in" type="date" data-ath="prFrom" value="${esc(p.from)}"></label><label>到 <input class="in" type="date" data-ath="prTo" value="${esc(p.to)}"></label><label>一頁放 <select class="in" data-ath="prPer" style="width:auto">${[1,2,3,4].map(n=>`<option value="${n}" ${+p.per===n?'selected':''}>${n} 週</option>`).join('')}</select></label></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px"><button class="btn" data-a="athPrint" ${cnt?'':'disabled'}>列印／存成 PDF（${cnt} 週）</button><button class="btn ghost" data-a="athPrAll">全部的週</button><button class="btn ghost" data-a="athPrFilled">只到有排內容的最後一週</button></div></div></div>`;
-  return h;
+  return h+'</div>';
 }
-function athPrWeeks(t){
-  const p=S.ath.pr,a=p.from?weekStart(p.from):'',b=p.to?weekStart(p.to):'9999-12-31';
-  return (t.data.weeks||[]).filter(w=>(!a||w.mon>=a)&&w.mon<=b);
+function athSlotModal(){
+  const E=S.sc.athEd,t=schedTable(E.tid),rows=athRowsFor(t,E.w),row=rows.find(r=>r.id===E.rid),w=tWeeks(t).find(x=>x.n===E.w);
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${esc(athDayLbl(w.mon,E.x))}　${esc(row?row.t:'')}</h2>
+    <p class="mut" style="margin:0 0 8px">點產品加進來，後面可以寫數量（例如 10個、各100、一起10顆）。產品會自動變成這一天的材料單。</p>
+    ${E.pids.length?E.pids.map(p=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><b style="flex:2">${esc(pTitle(p))}</b><span>(</span><input class="in" style="flex:1" data-ath="q" data-p="${esc(p)}" value="${esc(E.q[p]||'')}" placeholder="數量"><span>)</span><button class="linkb" data-a="athRemP" data-p="${esc(p)}">✕</button></div>`).join(''):'<p class="mut">還沒有加產品。</p>'}
+    <div style="margin:8px 0 4px"><b>加產品</b></div><input class="in" id="athQ" placeholder="輸入名稱找找看（例如 咖哩）" autocomplete="off" value="${esc(E.search||'')}"><div id="athRes">${athResHTML()}</div>
+    <div style="margin:10px 0 4px"><b>文字</b>（上課、考試、午休、放假…）</div><input class="in" data-ath="txt" value="${esc(E.txt)}" placeholder="例如 第七章上課" maxlength="30">
+    <div style="margin:10px 0 4px"><b>這格的樣子</b></div><select class="in" data-ath="st">${ATH_ST.map(([v,n])=>`<option value="${v}" ${E.st===v?'selected':''}>${n}</option>`).join('')}</select>
+    <label style="display:flex;gap:8px;align-items:center;padding:10px 0 0"><input type="checkbox" data-ath="all" ${E.all?'checked':''}> <span>這一週這一列的每一天都一樣（例如午休、上課）</span></label>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px;flex-wrap:wrap"><button class="btn ghost danger" data-a="athSlotClear">清空這格</button><span style="display:flex;gap:8px"><button class="btn ghost" data-a="athSlotNo">取消</button><button class="btn" data-a="athSlotOk">完成</button></span></div></div></div>`;
 }
-function athCellModal(){
-  const E=S.ath.ed,t=athCur();if(!E||!t)return '';
-  const w=t.data.weeks[E.w],c=E.cell;
-  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 4px">${esc(athDayLbl(w.mon,E.c))}　${esc(w.rows[E.r].t)}</h2>
-    <p class="mut" style="margin:0 0 8px">點產品加進來，後面可以寫數量（例如 10個、各100、一起10顆）。</p>
-    ${c.it.length?c.it.map((i,k)=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><input class="in" style="flex:2" data-ath="itn" data-ix="${k}" value="${esc(i.n)}" aria-label="名稱"><span>(</span><input class="in" style="flex:1" data-ath="itq" data-ix="${k}" value="${esc(i.q)}" placeholder="數量" aria-label="數量"><span>)</span><button class="linkb" data-a="athItDel" data-ix="${k}">✕</button></div>`).join(''):'<p class="mut">這格還是空的。</p>'}
-    <div style="margin:10px 0 4px"><b>加產品</b></div><input class="in" id="athQ" placeholder="輸入產品名稱找找看（例如 咖哩）" autocomplete="off"><div id="athRes" style="max-height:170px;overflow:auto;margin-top:4px"></div>
-    <div style="margin:10px 0 4px"><b>加文字</b>（上課、考試、午休…）</div><div style="display:flex;gap:6px"><input class="in" id="athTx" placeholder="例如 第七章上課"><button class="btn sm" data-a="athAddTx">加入</button></div>
-    <div style="margin:10px 0 4px"><b>這格的樣子</b></div><select class="in" data-ath="cst">${ATH_ST.map(([v,n])=>`<option value="${v}" ${c.st===v?'selected':''}>${n}</option>`).join('')}</select>
-    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px"><button class="btn ghost danger" data-a="athCellClear">清空這格</button><button class="btn" data-a="athCellOk">完成</button></div></div></div>`;
+function athResHTML(){
+  const E=S.sc.athEd,q=String(E.search||'').trim().toLowerCase(),chosen=new Set(E.pids);
+  const btn=p=>`<button data-a="athAddP" data-p="${esc(p.pid)}">＋ ${esc(p.title)} <small>${esc(p.serving||'')}</small></button>`;
+  if(q){const l=usableProducts().filter(p=>!chosen.has(p.pid)&&p.title.toLowerCase().includes(q)).slice(0,20);return l.length?`<div class="sres">${l.map(btn).join('')}</div>`:'<p class="mut" style="margin:4px 0">找不到；可以用下面「文字」直接打。</p>';}
+  const tab=E.tab||'一',bl=browseList(tab);
+  const body=bl.flat?bl.flat.filter(p=>!chosen.has(p.pid)).map(btn).join(''):bl.sems.map(([nm,l])=>{const x=l.filter(p=>!chosen.has(p.pid));return x.length?`<div class="mut" style="padding:4px 9px;font-size:12px;background:#F3F7F5">${nm==='新增的'?'新增的材料單':nm+'學期'}</div>${x.map(btn).join('')}`:'';}).join('');
+  return `<div class="tabs" style="flex-wrap:wrap;margin:6px 0 4px">${pickTabs().map(([k,n])=>`<button class="gt ${tab===k?'on':''}" data-a="athPTab" data-t="${esc(k)}">${esc(n)}</button>`).join('')}</div>${body?`<div class="sres" style="max-height:15em">${body}</div>`:'<p class="mut" style="margin:4px 0">這個分頁的產品都選了。</p>'}`;
 }
-function athResHTML(q){
-  q=String(q||'').trim();const ps=(S.cat&&S.cat.products)||[];
-  const l=(q?ps.filter(p=>String(p.title||'').includes(q)):ps).slice(0,40);
-  return l.length?l.map(p=>`<button class="btn sm ghost" style="margin:2px 4px 2px 0" data-a="athAddP" data-n="${esc(p.title)}">${esc(p.title)}</button>`).join(''):'<span class="mut">找不到；可以用下面「加文字」直接打。</span>';
+function athLastFilled(t){
+  const c=t.classes[0];let last=null;
+  tWeeks(t).forEach(w=>{const rows=athRowsFor(t,w.n);if(athDays(t,w.n).some(x=>{const cell=schedCell(t.id,w.n,c.cls,athDayKey(t,x));return cell&&(cell.kind==='lesson'||(cell.slots&&cell.slots.length));}))last=w;});
+  return last||tWeeks(t)[0];
 }
-function athPrintHTML(t){
-  const ws=athPrWeeks(t),per=Math.max(1,+S.ath.pr.per||3);let pages='';
+function athPrintOpts(p,t){
+  const ws=tWeeks(t);if(p.from===undefined){p.from=ws[0]?ws[0].mon:'';p.to=(athLastFilled(t)||{}).mon||'';p.per=3;}
+  return `<b style="display:block;margin-top:8px">要印哪幾週（排到哪就印到哪）</b><div class="rgrow"><label>從 <input class="in" type="date" data-ath="prFrom" value="${esc(p.from)}"></label><label>到 <input class="in" type="date" data-ath="prTo" value="${esc(p.to)}"></label><label>一頁放 <select class="in" data-ath="prPer" style="width:auto">${[1,2,3,4].map(n=>`<option value="${n}" ${(+p.per||3)===n?'selected':''}>${n} 週</option>`).join('')}</select></label></div><p class="mut" style="margin:4px 0 0">格式跟 Word 版一樣（A4 橫式）。按「列印／存成 PDF」後，在列印視窗選「另存為 PDF」或直接印。</p>`;
+}
+function athApply(E,clear){
+  const t=schedTable(E.tid),c=t.classes[0],rows=athRowsFor(t,E.w),xs=E.all?athDays(t,E.w):[E.x];
+  xs.forEach(x=>{
+    const dk=athDayKey(t,x),old=schedCell(t.id,E.w,c.cls,dk);let slots=[];
+    if(old){if(old.slots)slots=athClone(old.slots);else{const lg=rows[1]||rows[0],s=lg?athSlotOf(old,lg.id,rows):null;if(s&&(s.pids.length||s.txt))slots.push(athClone(s));}}
+    slots=slots.filter(s=>s.r!==E.rid);
+    if(!clear&&(E.pids.length||E.txt.trim()))slots.push({r:E.rid,pids:E.pids.slice(),q:Object.assign({},E.q),txt:E.txt.trim(),st:E.st});
+    slots.sort((a,b)=>rows.findIndex(r=>r.id===a.r)-rows.findIndex(r=>r.id===b.r));
+    const pids=[];slots.forEach(s=>s.pids.forEach(p=>{if(!pids.includes(p))pids.push(p);}));
+    let cell=null;
+    if(pids.length){const og=old&&old.kind==='lesson'?old.groups.find(g=>g.teacher):null;cell={kind:'lesson',mode:'joint',label:'',groups:[{teacher:og?og.teacher:athDefTeacher(t),pids}],slots};}
+    else if(slots.length)cell={kind:'note',note:slots.map(s=>s.txt).filter(Boolean).join('、').slice(0,40)||'—',slots};
+    stageCell(t.id,E.w,c.cls,dk,cell);
+  });
+}
+function athPrintHTML(t,from,to,per){
+  const a=from?weekStart(from):'',b=to?weekStart(to):'9999-12-31',c=t.classes[0];
+  const ws=tWeeks(t).filter(w=>(!a||w.mon>=a)&&w.mon<=b);let pages='';
   for(let i=0;i<ws.length;i+=per){
-    const chunk=ws.slice(i,i+per),nrow=1+chunk.reduce((s,w)=>s+1+w.rows.length,0);
-    const rh=(6.9/nrow).toFixed(3);
-    let tb=`<table><tr><th colspan="6" class="tt">${esc(t.name)}</th></tr>`;
+    const chunk=ws.slice(i,i+per),nrow=1+chunk.reduce((s,w)=>s+1+athRowsFor(t,w.n).length,0),rh=(6.9/nrow).toFixed(3);
+    let tb=`<table><tr><th colspan="${1+Math.max(...chunk.map(w=>athDays(t,w.n).length))}" class="tt">${esc(t.title||t.course)}</th></tr>`;
     chunk.forEach(w=>{
-      tb+=`<tr class="wh"><th class="tm">時間/日期</th>${[0,1,2,3,4].map(c=>`<th>${athDayLbl(w.mon,c)}</th>`).join('')}</tr>`;
-      w.rows.forEach(r=>{
-        const bg=r.bg?`background:${ATH_BG[r.bg]};`:'';
-        const cell=(cc,span)=>`<td ${span?'colspan="5"':''} style="${bg}${athCellStyle(cc)}">${cc&&cc.it?cc.it.map(i=>`<div>${athItemTxt(i)}</div>`).join(''):''}</td>`;
-        tb+=`<tr style="height:${rh}in"><td class="tm" style="${bg}">${esc(r.t).replace('-','-<br>')}</td>${r.span?cell(r.cells[0],true):[0,1,2,3,4].map(c=>cell(r.cells[c],false)).join('')}</tr>`;
+      const rows=athRowsFor(t,w.n),xs=athDays(t,w.n);
+      tb+=`<tr class="wh"><th class="tm">時間/日期</th>${xs.map(x=>`<th>${athDayLbl(w.mon,x)}</th>`).join('')}</tr>`;
+      rows.forEach(row=>{
+        const bg=row.bg?`background:${ATH_BG[row.bg]};`:'',{sl,merged}=athRowCells(t,w,row,rows,xs);
+        const td=(s,span)=>`<td ${span?`colspan="${xs.length}"`:''} style="${bg}${athSlotStyle(s)}">${athLines(s).map(l=>`<div>${esc(l)}</div>`).join('')}</td>`;
+        tb+=`<tr style="height:${rh}in"><td class="tm" style="${bg}">${esc(row.t).replace('-','-<br>')}</td>${merged?td(sl[0],true):sl.map(s=>td(s,false)).join('')}</tr>`;
       });
     });
     pages+=`<div class="pg">${tb}</table></div>`;
   }
   return pages;
 }
-async function athPrint(){
-  const t=athCur();if(!t)return;
+async function athPrintDoc(t,from,to,per){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(f);
-  const d=f.contentDocument,title=String(t.name).replace(/[<>&]/g,'');
+  const d=f.contentDocument,title=String(t.title||t.course).replace(/[<>&]/g,'');
   d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>@page{size:A4 landscape;margin:.35in}html,body{margin:0;padding:0}body{font-family:'標楷體','DFKai-SB','BiauKai','Times New Roman',serif;color:#000}
 .pg{page-break-after:always}.pg:last-child{page-break-after:auto}table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{border:1px solid #000;text-align:center;vertical-align:middle;font-weight:700;font-size:13pt;padding:2px 3px;line-height:1.25}
-th.tt{font-size:14pt;background:#fff}th.tm,td.tm{width:8.5%;font-size:12pt}tr.wh th{background:#DAEEF3;border-top:2.5px solid #000}.athq{font-weight:700}</style></head><body>${athPrintHTML(t)}</body></html>`);d.close();
+th.tt{font-size:14pt;background:#fff}th.tm,td.tm{width:8.5%;font-size:12pt}tr.wh th{background:#DAEEF3;border-top:2.5px solid #000}</style></head><body>${athPrintHTML(t,from,to,per)}</body></html>`);d.close();
   await new Promise(r=>setTimeout(r,300));
   const oldT=document.title;document.title=title;
   try{f.contentWindow.focus();f.contentWindow.print();}catch(e){}
   document.title=oldT;setTimeout(()=>f.remove(),1500);
 }
-/* 動作 */
 async function athAct(a,b){
-  const A=S.ath,t=athCur(),W=b&&b.dataset.w!==undefined?+b.dataset.w:-1,R=b&&b.dataset.r!==undefined?+b.dataset.r:-1;
-  const ws=t?t.data.weeks:null,chg=()=>{athDirty();render();};
-  if(a==='athPick'){A.cur=b.dataset.id;A.delAsk='';athPrInit();return render();}
-  if(a==='athNew'){
-    const mon=weekStart(today());
-    try{const data={weeks:[athNewWeek(mon),athNewWeek(addDays(mon,7))]};const r=await run('apiAthSave',{id:'',name:'選手進度表',data});A.list.push({id:r.id,owner:S.user.email,ownerName:S.user.name,name:'選手進度表',data,at:r.at});A.cur=r.id;athPrInit();}catch(e){S.err=e.message;}
-    return render();}
-  if(a==='athDel'){if(A.delAsk!==t.id){A.delAsk=t.id;return render();}
-    try{await run('apiAthDelete',t.id);A.list=A.list.filter(x=>x.id!==t.id);A.cur=(A.list[0]||{}).id||'';A.delAsk='';athPrInit();}catch(e){S.err=e.message;}return render();}
-  if(!t)return;
-  if(a==='athWeekAdd'){const last=ws[ws.length-1];ws.push(athNewWeek(last?addDays(last.mon,7):weekStart(today()),last));return chg();}
-  if(a==='athWeekCopy'){const n=athClone(ws[W]);n.mon=addDays(ws[W].mon,7);ws.splice(W+1,0,n);return chg();}
-  if(a==='athWeekDel'){ws.splice(W,1);return chg();}
-  if(a==='athRowAdd'){ws[W].rows.push({t:'',bg:'',span:false,cells:[]});return chg();}
-  if(a==='athRowDel'){ws[W].rows.splice(R,1);return chg();}
-  if(a==='athRowUp'){if(R>0){const rs=ws[W].rows;[rs[R-1],rs[R]]=[rs[R],rs[R-1]];}return chg();}
-  if(a==='athRowSpan'){const r=ws[W].rows[R];if(!r.span){const first=r.cells.find(c=>c&&c.it&&c.it.length);r.cells=first?[first]:[];}r.span=!r.span;return chg();}
-  if(a==='athRowBg'){const r=ws[W].rows[R],o=['','pk','gr','bl'];r.bg=o[(o.indexOf(r.bg||'')+1)%o.length];return chg();}
-  if(a==='athCell'){const row=ws[W].rows[R],c=+b.dataset.c,ex=row.span?row.cells[0]:row.cells[c];A.ed={w:W,r:R,c,cell:athClone(ex||{it:[],st:''})};if(!A.ed.cell.it)A.ed.cell.it=[];A.ed.cell.st=A.ed.cell.st||'';return render();}
-  if(a==='athItDel'){A.ed.cell.it.splice(+b.dataset.ix,1);return render();}
-  if(a==='athAddP'){A.ed.cell.it.push({n:b.dataset.n,q:''});S.athFocus=A.ed.cell.it.length-1;return render();}
-  if(a==='athAddTx'){const v=(($('#athTx')||{}).value||'').trim();if(!v)return;A.ed.cell.it.push({n:v,q:''});return render();}
-  if(a==='athCellClear'){A.ed.cell={it:[],st:''};return athCellOk();}
-  if(a==='athCellOk')return athCellOk();
-  if(a==='athPrAll'){A.pr.from=ws[0]?ws[0].mon:'';A.pr.to=ws.length?ws[ws.length-1].mon:'';return render();}
-  if(a==='athPrFilled'){athPrInit();return render();}
-  if(a==='athPrint')return athPrint();
-}
-function athCellOk(){
-  const A=S.ath,E=A.ed,t=athCur();if(!E||!t)return render();
-  const row=t.data.weeks[E.w].rows[E.r],c=E.cell;c.it=c.it.filter(i=>(i.n||'').trim()||(i.q||'').trim());
-  const val=c.it.length||c.st?c:null;
-  if(row.span)row.cells=val?[val]:[];else{row.cells[E.c]=val;for(let i=0;i<5;i++)if(row.cells[i]===undefined)row.cells[i]=null;}
-  A.ed=null;athDirty();render();
+  const t=schedTable(S.sc.tab),W=b.dataset.w!==undefined?+b.dataset.w:0,RID=b.dataset.rid;
+  if(a==='athRowAdd'){athEditRows(t,W,l=>l.push({id:Math.random().toString(36).slice(2,8),t:'',bg:''}));return;}
+  if(a==='athRowDel'){athEditRows(t,W,l=>{const i=l.findIndex(r=>r.id===RID);if(i>=0)l.splice(i,1);});return;}
+  if(a==='athRowUp'){athEditRows(t,W,l=>{const i=l.findIndex(r=>r.id===RID);if(i>0)[l[i-1],l[i]]=[l[i],l[i-1]];});return;}
+  if(a==='athRowBg'){athEditRows(t,W,l=>{const r=l.find(r=>r.id===RID),o=['','pk','gr','bl'];if(r)r.bg=o[(o.indexOf(r.bg||'')+1)%o.length];});return;}
+  if(a==='athRowsAll'){const rows=athClone(athRowsFor(t,W)),st=athStore(t.id)||(S.sc.data.athRows[t.id]={def:[],w:{}});st.def=rows;st.w={};athRowsDirty(t);S.info='已把這一週的時間列套用到全部週。';return render();}
+  if(a==='athSlot'){
+    const x=+b.dataset.x,c=t.classes[0],rows=athRowsFor(t,W),s=athSlotOf(schedCell(t.id,W,c.cls,athDayKey(t,x)),RID,rows)||{pids:[],q:{},txt:'',st:''};
+    S.sc.athEd={tid:t.id,w:W,x,rid:RID,pids:s.pids.slice(),q:Object.assign({},s.q||{}),txt:s.txt||'',st:s.st||'',all:false,search:'',tab:'一'};return render();}
+  const E=S.sc.athEd;if(!E)return;
+  if(a==='athSlotNo'){S.sc.athEd=null;return render();}
+  if(a==='athPTab'){E.tab=b.dataset.t;E.search='';return render();}
+  if(a==='athAddP'){if(!E.pids.includes(b.dataset.p))E.pids.push(b.dataset.p);E.search='';return render();}
+  if(a==='athRemP'){E.pids=E.pids.filter(p=>p!==b.dataset.p);delete E.q[b.dataset.p];return render();}
+  if(a==='athSlotOk'||a==='athSlotClear'){athApply(E,a==='athSlotClear');S.sc.athEd=null;S.info='這格改好了，還沒儲存。按上面的「儲存進度表」才會生效，排給老師的材料單才會出現。';return render();}
 }
 document.addEventListener('change',ev=>{
   const t=ev.target,k=t.dataset&&t.dataset.ath;if(!k)return;
-  const A=S.ath,cur=athCur();
-  if(k==='itn'||k==='itq'){A.ed.cell.it[+t.dataset.ix][k==='itn'?'n':'q']=t.value;return;}
-  if(k==='cst'){A.ed.cell.st=t.value;return;}
-  if(!cur)return;
-  if(k==='name'){cur.name=t.value.trim()||'選手進度表';athDirty();return;}
-  if(k==='time'){cur.data.weeks[+t.dataset.w].rows[+t.dataset.r].t=t.value;athDirty();return;}
-  if(k==='mon'){if(!t.value)return;cur.data.weeks[+t.dataset.w].mon=weekStart(t.value);athDirty();return render();}
-  if(k==='prFrom'){A.pr.from=t.value;return render();}
-  if(k==='prTo'){A.pr.to=t.value;return render();}
-  if(k==='prPer'){A.pr.per=+t.value;return;}
+  const E=S.sc.athEd;
+  if(k==='time'){const tb=schedTable(S.sc.tab);athEditRows(tb,+t.dataset.w,l=>{const r=l.find(r=>r.id===t.dataset.rid);if(r)r.t=t.value;});return;}
+  if(k==='prFrom'){S.sc.print.from=t.value;return;}
+  if(k==='prTo'){S.sc.print.to=t.value;return;}
+  if(k==='prPer'){S.sc.print.per=+t.value;return;}
+  if(!E)return;
+  if(k==='q'){E.q[t.dataset.p]=t.value;return;}
+  if(k==='txt'){E.txt=t.value;return;}
+  if(k==='st'){E.st=t.value;return;}
+  if(k==='all'){E.all=t.checked;return;}
 });
 document.addEventListener('input',ev=>{
-  const t=ev.target;
-  if(t.id==='athQ'){const r=$('#athRes');if(r)r.innerHTML=athResHTML(t.value);}
+  const t=ev.target,E=S.sc&&S.sc.athEd;if(!E)return;
+  if(t.id==='athQ'){E.search=t.value;const r=$('#athRes');if(r)r.innerHTML=athResHTML();return;}
   const k=t.dataset&&t.dataset.ath;
-  if(k==='itn'||k==='itq'){S.ath.ed.cell.it[+t.dataset.ix][k==='itn'?'n':'q']=t.value;}
+  if(k==='q')E.q[t.dataset.p]=t.value;else if(k==='txt')E.txt=t.value;
 });
 
 async function boot(){
