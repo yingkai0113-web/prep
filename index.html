@@ -307,7 +307,7 @@ const gIsOpen=(st,g,n)=>{const v=S.gOpen[st+':'+g.key];return v===undefined?(st=
 const gHead=(st,g,n,small,st2)=>{const o=gIsOpen(st,g,n);return `<button class="gh ${st2||''}" data-a="gtoggle" data-g="${esc(st+':'+g.key)}" data-o="${o?1:0}"><span><b>${esc(gLabel(g))}</b><small>${small}</small></span><span>${o?'▴':'▾'}</span></button>`;};
 const gAll=st=>`<div style="text-align:right;margin:-4px 0 8px"><button class="linkb" data-a="gall" data-st="${st}" data-o="1">全部展開</button>　<button class="linkb" data-a="gall" data-st="${st}" data-o="0">全部收合</button></div>`;
 function syncEntries(){}
-const entriesOk=scope=>S.entries.filter(e=>scope==='extra'?!e.sid:!!e.sid).every(e=>pd(e.date)&&e.course&&(!e.cls||(S.classes[e.dept]||[]).includes(e.cls)));
+const entriesOk=scope=>S.entries.filter(e=>scope==='extra'?!e.sid:!!e.sid).every(e=>pd(e.date)&&e.course&&(scope!=='extra'||!e.cls||(S.classes[e.dept]||[]).includes(e.cls)));      // 進度表排的課，班級名稱跟著進度表（例如「技藝競賽選手」不在一般班級清單裡也沒關係）
 /* 「有沒有改過、送出了沒」：用內容指紋比對 */
 const sigOf=es=>JSON.stringify(es.map(e=>JSON.stringify([e.pid,e.dept,e.course,e.date,e.cls,e.sets,e.scale,e.yFrom||null,e.yTo||null,e.yUnit||'',Object.keys(e.ov||{}).sort().map(k=>[k,e.ov[k]]),
   e.tools?e.tools.filter(t=>t.name.trim()).map(t=>[t.who,t.name.trim(),t.qty.trim()]):null,(e.extra||[]).map(x=>[x.per===undefined?null:x.per,x.total===undefined?null:x.total,x.unit,x.kind||'']),(e.omit||[]).slice().sort(),e.title||'',Object.keys(e.conv||{}).sort().map(k=>[k,e.conv[k]])])).sort());
@@ -985,7 +985,7 @@ document.addEventListener('click',async ev=>{
       S.busy='';
     }
     if(n===0){S.view='sched';S.step=0;S.sent=null;window.scrollTo(0,0);return loadSched();}
-    if(n>=3&&sc().length&&!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';S.view='extra';S.step=2;return render();}
+    if(n>=3&&sc().length&&!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';if(curScope()==='extra'){S.view='extra';S.step=2;}return render();}
     if(n>=2&&S.view==='extra'&&!sc().length)return;
     if(n!==5)S.sent=null;
     S.step=n;window.scrollTo(0,0);return render();}
@@ -1455,7 +1455,7 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='export'){
     if(!sc().length)return;
-    if(!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';S.view='extra';S.step=2;return render();}
+    if(!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';if(curScope()==='extra'){S.view='extra';S.step=2;}return render();}
     const nw=sc().filter(e=>!S.seen.has(eKey(e))).length,nt=sc().filter(e=>!S.seen4.has(eKey(e))).length;
     const nm=schedMissing()||0;
     if(nw||nt||nm){S.needCheck={w:nw,t:nt,m:nm};return render();}                  // 還有沒勾的：不能匯出，先提醒
