@@ -644,8 +644,9 @@ function resetHTML(){
   if(!realStaff())return '';
   const r=S.rs;
   const body=r.open?`<div style="margin-top:10px;border:1px solid var(--err);border-radius:10px;padding:12px"><p style="margin:0 0 6px"><b>確定要刪除 ${esc(S.term)} 的所有資料嗎？</b></p><p class="mut" style="margin:0 0 8px">會刪掉：這學期<b>所有老師</b>排的課、送出的材料單、草稿，還有教學進度表格子裡排的內容。<br>也會清掉所有課程的<b>授課老師</b>，讓你重新選。<br>不會刪：使用者名單、材料單、設定、「每學期要有哪些進度表」的課程和班級。<br>刪掉的內容會<b>保留 30 天</b>，這段時間內可以在下面按「還原」救回來；超過 30 天就會自動清掉。</p><label class="lbl">請輸入「刪除本學期資料」來確認</label><input class="in" style="width:100%" data-k="rstxt" placeholder="刪除本學期資料" value="${esc(r.txt)}"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn ghost" data-a="rsNo">取消</button><button class="btn danger" data-a="rsYes" ${r.busy?'disabled':''}>${r.busy?'刪除中…':'刪除'}</button></div></div>`:`<button class="btn danger" style="margin-top:10px" data-a="rsAsk">刪除本學期所有資料</button>`;
+  const cf=S.rsConf,cfh=cf?`<div style="margin-top:10px;border:2px solid var(--err);border-radius:10px;padding:12px"><p style="margin:0 0 6px"><b>刪除之後你又編輯過了，要怎麼還原？</b></p><p class="mut" style="margin:0 0 8px">跟舊資料撞到的有：排課 ${cf.skipPlans} 筆、進度表格子 ${cf.skipCells} 格、已經重新選好的授課老師 ${cf.skipTeachers} 筆。</p><div style="display:grid;gap:8px"><button class="btn" data-a="rsFill" ${S.rsBusy?'disabled':''}>只補回空的（新編輯的都保留）</button><button class="btn danger" data-a="rsReplace" ${S.rsBusy?'disabled':''}>整個換回舊的（刪除後新編輯的會消失）</button><button class="btn ghost" data-a="rsConfNo">取消</button></div></div>`:'';
   const bl=S.rsBk;const bh=bl===undefined?'<p class="mut" style="margin:10px 0 0">讀取可還原的備份…</p>':(bl&&bl.length?`<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><b>可以還原的備份（保留 30 天）</b>${bl.map(x=>`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px"><span>${esc(x.stamp)} 刪除　${esc(x.term)}<br><small class="mut">排課 ${x.plans} 筆、進度表內容 ${x.cells} 格、授課老師 ${x.tch||0} 筆，還剩 ${x.daysLeft} 天可還原</small></span><button class="btn" data-a="rsRestore" data-s="${esc(x.stamp)}" ${S.rsBusy?'disabled':''}>${S.rsBusy===x.stamp?'還原中…':'還原'}</button></div>`).join('')}</div>`:'<p class="mut" style="margin:10px 0 0">目前沒有可以還原的備份。</p>');
-  return `<div class="adm"><b>刪除本學期所有資料</b><p class="mut" style="margin:4px 0 0">老師測試完，想清掉重來時用。技士、科主任、管理者看得到這個按鈕。</p>${body}${bh}</div>`;
+  return `<div class="adm"><b>刪除本學期所有資料</b><p class="mut" style="margin:4px 0 0">老師測試完，想清掉重來時用。技士、科主任、管理者看得到這個按鈕。</p>${body}${bh}${cfh}</div>`;
 }
 function adminHTML(){
   const cats=S.cat.categories||[];
@@ -1216,7 +1217,17 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='umDelAsk'){S.um.del=b.dataset.e;return render();}
   if(a==='umDelNo'){S.um.del='';return render();}
-  if(a==='rsRestore'){const st=b.dataset.s;S.rsBusy=st;S.err='';render();try{const r=await run('apiResetRestore',st);S.sc.data=null;S.entries=[];await boot();S.view='admin';S.rsBk=await run('apiResetBackups');S.info=`已還原 ${r.term} 的資料：排課 ${r.plans} 筆、進度表內容 ${r.cells} 格、授課老師 ${r.teachers||0} 筆。`;}catch(e){S.err=e.message;}S.rsBusy='';return render();}
+  if(a==='rsRestore'||a==='rsFill'||a==='rsReplace'){
+    const st=a==='rsRestore'?b.dataset.s:S.rsConf.stamp;S.rsBusy=st;S.err='';
+    if(a==='rsRestore')S.rsConf=null;render();
+    try{
+      if(a==='rsRestore'){const c=await run('apiResetRestoreCheck',st);if(c.conflict){S.rsConf=Object.assign({stamp:st},c);S.rsBusy='';return render();}}
+      const mode=a==='rsReplace'?'replace':'fill';
+      const r=await run('apiResetRestore',st,mode);S.rsConf=null;S.sc.data=null;S.entries=[];await boot();S.view='admin';S.rsBk=await run('apiResetBackups');
+      S.info=`已還原 ${r.term} 的資料：排課 ${r.plans} 筆、進度表內容 ${r.cells} 格、授課老師 ${r.teachers} 筆。`+((r.skipPlans+r.skipCells+r.skipTeachers)&&mode==='fill'?`（你刪除後新編輯過的 ${r.skipPlans+r.skipCells+r.skipTeachers} 筆沒有動）`:'');
+    }catch(e){S.err=e.message;}
+    S.rsBusy='';return render();}
+  if(a==='rsConfNo'){S.rsConf=null;return render();}
   if(a==='rsAsk'){S.rs.open=true;S.rs.txt='';return render();}
   if(a==='rsNo'){S.rs.open=false;S.rs.txt='';return render();}
   if(a==='rsYes'){

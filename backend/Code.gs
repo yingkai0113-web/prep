@@ -1730,43 +1730,79 @@ function apiResetBackups() {
   out.forEach(function (x) { x.daysLeft = Math.max(0, RESET_KEEP_DAYS_ - Math.floor((now - new Date(x.stamp.replace(' ', 'T') + '+08:00').getTime()) / 86400000)); });
   return out.reverse();
 }
-function apiResetRestore(stamp) {
+/* 還原：mode='fill'＝只補回現在還是空的（同一堂課、同一格、已經重新選好的授課老師都不動）；mode='replace'＝先清掉這學期現有的排課和進度表內容，整份換回刪除前的樣子 */
+function resetPlan_(stamp, mode) {
+  var book = ss_(), bk = book.getSheetByName('刪除前備份');
+  if (!bk || bk.getLastRow() < 2) throw new Error('找不到這份備份（可能已超過 30 天被清掉）。');
+  var vals = bk.getRange(2, 1, bk.getLastRow() - 1, 5).getValues(), mine = [];
+  for (var i = 0; i < vals.length; i++) if (bkStamp_(vals[i][0]) === stamp) mine.push({ row: i + 2, sheet: String(vals[i][3]), data: jparse_(vals[i][4], null) });
+  if (!mine.length) throw new Error('找不到這份備份（可能已超過 30 天被清掉）。');
+  var term = String(vals[mine[0].row - 2][2]), plan = { mine: mine, term: term, bk: bk, add: { '排課': [], '教學進度內容': [] }, tch: [], skip: { plans: 0, cells: 0, teachers: 0 } };
+  function cur_(name) {
+    var sh = book.getSheetByName(name);
+    if (!sh || sh.getLastRow() < 2) return { sh: sh, head: sh ? sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0] : [], rows: [] };
+    var all = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues();
+    return { sh: sh, head: all[0], rows: all.slice(1) };
+  }
+  var keyOf = {
+    '排課': function (r, h) { return [r[h.indexOf('老師信箱')], r[h.indexOf('產品編號')], bkStamp_(r[h.indexOf('上課日期')]).slice(0, 10), r[h.indexOf('班級')], r[h.indexOf('課程')]].join('|'); },
+    '教學進度內容': function (r, h) { return [r[h.indexOf('表ID')], r[h.indexOf('週次')], r[h.indexOf('班級')], r[h.indexOf('星期')]].join('|'); }
+  };
+  ['排課', '教學進度內容'].forEach(function (name) {
+    var c = cur_(name); if (!c.sh) return;
+    var have = {}, ids = {};
+    c.rows.forEach(function (r) {
+      if (name === '排課' && mode === 'replace' && String(r[c.head.indexOf('學年學期')]) === term) return;
+      if (name === '教學進度內容' && mode === 'replace') return;
+      have[keyOf[name](r, c.head)] = 1; ids[String(r[0])] = 1;
+    });
+    mine.filter(function (m) { return m.sheet === name && m.data; }).forEach(function (m) {
+      var k = keyOf[name](m.data, c.head);
+      if (have[k] || (name === '排課' && ids[String(m.data[0])])) { plan.skip[name === '排課' ? 'plans' : 'cells']++; return; }
+      have[k] = 1; plan.add[name].push(m.data);
+    });
+  });
+  ['應有進度表', '教學進度表'].forEach(function (name) {
+    var c = cur_(name); if (!c.sh) return;
+    var ti = c.head.indexOf('授課老師'), pos = {};
+    c.rows.forEach(function (r, i) { pos[String(r[0])] = { row: i + 2, has: ti >= 0 && String(r[ti]) !== '' }; });
+    mine.filter(function (m) { return m.sheet === name && m.data; }).forEach(function (m) {
+      var x = pos[String(m.data[0])]; if (!x) return;
+      if (x.has && mode !== 'replace') { plan.skip.teachers++; return; }
+      plan.tch.push({ sh: c.sh, row: x.row, data: m.data });
+    });
+  });
+  return plan;
+}
+function apiResetRestoreCheck(stamp) {
   requireStaff_();
-  stamp = String(stamp || '');
+  var p = resetPlan_(String(stamp || ''), 'fill');
+  return { term: p.term, skipPlans: p.skip.plans, skipCells: p.skip.cells, skipTeachers: p.skip.teachers, conflict: p.skip.plans + p.skip.cells + p.skip.teachers > 0 };
+}
+function apiResetRestore(stamp, mode) {
+  requireStaff_();
+  mode = mode === 'replace' ? 'replace' : 'fill';
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
-    var book = ss_(), bk = book.getSheetByName('刪除前備份');
-    if (!bk || bk.getLastRow() < 2) throw new Error('找不到這份備份（可能已超過 30 天被清掉）。');
-    var vals = bk.getRange(2, 1, bk.getLastRow() - 1, 5).getValues(), mine = [];
-    for (var i = 0; i < vals.length; i++) if (bkStamp_(vals[i][0]) === stamp) mine.push({ row: i + 2, sheet: String(vals[i][3]), data: jparse_(vals[i][4], null) });
-    if (!mine.length) throw new Error('找不到這份備份（可能已超過 30 天被清掉）。');
-    var counts = { plans: 0, cells: 0, teachers: 0 }, term = String(vals[mine[0].row - 2][2]);
-    ['應有進度表', '教學進度表'].forEach(function (name) {       // 授課老師：照 ID 把原本那一列放回去
-      var sh = book.getSheetByName(name), rows = mine.filter(function (m) { return m.sheet === name && m.data; });
-      if (!sh || !rows.length || sh.getLastRow() < 2) return;
-      var cols = sh.getLastColumn(), ids = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
-      rows.forEach(function (m) {
-        for (var i = 0; i < ids.length; i++) if (String(ids[i][0]) === String(m.data[0])) { var d = m.data.slice(0, cols); while (d.length < cols) d.push(''); sh.getRange(i + 2, 1, 1, cols).setValues([d]); counts.teachers++; break; }
-      });
-    });
+    var book = ss_(), p = resetPlan_(String(stamp || ''), mode), counts = { plans: 0, cells: 0, teachers: 0 };
+    if (mode === 'replace') {                                       // 整個換回舊的：先清掉這學期現有的排課和進度表內容
+      var sp = book.getSheetByName('排課');
+      if (sp && sp.getLastRow() >= 2) { var pv = sp.getRange(1, 1, sp.getLastRow(), sp.getLastColumn()).getValues(), ti = pv[0].indexOf('學年學期'); for (var i = pv.length - 1; i >= 1; i--) if (String(pv[i][ti]) === p.term) sp.deleteRow(i + 1); }
+      var tbl = {}; schedTables_(p.term).forEach(function (t) { tbl[t.id] = 1; });
+      var sc = book.getSheetByName('教學進度內容');
+      if (sc && sc.getLastRow() >= 2) { var cv = sc.getRange(1, 1, sc.getLastRow(), sc.getLastColumn()).getValues(); for (var k = cv.length - 1; k >= 1; k--) if (tbl[String(cv[k][0])]) sc.deleteRow(k + 1); }
+    }
     ['排課', '教學進度內容'].forEach(function (name) {
-      var sh = book.getSheetByName(name); if (!sh) return;
-      var rows = mine.filter(function (m) { return m.sheet === name && m.data; });
-      if (!rows.length) return;
-      var have = {};
-      if (sh.getLastRow() >= 2) sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).getValues().forEach(function (r) { have[name === '排課' ? String(r[0]) : JSON.stringify(r.map(bkStamp_))] = 1; });
-      var cols = sh.getLastColumn(), add = [];
-      rows.forEach(function (m) {
-        var d = m.data.slice(0, cols); while (d.length < cols) d.push('');
-        var key = name === '排課' ? String(d[0]) : JSON.stringify(d.map(bkStamp_));
-        if (have[key]) return;
-        have[key] = 1; add.push(d);
-      });
-      if (add.length) { sh.getRange(sh.getLastRow() + 1, 1, add.length, cols).setValues(add); counts[name === '排課' ? 'plans' : 'cells'] = add.length; }
+      var sh = book.getSheetByName(name), add = p.add[name]; if (!sh || !add.length) return;
+      var cols = sh.getLastColumn();
+      var rows = add.map(function (d) { d = d.slice(0, cols); while (d.length < cols) d.push(''); return d; });
+      sh.getRange(sh.getLastRow() + 1, 1, rows.length, cols).setValues(rows);
+      counts[name === '排課' ? 'plans' : 'cells'] = rows.length;
     });
-    for (var k = mine.length - 1; k >= 0; k--) bk.deleteRow(mine[k].row);   // 由下往上刪，列號才不會跑掉
+    p.tch.forEach(function (t) { var cols = t.sh.getLastColumn(), d = t.data.slice(0, cols); while (d.length < cols) d.push(''); t.sh.getRange(t.row, 1, 1, cols).setValues([d]); counts.teachers++; });
+    for (var m = p.mine.length - 1; m >= 0; m--) p.bk.deleteRow(p.mine[m].row);   // 由下往上刪，列號才不會跑掉
     try { CacheService.getScriptCache().removeAll([]); } catch (e) {}
-    return { term: term, plans: counts.plans, cells: counts.cells, teachers: counts.teachers };
+    return { term: p.term, plans: counts.plans, cells: counts.cells, teachers: counts.teachers, skipPlans: p.skip.plans, skipCells: p.skip.cells, skipTeachers: p.skip.teachers };
   } finally { rtClear_(); lock.releaseLock(); }
 }
 
