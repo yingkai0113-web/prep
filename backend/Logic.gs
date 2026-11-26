@@ -360,10 +360,11 @@ function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, f
     L_toolsFor(e, cat).forEach(function (t) {
       if (t.who !== '技士') return;
       var q = L_parseQty(t.qty);
-      if (!q) { day.texts.push({ name: t.name, qty: t.qty, title: ttl }); return; }
+      var tu = { course: e.course || '', teacher: tname, cls: e.cls + (e.group ? '（' + e.group + '）' : ''), title: ttl, qty: t.qty };
+      if (!q) { day.texts.push({ name: t.name, qty: t.qty, title: ttl, uses: [tu] }); return; }
       var k = t.name + '|' + q.unit;
-      var x = day.map[k] || (day.map[k] = { name: t.name, unit: q.unit, n: 0, rest: q.rest });
-      x.n += q.n;
+      var x = day.map[k] || (day.map[k] = { name: t.name, unit: q.unit, n: 0, rest: q.rest, uses: [] });
+      x.n += q.n; x.uses.push(tu);
     });
   });
   var materials = Object.keys(mats).map(function (k) { var m = mats[k]; m.total = L_round(m.total); m.uses = L_mergeUses(m.uses); return m; })
@@ -371,8 +372,8 @@ function L_rangeAggregate(entries, cat, start, end, teacherNames, onlyTeacher, f
   var totalG = L_round(materials.reduce(function (s, m) { return s + (m.unit === 'g' ? m.total : 0); }, 0));
   var tools = Object.keys(byDate).sort().map(function (d) {
     var day = byDate[d];
-    var items = Object.keys(day.map).map(function (k) { var x = day.map[k]; return { name: x.name, n: L_round(x.n), unit: x.unit, rest: x.rest }; });
-    day.texts.forEach(function (t) { items.push({ name: t.name, n: null, unit: '', rest: t.qty }); });
+    var items = Object.keys(day.map).map(function (k) { var x = day.map[k]; return { name: x.name, n: L_round(x.n), unit: x.unit, rest: x.rest, uses: x.uses }; });
+    day.texts.forEach(function (t) { items.push({ name: t.name, n: null, unit: '', rest: t.qty, uses: t.uses }); });
     return { date: d, wd: day.wd, items: items };
   });
   return { start: start, weekStart: start, end: end, teachers: teachers, onlyTeacher: onlyTeacher || '', filter: filter, facets: facets, classes: classes, lessons: lessons, materials: materials, totalG: totalG,
