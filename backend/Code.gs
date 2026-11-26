@@ -1491,6 +1491,15 @@ function apiExportTerm(order, fmt) {
   if (!d.start || !d.end) throw new Error('學期的開學日、結業式還沒設定，請先到「教學進度表」設定日期。');
   return apiExportRangeSheets(d.start, d.end, '', null, order, fmt);
 }
+/* 匯出指定學期（以前的學期也可以）整學期、全部老師的材料單 */
+function apiExportTermOf(term, order, fmt) {
+  requireStaff_();
+  term = String(term || '');
+  if (!/^\d{3}-[12]$/.test(term)) throw new Error('學期不正確。');
+  var st = setting_('開學日 ' + term, ''), en = setting_('結業式 ' + term, '');
+  if (!st || !en) throw new Error(term + ' 沒有設定開學日、結業式，請改用「每週材料總量」自己選日期範圍匯出。');
+  return apiExportRangeSheets(st, en, '', null, order, fmt);
+}
 function apiExportWeekSheets(anyDateInWeek, teacherEmail, order) { var ws = L_weekStart(anyDateInWeek); return apiExportRangeSheets(ws, L_addDays(ws, 6), teacherEmail, null, order); }
 
 /* 刪除老師開錯的課。技士、科主任、管理者都可以；會留一筆紀錄在「排課刪除紀錄」分頁。 */

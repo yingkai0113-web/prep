@@ -313,13 +313,13 @@ const dirty=()=>sigOf(S.entries)!==S.savedSig;
 function render(){
   if(!S.user){return;}
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
-  const views=S.asT?[['sched','教學進度表']]:[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','送單狀況'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
+  const views=S.asT?[['sched','教學進度表']]:[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','送單狀況'],canTech()&&['tech','每週材料總量'],canTech()&&['arch','以前學期'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
   if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>老師模式（預覽）：你正在看 <b>${esc(uName(S.asT))}</b> 的教學進度表。只能看，不能修改。</span><button class="btn sm ghost" data-a="asTpick">換一位老師</button></div>`;
   if(S.pickT){const l=S.pickList;h+=`<div class="card" style="margin:10px 0"><div class="cb"><b>老師模式：要看哪一位老師的畫面？</b>${l?`<select class="in" id="asTsel" style="width:100%;margin:8px 0">${l.filter(x=>x.role==='老師').concat(l.filter(x=>x.role!=='老師')).map(x=>`<option value="${esc(x.email)}"${x.email===S.asT?' selected':''}>${esc(x.name)}（${esc(x.role)}）</option>`).join('')}</select><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-a="asTcancel">取消</button><button class="btn" data-a="asTgo">進入老師模式</button></div>`:'<p class="mut">載入名單中…</p>'}</div></div>`;}
   if(S.err)h+=`<div class="err">${esc(S.err)}</div>`;
   if(S.info)h+=`<div class="ok-msg">${esc(S.info)}</div>`;
-  h+=S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
+  h+=S.view==='arch'?archPageHTML():S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
   if(S.preview)h+=`<div class="modal"><div class="mb"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>匯出內容預覽</b><button class="btn sm ghost" data-a="closePrev">關閉</button></div>${S.preview}</div></div>`;
   if(S.confirmSend)h+=confirmHTML();
   if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.archView)h+=archViewModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
@@ -693,6 +693,34 @@ function lessonHTML(l,i){
 }
 const rangeLen=()=>Math.round((pd(S.rgTo)-pd(S.rgFrom))/86400000)+1;
 const rangeText=()=>`${md0(S.rgFrom)} – ${md0(S.rgTo)}`+(S.rgFrom.slice(0,4)!==S.rgTo.slice(0,4)?`（${S.rgFrom.slice(0,4)}–${S.rgTo.slice(0,4)}）`:'');
+async function archInit(){
+  S.err='';S.arch=S.arch||{};S.tech=null;
+  if(!S.arch.terms){S.arch.busy=true;render();try{const r=await run('apiTermArchive','');S.arch.terms=r.terms;}catch(e){S.err=e.message;}S.arch.busy=false;}
+  render();
+}
+async function archPick(term){
+  const A=S.arch;A.term=term;A.data=null;S.tech=null;
+  if(!term)return render();
+  A.busy=true;render();
+  try{A.data=await run('apiTermArchive',term);if(A.data.start&&A.data.end){S.rgFrom=A.data.start;S.rgTo=A.data.end;await loadRange();}else{S.err=term+' 沒有設定開學日、結業式，請在下面自己選日期範圍。';const w0=weekStart(today());S.rgFrom=w0;S.rgTo=addDays(w0,6);await loadRange();}}catch(e){S.err=e.message;}
+  A.busy=false;render();
+}
+function archPageHTML(){
+  const A=S.arch||{};
+  let h=`<h2 style="margin:0 0 4px">以前學期</h2><p class="mut" style="margin:0 0 8px">只有管理者、科主任、技士看得到，只能看、匯出，不能改。</p>`;
+  if(!A.terms)return h+`<p class="load">${S.err?'':'載入中…'}</p>`;
+  if(!A.terms.length)return h+'<p class="mut">還沒有以前的學期。</p>';
+  h+=`<div class="card"><div class="cb" style="padding-top:12px"><label class="lbl">選學期</label><select class="in" data-k="archTerm" style="width:auto"><option value="">請選學期</option>${A.terms.map(t=>`<option ${A.term===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
+  const D=A.data;
+  if(D){
+    h+=`<p class="mut" style="margin:8px 0">${esc(D.term)}　${D.start&&D.end?fullDate(D.start)+' ～ '+fullDate(D.end):'（沒有設定開學日、結業式）'}　共 ${D.plans} 堂課（額外材料單 ${D.extra} 張）</p>
+    ${D.tables.length?`<b>這學期的課程</b>`+D.tables.map(x=>`<div class="ssrow ${x.sent>=x.lessons&&x.lessons?'done':'todo'}" style="padding-right:12px!important;cursor:default"><div><b>${esc(x.course)}</b> <span class="mut">${esc(x.dept)}</span> <span class="tg">${x.sent}／${x.lessons} 堂已送</span></div>${x.classes.map(c=>`<div style="margin:3px 0"><span class="tg" style="background:#E3EDE8;color:#1B4D3E;font-weight:700">${esc(c.cls)}</span> ${c.teachers.length?esc(c.teachers.join('、')):'<span class="mut">沒指定老師</span>'}</div>`).join('')}${x.cells?`<button class="btn sm ghost" style="margin-top:4px" data-a="archSched" data-id="${esc(x.id)}">看這張進度表</button>`:'<span class="mut">沒有排進度表內容</span>'}</div>`).join(''):'<p class="mut">這學期沒有進度表資料（只有材料單）。</p>'}`;
+  }
+  h+='</div></div>';
+  if(A.busy&&!S.tech)return h+'<p class="load">載入中…</p>';
+  if(!A.term)return h;
+  return h+techHTML();
+}
 function termBlockHTML(){
   const [ty,th]=S.term.split('-').map(Number);
   const prevTerm=th===2?`${ty}-1`:`${ty-1}-2`;
@@ -760,22 +788,7 @@ function statusHTML(){
   const de=S.sc.datesEd;
   h+=`<div class="card"><div class="cb" style="padding-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span>${d.canConfig&&!de?'<button class="btn sm ghost" data-a="scDates">設定日期</button>':''}</div>
     ${de?`<div class="rgrow" style="margin-top:8px"><label>開學日 <input class="in" type="date" data-k="scStart" value="${esc(de.start)}"></label><label>結業式 <input class="in" type="date" data-k="scEnd" value="${esc(de.end)}"></label></div><p class="mut" style="margin:4px 0 8px">開學日選那一週的任何一天都可以，從那一週的週一開始排。</p><button class="btn sm" data-a="scDatesSave">儲存</button> <button class="btn sm ghost" data-a="scDatesNo">取消</button>`:''}</div></div>`;
-  return h+ssHTML()+archHTML();
-}
-function archHTML(){
-  const A=S.arch||{};
-  let h=`<div class="card"><div class="cb" style="padding-top:12px"><b style="font-size:17px">查看以前學期的資料</b><small class="mut" style="display:block">只有管理者、科主任、技士看得到。只能看，不能改。</small>`;
-  if(!A.terms)return h+`<div style="margin-top:8px"><button class="btn ghost" data-a="archOpen">${A.busy?'載入中…':'打開'}</button></div></div></div>`;
-  if(!A.terms.length)return h+'<p class="mut">還沒有以前的學期。</p></div></div>';
-  h+=`<div class="rgrow" style="margin-top:8px"><label>學期 <select class="in" data-k="archTerm"><option value="">請選學期</option>${A.terms.map(t=>`<option ${A.term===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label><button class="btn sm ghost" data-a="archClose">收起</button></div>`;
-  const D=A.data;
-  if(A.busy)h+='<p class="load">載入中…</p>';
-  else if(D){
-    h+=`<p class="mut" style="margin:8px 0">${esc(D.term)}　${D.start&&D.end?fullDate(D.start)+' ～ '+fullDate(D.end):''}　共 ${D.plans} 堂課（已送出的額外材料單 ${D.extra} 張）</p>
-    <button class="btn sm" data-a="archTech">看這學期的每週材料總量、逐張材料單</button>
-    ${D.tables.length?D.tables.map(x=>`<div class="ssrow ${x.sent>=x.lessons&&x.lessons?'done':'todo'}" style="padding-right:12px!important"><div><b>${esc(x.course)}</b> <span class="mut">${esc(x.dept)}</span> <span class="tg">${x.sent}／${x.lessons} 堂已送</span></div>${x.classes.map(c=>`<div style="margin:3px 0"><span class="tg" style="background:#E3EDE8;color:#1B4D3E;font-weight:700">${esc(c.cls)}</span> ${c.teachers.length?esc(c.teachers.join('、')):'<span class="mut">沒指定老師</span>'}</div>`).join('')}${x.cells?`<button class="btn sm ghost" style="margin-top:4px" data-a="archSched" data-id="${esc(x.id)}">看這張進度表</button>`:'<span class="mut">沒有排進度表內容</span>'}</div>`).join(''):'<p class="mut">這學期沒有進度表資料。</p>'}`;
-  }
-  return h+'</div></div>';
+  return h+ssHTML();
 }
 const setRange=(a,b)=>{S.rgFrom=a;S.rgTo=b;return loadRange();};
 
@@ -889,7 +902,9 @@ document.addEventListener('click',async ev=>{
   if(a==='view'){
     const v=b.dataset.v;
     if(S.view==='sched')S.sstep=S.step;else if(S.view==='extra')S.estep=S.step;
+    if(S.view==='arch'&&v!=='arch'){const w0=weekStart(today());S.rgFrom=w0;S.rgTo=addDays(w0,6);S.tech=null;}
     S.view=v;
+    if(v==='arch')return archInit();
     if(v==='sched'){S.step=[0,3,4,5].includes(S.sstep)?S.sstep:0;return S.step===0?loadSched():render();}
     if(v==='extra'){S.step=[1,2,3,4,5].includes(S.estep)?S.estep:1;return render();}
     if(v==='tech')return loadRange();
@@ -949,6 +964,7 @@ document.addEventListener('click',async ev=>{
   if(a==='rqOpen'){S.rq={form:null,delAsk:''};return render();}
   if(a==='rqClose'){S.rq=null;return render();}
   if(a==='rqNew'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const dp=S.dept;S.rq.form={id:'',dept:dp,course:'',classes:[],groups:'',half:'每',note:'',teachers:[]};return render();}
+  if(a==='rqNewJr'){S.rq={form:{id:'',dept:'日間部',course:'國中技藝班',classes:[],groups:'',half:'每',note:'',teachers:[]},delAsk:'',direct:true};return render();}
   if(a==='rqEdit'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.filter(c=>!(x.course==='國中技藝班'&&c.cls==='國中技藝班')).map(c=>({cls:c.cls,days:c.days.slice(),teachers:(c.teachers?c.teachers:reqTeachers(x)).slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||'',teachers:reqTeachers(x)};return render();}
   if(a==='rqBack'){if(S.rq.direct){S.rq=null;return render();}S.rq.form=null;return render();}
   if(a==='rqDept'){const f=S.rq.form;f.dept=b.dataset.d;f.course=(S.courses[f.dept]||[])[0]||'';f.classes=[];if(f.dept==='夜間部')f.groups='';return render();}
@@ -983,9 +999,6 @@ document.addEventListener('click',async ev=>{
   if(!f.id&&!f.groups&&f.dept==='日間部'&&!['國中技藝班','技藝競賽選手'].includes(f.course))f.groups='單數組、雙數組';f.busy=true;f.err='';render();
     try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));const dr=S.rq.direct;S.rq.form=null;if(dr)S.rq=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}if(S.view==='status'){render();loadStatus();return;}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
-  if(a==='archOpen'){S.arch={busy:true};render();try{const r=await run('apiTermArchive','');S.arch={terms:r.terms,term:'',data:null};}catch(e){S.arch=null;S.err=e.message;}return render();}
-  if(a==='archClose'){S.arch=null;S.archView=null;return render();}
-  if(a==='archTech'){const D=S.arch.data;if(!D.start||!D.end){S.err='這個學期沒有設定開學日和結業式，請到「每週材料總量」自己選日期範圍。';return render();}S.rgFrom=D.start;S.rgTo=D.end;S.view='tech';window.scrollTo(0,0);return loadRange();}
   if(a==='archSched'){S.archView={busy:true};render();try{const d=await run('apiScheduleHistoryTable',b.dataset.id);S.archView={data:d};}catch(e){S.archView=null;S.err=e.message;}return render();}
   if(a==='archViewClose'){S.archView=null;return render();}
   if(a==='ssDelAsk'){S.ssDel=b.dataset.id;return render();}
@@ -1351,7 +1364,7 @@ document.addEventListener('click',async ev=>{
   if(a==='expTermNo'){S.termDlg=false;return render();}
   if(a==='expTermGo'){
     S.termDlg=false;S.busy='製作整個學期（全部老師）的檔案…';S.busyA='exportTerm';render();
-    try{await runFmt('apiExportTerm',S.termOrder||'date');}catch(e){S.err=e.message;}
+    try{if(S.view==='arch')await runFmt('apiExportTermOf',S.arch.term,S.termOrder||'date');else await runFmt('apiExportTerm',S.termOrder||'date');}catch(e){S.err=e.message;}
     S.busy='';S.busyA='';return render();}
   if(a==='exportWeek'||a==='exportSheets'){S.exDlg=a;S.exOrder=S.tOrder==='class'||S.tOrder==='course'?S.tOrder:'date';return render();}
   if(a==='exNo'){S.exDlg=null;return render();}
@@ -1455,10 +1468,10 @@ document.addEventListener('change',ev=>{
     const c=(k[0]==='s'?S.sc.tableEd:S.rq.form).classes[0];let f=Math.min(...c.days),to=Math.max(...c.days);
     if(k.endsWith('From')){f=+t.value;if(to<f)to=f;}else{to=+t.value;if(to<f)f=to;}
     c.days=[];for(let n=f;n<=to;n++)c.days.push(n);return render();}
+  if(k==='archTerm'){archPick(t.value);return;}
   if(k==='scXFrom'||k==='scXTo'){S.sc.extraEd[k==='scXFrom'?'from':'to']=t.value;return;}
   if(k==='tfCourse'||k==='tfCls'||k==='tfQ'){S.tFilter={course:k==='tfCourse'?t.value:S.tFilter.course,cls:k==='tfCls'?t.value:S.tFilter.cls,q:k==='tfQ'?t.value.trim():S.tFilter.q,id:''};return loadRange();}
   if(k==='rqcourse'){const f=S.rq.form,j0=f.course==='國中技藝班';f.course=t.value.trim();const j=f.course==='國中技藝班';if(j!==j0){f.classes=f.classes.filter(c=>j?/國中$/.test(c.cls):!/國中$/.test(c.cls));if(j&&f.classes.length>1)f.classes=[f.classes[0]];render();const el=document.querySelector('[data-k="rqcourse"]');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}}return;}
-  if(k==='archTerm'){S.arch.term=t.value;S.arch.data=null;if(!t.value)return render();S.arch.busy=true;render();run('apiTermArchive',t.value).then(r=>{S.arch.data=r;}).catch(e=>{S.err=e.message;}).then(()=>{S.arch.busy=false;render();});return;}
   if(k==='hTerm'){const H=S.sc.hist,tm=H.terms.find(x=>x.term===t.value),t0=schedTable(S.sc.tab);H.term=t.value;const x=tm.tables.find(y=>y.dept===t0.dept&&y.course===t0.course)||tm.tables[0];return loadHistTable(x.id);}
   if(k==='hTable'){return loadHistTable(t.value);}
   if(k==='hFrom'){S.sc.hist.a=+t.value;if(S.sc.hist.b<S.sc.hist.a)S.sc.hist.b=S.sc.hist.a;return render();}
@@ -1513,7 +1526,8 @@ async function commitSched(after){
   await Promise.all([run('apiScheduleGet',S.asT||'').then(d=>{S.sc.data=d;}),refreshEntries()]);
   return {saved};
 }
-async function quietSched(){try{S.sc.data=await run('apiScheduleGet',S.asT||'');render();}catch(e){}}
+async function quietSched(){try{S.sc.data=await run('apiScheduleGet',S.asT||'');if(document.activeElement&&document.activeElement.tagName==='SELECT'){S.pendRender=1;return;}render();}catch(e){}}
+document.addEventListener('focusout',()=>{if(S.pendRender){S.pendRender=0;setTimeout(()=>{if(!(document.activeElement&&document.activeElement.tagName==='SELECT'))render();},60);}});
 
 const uName=em=>{const u=((S.sc.data&&S.sc.data.users)||[]).find(x=>x.email===em)||(S.pickList||[]).find(x=>x.email===em);return u?u.name:(em||'').split('@')[0];};
 const pTitle=pid=>{const p=S.cat.pmap[pid];if(p)return p.title;const c=S.sc&&S.sc.data&&S.sc.data.cellProducts&&S.sc.data.cellProducts[pid];return c?c.title:'（找不到的材料單）';};
@@ -1870,9 +1884,9 @@ function ssHTML(){
   const pendRq=rq.filter(x=>x.state!=='done').length;
   const skipped=(d.required||[]).filter(x=>x.skip);
   return `<div class="card"><div class="cb" style="padding-top:12px"><b style="font-size:17px">教學進度表送單狀況</b><small class="mut" style="display:block">${rq.length} 門課要排進度表${pendRq?`・<span style="color:var(--err)">${pendRq} 門還沒完成</span>`:'・全部完成 ✓'}　｜　已排 ${all.length} 堂，已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}</small>
-    <div style="margin:8px 0"><button class="btn" data-a="rqNew">＋ 新增課程</button></div><p class="mut" style="margin:8px 0 6px">每一門要排進度表的課，授課老師有沒有送單。點一列可以看那張進度表；課程、班級、授課老師也在這裡設定，設定一次，以後每學期都照這份清單。</p>${depts||'<p class="mut">還沒設定哪些課要排進度表。</p>'}
+    <div style="margin:8px 0"><button class="btn" data-a="rqNew">＋ 新增課程</button> <button class="btn" data-a="rqNewJr">＋ 新增國中技藝班（選國中）</button></div><p class="mut" style="margin:8px 0 6px">每一門要排進度表的課，授課老師有沒有送單。點一列可以看那張進度表；課程、班級、授課老師也在這裡設定，設定一次，以後每學期都照這份清單。</p>${depts||'<p class="mut">還沒設定哪些課要排進度表。</p>'}
     ${skipped.length?`<div class="ssd">這學期不開</div>${skipped.map(x=>`<div class="ssact" style="justify-content:space-between"><span class="mut">${esc(x.dept)}・${esc(x.course)}</span><button class="btn sm ghost" data-a="rqSkip" data-id="${esc(x.id)}" data-v="0" ${S.rqBusy?'disabled':''}>${S.rqBusy===x.id?'處理中…':'恢復（這學期要開）'}</button></div>`).join('')}`:''}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><button class="btn" data-a="rqNew">＋ 新增一門要排進度表的課</button>${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}</div></div></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><button class="btn" data-a="rqNew">＋ 新增一門要排進度表的課</button><button class="btn" data-a="rqNewJr">＋ 新增國中技藝班（選國中）</button>${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}</div></div></div>`;
 }
 function dlFilesModal(){
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">檔案做好了（${S.dlFiles.length} 個）</h2>
@@ -1937,8 +1951,8 @@ function rqModal(){
   const NO=['①','②','③','④'],jr0=f.course==='國中技藝班',cls=(S.classes[f.dept]||[]).filter(c=>jr0?/國中$/.test(c):!/國中$/.test(c)),courses=S.courses[f.dept]||[],one=f.classes.length===1,jr=jr0,W=jr?'哪一所國中（每一所國中一張獨立的進度表）':'哪些班',W2=jr?'國中':'班';
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 8px">${f.id?'修改：'+esc(f.dept)+'・'+esc(f.course):'新增一門要排進度表的課'}</h2>
     ${f.id?'':`<div class="rqsec"><b class="rqh">部別</b><div class="seg">${DEPTS.map(x=>`<button data-a="rqDept" data-d="${x}" class="${f.dept===x?'on':''}">${x}</button>`).join('')}</div></div>`}
-    ${f.id?'':`<div class="rqsec"><b class="rqh">${NO[0]} 課程名稱</b><input class="in" style="width:100%" data-k="rqcourse" maxlength="20" placeholder="直接打課程名稱，例如：烘焙食品加工實習" value="${esc(f.course||'')}"></div>`}
-    <div class="rqsec"><b class="rqh">${NO[1-(f.id?1:0)]} ${W}</b><div class="mut" style="font-size:13px;margin-bottom:4px">${jr?'一次選一所；要新增另一所，存好後再按「＋ 新增課程」':'同一門課、同一'+W2+'只能有一張進度表'}</div><div class="ccs">${cls.map(c=>f.clsDel?`<button class="cc" data-a="rqClsDel" data-cl="${esc(c)}" title="刪掉這個${W2}">✕ ${esc(c)}</button>`:`<button class="cc ${f.classes.some(x=>x.cls===c)?'on':''}" data-a="rqClass" data-cl="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    ${f.id?'':`<div class="rqsec"><b class="rqh">${NO[0]} 課程名稱</b><input class="in" style="width:100%" data-k="rqcourse" maxlength="20" placeholder="直接打課程名稱，例如：烘焙食品加工實習" value="${esc(f.course||'')}"><button class="btn sm ghost" style="margin-top:6px" data-a="rqCourse" data-c="國中技藝班">國中技藝班（選國中）</button></div>`}
+    <div class="rqsec"><b class="rqh">${NO[1-(f.id?1:0)]} ${W}</b><div class="mut" style="font-size:13px;margin-bottom:4px">${jr?'一次選一所；要新增另一所，存好後再按「＋ 新增課程」':'同一門課、同一'+W2+'只能有一張進度表'}</div>${jr&&!cls.length?'<p class="mut" style="margin:4px 0">還沒有國中，請在下面「新增國中」打學校名稱，按「加入」。</p>':''}<div class="ccs">${cls.map(c=>f.clsDel?`<button class="cc" data-a="rqClsDel" data-cl="${esc(c)}" title="刪掉這個${W2}">✕ ${esc(c)}</button>`:`<button class="cc ${f.classes.some(x=>x.cls===c)?'on':''}" data-a="rqClass" data-cl="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div style="display:flex;gap:6px;margin-top:6px;align-items:center"><input class="in" data-k="rqNewCls" maxlength="10" placeholder="${jr?'新增國中（例如：大村國中）':'新增班級'}" value="${esc(f.newCls||'')}" style="flex:1"><button class="btn sm" data-a="rqClsAdd">加入</button></div>
     <button class="linkb" data-a="rqClsMode">${f.clsDel?'完成（回去選）':'刪掉用不到的'+W2}</button></div>
     ${f.classes.length?`<div class="rqsec"><b class="rqh">${NO[2-(f.id?1:0)]} 每個${W2}的上課日、授課老師</b>${f.classes.map((c,ci)=>`<div class="rqcls" style="border-color:${ci%2?'#B65F00':'#1B6B54'}"><div class="rqct" style="background:${ci%2?'#B65F00':'#1B6B54'}">${esc(c.cls)}</div><div class="rqcb"><label class="lbl">每週上課日：<span class="mut">${esc(daysText(c.days))}</span></label><div class="ccs">${[1,2,3,4,5].map(n=>`<button class="cc ${c.days.includes(n)?'on':''}" data-a="rqDay" data-cl="${esc(c.cls)}" data-n="${n}">週${WDN[n]}</button>`).join('')}${one?`<button class="cc ${c.days.length===5?'on':''}" data-a="rqDay" data-cl="${esc(c.cls)}" data-n="all">每天</button>`:''}</div>${one?`<div class="rgrow" style="margin-top:6px"><label>從 <select class="in" data-k="rqFrom">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.min(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label><label>到 <select class="in" data-k="rqTo">${[1,2,3,4,5].map(n=>`<option value="${n}" ${Math.max(...c.days)===n?'selected':''}>週${WDN[n]}</option>`).join('')}</select></label></div>`:''}
