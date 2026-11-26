@@ -310,8 +310,9 @@ function L_mergeUses(uses) {
   var out = [], idx = {};
   (uses || []).forEach(function (u) {
     var k = u.date + '|' + (u.course || u.title) + '|' + (u.teacher || '');
-    if (idx[k] === undefined) { idx[k] = out.length; out.push({ date: u.date, course: u.course || u.title, teacher: u.teacher || '', qty: typeof u.qty === 'number' ? u.qty : null }); }
+    if (idx[k] === undefined) { idx[k] = out.length; out.push({ date: u.date, course: u.course || u.title, teacher: u.teacher || '', qty: typeof u.qty === 'number' ? u.qty : null, items: [] }); }
     else if (typeof u.qty === 'number') out[idx[k]].qty = (out[idx[k]].qty || 0) + u.qty;
+    out[idx[k]].items.push({ title: u.title || '', cls: u.cls || '', qty: typeof u.qty === 'number' ? L_round(u.qty) : null });
   });
   return out.map(function (u) { if (typeof u.qty === 'number') u.qty = L_round(u.qty); return u; });
 }
