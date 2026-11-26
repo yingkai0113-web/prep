@@ -835,6 +835,14 @@ function setRatio(i){
   const c=$(`[data-c="${i}"]`);const s=$('[data-k="scale"]',c);if(s&&document.activeElement!==s)s.value=e.scale;
   const u=$('[data-yu]',c);if(u)u.textContent=e.yUnit||(parseYield(P(e.pid).serving)||{}).unit||'';
 }
+/* 任何「儲存」按鈕：一按下去立刻顯示「儲存中…」並鎖住，避免不知道有沒有按到 */
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a]');if(!b||b.disabled||b.dataset.sv)return;
+  const t=(b.textContent||'').trim();
+  if(!/儲存|存起來/.test(t)||/中…/.test(t)||/^(取消|不要)/.test(t))return;
+  b.dataset.sv=t;b.textContent='儲存中…';b.disabled=true;
+  setTimeout(()=>{if(b.isConnected&&b.dataset.sv){b.textContent=b.dataset.sv;b.disabled=false;delete b.dataset.sv;}},8000);
+},true);
 document.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;S.err='';S.info='';
   if(a==='signout')return signOut();
