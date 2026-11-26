@@ -1272,10 +1272,12 @@ document.addEventListener('click',async ev=>{
     if(!sc().length)return;
     if(!entriesOk(curScope())){S.err='每一堂課都要填課程名稱和日期。';S.view='extra';S.step=2;return render();}
     const nw=sc().filter(e=>!S.seen.has(eKey(e))).length,nt=sc().filter(e=>!S.seen4.has(eKey(e))).length;
-    if(nw||nt){S.needCheck={w:nw,t:nt};return render();}                  // 還有沒勾的：不能匯出，先提醒
+    const nm=schedMissing()||0;
+    if(nw||nt||nm){S.needCheck={w:nw,t:nt,m:nm};return render();}                  // 還有沒勾的：不能匯出，先提醒
     S.confirmSend=a;return render();}                                // 先讓老師核對日期、產品，確定了才送出
   if(a==='needNo'){S.needCheck=null;return render();}
-  if(a==='needGo'){const n=+b.dataset.n;S.needCheck=null;S.step=n;window.scrollTo(0,0);return render();}
+  if(a==='needForce'){S.needCheck=null;S.confirmSend='export';return render();}
+  if(a==='needGo'){const n=+b.dataset.n;S.needCheck=null;S.step=n;if(n===0)S.view='sched';window.scrollTo(0,0);return render();}
   if(a==='sendNo'){S.confirmSend='';return render();}
   if(a==='dlSent'){S.busy='製作中…';render();try{const f=await runFmt('apiExportRequisition',curScope(),'all',S.expOrder);S.info=`已下載「${f.name}」。`;}catch(e){S.err=e.message;}S.busy='';return render();}
   if(a==='sendYes'){
@@ -1799,12 +1801,13 @@ function dlFilesModal(){
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="dlFilesClose">關閉</button><button class="btn" data-a="dlFilesAll">全部下載</button></div></div></div>`;
 }
 function needCheckModal(){
-  const n=S.needCheck;
-  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px;color:#B65F00">還沒全部勾完，不能匯出</h2>
-    <p style="margin:0 0 10px">每一堂課的重量、器具都要看過、打勾，才能匯出。</p>
+  const n=S.needCheck,hard=n.w||n.t;
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px;color:#B65F00">${hard?'還沒全部勾完，不能匯出':'進度表還有空白格子'}</h2>
+    <p style="margin:0 0 10px">${hard?'每一堂課的重量、器具都要看過、打勾，才能匯出。':'重量、器具都確認了，但進度表還有格子沒排。要先回去排，還是先匯出？'}</p>
+    ${n.m?`<div class="spill warn" style="margin:6px 0">進度表：還有 <b>${n.m}</b> 格空白</div>`:`<div class="spill" style="margin:6px 0">進度表：全部排好了 ✓</div>`}
     ${n.w?`<div class="spill warn" style="margin:6px 0">重量：還有 <b>${n.w}</b> 堂沒打勾</div>`:`<div class="spill" style="margin:6px 0">重量：全部確認了 ✓</div>`}
     ${n.t?`<div class="spill warn" style="margin:6px 0">器具：還有 <b>${n.t}</b> 堂沒打勾</div>`:`<div class="spill" style="margin:6px 0">器具：全部確認了 ✓</div>`}
-    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px"><button class="btn ghost" data-a="needNo">關閉</button>${n.w?'<button class="btn" data-a="needGo" data-n="3">去確認重量</button>':''}${n.t?'<button class="btn" data-a="needGo" data-n="4">去確認器具</button>':''}</div></div></div>`;
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px"><button class="btn ghost" data-a="needNo">關閉</button>${n.m?'<button class="btn" data-a="needGo" data-n="0">去排進度表</button>':''}${n.w?'<button class="btn" data-a="needGo" data-n="3">去確認重量</button>':''}${n.t?'<button class="btn" data-a="needGo" data-n="4">去確認器具</button>':''}${!hard?'<button class="btn ghost" data-a="needForce">仍然匯出</button>':''}</div></div></div>`;
 }
 function exModal(){
   const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
