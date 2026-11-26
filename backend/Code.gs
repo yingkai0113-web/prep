@@ -1861,6 +1861,7 @@ function apiPaperImport(rec) {
       if (raw.mode !== 'joint') throw new Error('第 ' + (ix + 1) + ' 張：這一格是分組的，請手動處理。');
       if (raw.groups[0].teacher && raw.groups[0].teacher !== it._teacher) throw new Error('第 ' + (ix + 1) + ' 張：這一格已經有別的老師開單。');
       raw.groups[0].teacher = it._teacher;
+      if (it.dropPid) raw.groups[0].pids = raw.groups[0].pids.filter(function (x) { return x !== it.dropPid; });
       if (raw.groups[0].pids.indexOf(pid) < 0) raw.groups[0].pids.push(pid);
       var cell = L_cleanCell(raw, t, cat.products, emails, it._teacher, tablePids_(t.id));
       var rows = schedCells_().filter(function (x) { return !(x.tableId === t.id && x.week === it._wk.n && x.cls === it.cls && (x.day || 0) === it._day); }).map(cellRow_);
