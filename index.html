@@ -43,7 +43,7 @@ h2{font-size:20px;margin:0 0 4px}
 .tile.on .box{background:var(--pri);border-color:var(--pri)}
 .tile.on .box::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
 .opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;margin:10px 0;font:inherit;font-size:18px;background:#fff;color:#1b2a22;border:2px solid #9DB8A9;border-radius:14px;cursor:pointer;box-shadow:0 2px 0 #C9D9CF}.opt:hover{border-color:var(--pri);background:#F3F8F5}.opt:active{transform:translateY(1px);box-shadow:none}.opt.on{border-color:var(--pri);background:#E3F1E9;box-shadow:0 0 0 2px var(--pri)}.opt .rd{font-size:26px;line-height:1;color:var(--pri)}.opt small{display:block;font-size:13px;font-weight:400;color:#5b6b62;margin-top:2px}
-.ssd{font-weight:700;margin:12px 0 4px;color:var(--pri)}.ssrow{display:block;width:100%;text-align:left;background:#fff;border:2px solid #C9D9CF;border-radius:12px;padding:10px 12px;margin:6px 0;font:inherit;cursor:pointer;position:relative}.ssrow.todo{border-color:#F0A04B;background:#FFF8EE}.ssrow.done{border-color:#6DBB86;background:#F1FAF3}.ssrow:hover{box-shadow:0 0 0 2px var(--pri)}.ssrow:disabled{cursor:default;opacity:.8}.ssl{display:block;font-size:16px}.ssm{display:block;margin-top:4px;font-size:14px}.ssgo{position:absolute;right:12px;top:10px;font-size:13px;color:var(--pri);font-weight:600}
+.ssd{font-weight:700;margin:12px 0 4px;color:var(--pri)}.ssw{margin-bottom:10px}.ssact{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 4px 0}.ssrow{display:block;width:100%;text-align:left;background:#fff;border:2px solid #C9D9CF;border-radius:12px;padding:10px 12px;margin:6px 0;font:inherit;cursor:pointer;position:relative}.ssrow.todo{border-color:#F0A04B;background:#FFF8EE}.ssrow.done{border-color:#6DBB86;background:#F1FAF3}.ssrow:hover{box-shadow:0 0 0 2px var(--pri)}.ssrow:disabled{cursor:default;opacity:.8}.ssl{display:block;font-size:16px}.ssm{display:block;margin-top:4px;font-size:14px}.ssgo{position:absolute;right:12px;top:10px;font-size:13px;color:var(--pri);font-weight:600}
 .card.todo{background:#FFF1E0;border-color:#F0A04B}.card.todo .ch{background:#FFF1E0}.gh.todo{background:#E8820C;color:#fff}.gh.done{background:#2E9E5B;color:#fff}.card.seen{background:#E6F4EA;border-color:#6DBB86}.card.seen .ch{background:#E6F4EA}.okbox{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;margin-top:10px;border:2px solid #6DBB86;border-radius:12px;background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:#1d5a35;text-align:left}.okbox.on{background:#2E9E5B;color:#fff;border-color:#2E9E5B}.okbox b{font-size:22px;line-height:1}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;overflow:hidden}
 .ch{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;padding:12px;text-align:left}
@@ -313,13 +313,13 @@ const dirty=()=>sigOf(S.entries)!==S.savedSig;
 function render(){
   if(!S.user){return;}
   let h=`<div class="top"><div class="brand"><span class="logo">料</span>員林農工材料單系統<span class="term">${esc(S.term)}</span></div><div class="who"><b>${esc(S.user.name)}</b><span class="role">${esc(S.user.role)}</span>${realStaff()?`<button class="linkb" style="font-size:12px;font-weight:600" data-a="asT">${S.asT?'回到管理模式':'切換成老師模式'}</button>`:''}<button class="linkb" style="font-size:12px;font-weight:400" data-a="signout">切換帳號</button></div></div>`;
-  const views=S.asT?[['sched','教學進度表']]:[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
+  const views=S.asT?[['sched','教學進度表']]:[['sched','教學進度表'],canPlan()&&['extra','額外材料單'],canTech()&&['status','送單狀況'],canTech()&&['tech','每週材料總量'],isAdmin()&&['admin','後台']].filter(Boolean);
   if(views.length>1)h+=`<div class="tabs">${views.map(([v,n])=>`<button data-a="view" data-v="${v}" class="${S.view===v?'on':''}">${n}</button>`).join('')}</div>`;
   if(S.asT)h+=`<div class="ok-msg" style="background:#FFF4CF;color:#5A4500;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><span>老師模式（預覽）：你正在看 <b>${esc(uName(S.asT))}</b> 的教學進度表。只能看，不能修改。</span><button class="btn sm ghost" data-a="asTpick">換一位老師</button></div>`;
   if(S.pickT){const l=S.pickList;h+=`<div class="card" style="margin:10px 0"><div class="cb"><b>老師模式：要看哪一位老師的畫面？</b>${l?`<select class="in" id="asTsel" style="width:100%;margin:8px 0">${l.filter(x=>x.role==='老師').concat(l.filter(x=>x.role!=='老師')).map(x=>`<option value="${esc(x.email)}"${x.email===S.asT?' selected':''}>${esc(x.name)}（${esc(x.role)}）</option>`).join('')}</select><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-a="asTcancel">取消</button><button class="btn" data-a="asTgo">進入老師模式</button></div>`:'<p class="mut">載入名單中…</p>'}</div></div>`;}
   if(S.err)h+=`<div class="err">${esc(S.err)}</div>`;
   if(S.info)h+=`<div class="ok-msg">${esc(S.info)}</div>`;
-  h+=S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
+  h+=S.view==='status'?statusHTML():S.view==='tech'?techHTML():S.view==='admin'?adminHTML():S.view==='sched'?flowHTML():extraHTML();
   if(S.preview)h+=`<div class="modal"><div class="mb"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>匯出內容預覽</b><button class="btn sm ghost" data-a="closePrev">關閉</button></div>${S.preview}</div></div>`;
   if(S.confirmSend)h+=confirmHTML();
   if(S.sc.cellEd)h+=scCellModal();if(S.sc.conflict)h+=conflictModal();if(S.sc.print)h+=printModal();if(S.sc.hist)h+=histSchedModal();if(S.sc.importRes)h+=importResModal();if(S.sc.dayPick)h+=dayPickModal();if(S.sc.pasteAsk)h+=pasteAskModal();if(S.sc.extraEd)h+=extraModal();
@@ -680,7 +680,7 @@ function adminHTML(){
     <button class="btn" style="margin-top:10px" data-a="edNew" data-sh="1" data-cat="${esc(place)}">＋ 新增產品到「${esc(placeLabel)}」</button></div>
   ${usersHTML()}
   ${resetHTML()}
-  <div class="adm"><b>老師開錯的課</b><p class="mut" style="margin:4px 0 0">到「每週材料總量」的「逐張材料單」裡可以刪掉。日間部、夜間部有哪些班級和課程，在「設定每學期要有哪些進度表」裡調整。</p></div>`;
+  <div class="adm"><b>老師開錯的課</b><p class="mut" style="margin:4px 0 0">到「每週材料總量」的「逐張材料單」裡可以刪掉。日間部、夜間部有哪些班級和課程，在「送單狀況」分頁裡調整。</p></div>`;
 }
 
 /* ---------- 技士、科主任、管理者：看任何日期範圍的總量 ---------- */
@@ -713,11 +713,10 @@ function subHTML(){
 }
 function techHTML(){
   const t=S.tech;
-  let h=switchHTML()+extraSwitchHTML()+`<div class="rgrow"><label>從 <input class="in" type="date" data-k="rgFrom" value="${esc(S.rgFrom)}"></label><label>到 <input class="in" type="date" data-k="rgTo" value="${esc(S.rgTo)}"></label></div>
+  let h=`<div class="rgrow"><label>從 <input class="in" type="date" data-k="rgFrom" value="${esc(S.rgFrom)}"></label><label>到 <input class="in" type="date" data-k="rgTo" value="${esc(S.rgTo)}"></label></div>
   <div class="rgrow"><button class="btn sm ghost" data-a="rgShift" data-d="-1" aria-label="往前一段">◀</button><b style="flex:1;min-width:8em;text-align:center">${rangeText()}（${rangeLen()} 天）</b><button class="btn sm ghost" data-a="rgShift" data-d="1" aria-label="往後一段">▶</button></div>
   <div class="rgrow">${[['week','本週'],['next','下週'],['month','本月'],['nmonth','下個月']].map(([v,n])=>`<button class="btn sm ghost" data-a="rgPreset" data-p="${v}">${n}</button>`).join('')}</div>`;
   if(!t)return h+`<p class="load">${S.err?'':'計算中…'}</p>`;
-  h+=ssHTML();
   const tl=[...t.teachers];if(S.tTeacher&&!tl.some(x=>x.email===S.tTeacher))tl.push({email:S.tTeacher,name:S.tTeacher});
   h+=`<div class="tctl"><select class="in" data-k="tTeacher" aria-label="哪位老師"><option value="">全部老師</option>${tl.map(x=>`<option value="${esc(x.email)}" ${x.email===S.tTeacher?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
   <select class="in" data-k="tOrder" aria-label="材料單的順序"><option value="date" ${S.tOrder!=='class'&&S.tOrder!=='course'?'selected':''}>依日期排</option><option value="course" ${S.tOrder==='course'?'selected':''}>依課程、再依日期排</option><option value="class" ${S.tOrder==='class'?'selected':''}>依課程、班級排</option></select>
@@ -741,8 +740,22 @@ function techHTML(){
 }
 async function loadRange(){
   S.tech=null;S.err='';S.tOpen=new Set();render();
-  try{const [t,sub,ss]=await Promise.all([run('apiTechRange',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder),run('apiSubmissions',S.rgFrom,S.rgTo),run('apiScheduleStatus',S.ssAll?'':S.rgFrom,S.ssAll?'':S.rgTo).catch(()=>null)]);S.tech=t;S.sub=sub;S.ss=ss;}catch(e){S.err=e.message;}
+  try{const [t,sub,ss]=await Promise.all([run('apiTechRange',S.rgFrom,S.rgTo,S.tTeacher,S.tFilter,S.tOrder),run('apiSubmissions',S.rgFrom,S.rgTo),Promise.resolve(null)]);S.tech=t;S.sub=sub;}catch(e){S.err=e.message;}
   render();
+}
+async function loadStatus(){
+  S.err='';S.ssBusy=true;render();
+  try{const [ss,sd]=await Promise.all([run('apiScheduleStatus','',''),run('apiScheduleGet','')]);S.ss=ss;S.sc.data=sd;fixTab();}catch(e){S.err=e.message;}
+  S.ssBusy=false;render();
+}
+function statusHTML(){
+  const d=S.sc.data;
+  let h=switchHTML()+extraSwitchHTML();
+  if(!S.ss||!d)return h+`<p class="load">${S.err?'':'載入中…'}</p>`;
+  const de=S.sc.datesEd;
+  h+=`<div class="card"><div class="cb" style="padding-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span>${d.canConfig&&!de?'<button class="btn sm ghost" data-a="scDates">設定日期</button>':''}</div>
+    ${de?`<div class="rgrow" style="margin-top:8px"><label>開學日 <input class="in" type="date" data-k="scStart" value="${esc(de.start)}"></label><label>結業式 <input class="in" type="date" data-k="scEnd" value="${esc(de.end)}"></label></div><p class="mut" style="margin:4px 0 8px">開學日選那一週的任何一天都可以，從那一週的週一開始排。</p><button class="btn sm" data-a="scDatesSave">儲存</button> <button class="btn sm ghost" data-a="scDatesNo">取消</button>`:''}</div></div>`;
+  return h+ssHTML();
 }
 const setRange=(a,b)=>{S.rgFrom=a;S.rgTo=b;return loadRange();};
 
@@ -860,6 +873,7 @@ document.addEventListener('click',async ev=>{
     if(v==='sched'){S.step=[0,3,4,5].includes(S.sstep)?S.sstep:0;return S.step===0?loadSched():render();}
     if(v==='extra'){S.step=[1,2,3,4,5].includes(S.estep)?S.estep:1;return render();}
     if(v==='tech')return loadRange();
+    if(v==='status')return loadStatus();
     return render();}
     if(a==='dept'){S.dept=b.dataset.d;return render();}
   if(a==='tab'){S.tab=b.dataset.g;return render();}
@@ -914,9 +928,9 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='rqOpen'){S.rq={form:null,delAsk:''};return render();}
   if(a==='rqClose'){S.rq=null;return render();}
-  if(a==='rqNew'){const dp=S.dept;S.rq.form={id:'',dept:dp,course:(S.courses[dp]||[])[0]||'',classes:[],groups:'',half:'每',note:'',teachers:[]};return render();}
-  if(a==='rqEdit'){const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.map(c=>({cls:c.cls,days:c.days.slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||'',teachers:reqTeachers(x)};return render();}
-  if(a==='rqBack'){S.rq.form=null;return render();}
+  if(a==='rqNew'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const dp=S.dept;S.rq.form={id:'',dept:dp,course:(S.courses[dp]||[])[0]||'',classes:[],groups:'',half:'每',note:'',teachers:[]};return render();}
+  if(a==='rqEdit'){if(!S.rq)S.rq={form:null,delAsk:'',direct:true};const x=S.sc.data.requiredAll.find(y=>y.id===b.dataset.id);S.rq.form={id:x.id,dept:x.dept,course:x.course,classes:x.classes.map(c=>({cls:c.cls,days:c.days.slice()})),groups:(x.groups||[]).join('、'),half:x.half,note:x.note||'',teachers:reqTeachers(x)};return render();}
+  if(a==='rqBack'){if(S.rq.direct){S.rq=null;return render();}S.rq.form=null;return render();}
   if(a==='rqDept'){const f=S.rq.form;f.dept=b.dataset.d;f.course=(S.courses[f.dept]||[])[0]||'';f.classes=[];if(f.dept==='夜間部')f.groups='';return render();}
   if(a==='rqCourse'){S.rq.form.course=b.dataset.c;return render();}
   if(a==='rqClass'){
@@ -944,11 +958,14 @@ document.addEventListener('click',async ev=>{
     return render();}
   if(a==='rqTeach'){const f=S.rq.form,em=b.dataset.em;f.teachers=f.teachers.includes(em)?f.teachers.filter(x=>x!==em):f.teachers.concat([em]);return render();}
   if(a==='rqSave'){const f=S.rq.form;if(!f||f.busy)return;f.busy=true;f.err='';render();
-    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));S.rq.form=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}render();refreshEntries().then(render);return;}
+    try{S.sc.data=await run('apiRequiredSave',Object.assign({},f,{busy:undefined,err:undefined}));const dr=S.rq.direct;S.rq.form=null;if(dr)S.rq=null;S.info='存好了。進度表已經自動建好，以後每學期都照這份清單，不用重設。'+(window.__last&&window.__last.server!=null?`（這次共 ${(window.__last.total/1000).toFixed(1)} 秒，其中伺服器 ${(window.__last.server/1000).toFixed(1)} 秒）`:'');}catch(e){f.busy=false;f.err=e.message;return render();}if(S.view==='status'){render();loadStatus();return;}render();refreshEntries().then(render);return;}
   if(a==='rqDelAsk'){S.rq.delAsk=b.dataset.id;return render();}
+  if(a==='ssDelAsk'){S.ssDel=b.dataset.id;return render();}
+  if(a==='ssDelNo'){S.ssDel='';return render();}
+  if(a==='ssDelYes'){S.rqBusy=b.dataset.id;render();try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.ss=await run('apiScheduleStatus','','');S.ssDel='';S.info='已刪除這門課的進度表設定。';}catch(e){S.err=e.message;}S.rqBusy='';return render();}
   if(a==='rqDelNo'){S.rq.delAsk='';return render();}
   if(a==='rqDelYes'){try{S.sc.data=await run('apiRequiredDelete',b.dataset.id);S.rq.delAsk='';}catch(e){S.err=e.message;}return render();}
-  if(a==='rqSkip'){if(S.rqBusy)return;S.rqBusy=b.dataset.id;render();try{S.sc.data=await run('apiRequiredSkip',b.dataset.id,b.dataset.v==='1');S.info=b.dataset.v==='1'?'這學期不開這門課。下學期還是會在清單裡。':'已恢復。';}catch(e){S.err=e.message;}S.rqBusy='';return render();}
+  if(a==='rqSkip'){if(S.rqBusy)return;S.rqBusy=b.dataset.id;render();try{S.sc.data=await run('apiRequiredSkip',b.dataset.id,b.dataset.v==='1');if(S.view==='status')S.ss=await run('apiScheduleStatus','','');S.info=b.dataset.v==='1'?'這學期不開這門課。下學期還是會在清單裡。':'已恢復。';}catch(e){S.err=e.message;}S.rqBusy='';return render();}
   if(a==='ssToggle'){S.ssOpen=!S.ssOpen;return render();}
   if(a==='remindOpen'){S.remind=remindText(b.dataset.c);return render();}
   if(a==='remindNo'){S.remind='';return render();}
@@ -1612,13 +1629,12 @@ function schedHTML(){
   const d=S.sc.data;
   if(!d)return `<p class="load">${S.sc.busy?'載入中…':'還沒載入'}</p>`;
   const de=S.sc.datesEd;
-  let h=`<div style="margin:0 0 8px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span>${d.canConfig&&!de?'<button class="btn sm ghost" data-a="scDates">設定日期</button>':''}</div>
-    ${de?`<div class="rgrow" style="margin-top:8px"><label>開學日 <input class="in" type="date" data-k="scStart" value="${esc(de.start)}"></label><label>結業式 <input class="in" type="date" data-k="scEnd" value="${esc(de.end)}"></label></div><p class="mut" style="margin:4px 0 8px">開學日選那一週的任何一天都可以，從那一週的週一開始排。</p><button class="btn sm" data-a="scDatesSave">儲存</button> <button class="btn sm ghost" data-a="scDatesNo">取消</button>`:(!d.start&&!d.canConfig?'<p class="mut" style="margin:6px 0 0">請技士、科主任或管理者先設定開學日和結業式。</p>':'')}</div>`;
+  let h=`<div style="margin:0 0 8px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px"><span><b>${esc(d.term)}</b> ${d.start&&d.end?`<span class="mut">${fullDate(d.start)} ～ ${fullDate(d.end)}（${d.weeks.length} 週）</span>`:'<span style="color:var(--err)">還沒設定開學日和結業式</span>'}</span></div>
+    ${(!d.start&&!d.canConfig?'<p class="mut" style="margin:6px 0 0">請技士、科主任或管理者先設定開學日和結業式。</p>':'')}</div>`;
   const pc=pendCount();
   if(pc)h+=`<div class="spill warn" style="flex-wrap:wrap;position:sticky;top:0;z-index:6"><span style="flex:1;min-width:11em">✎ 有 <b>${pc}</b> 格改了還沒儲存。<b>按「儲存進度表」才會生效</b>，排給老師的材料單才會出現。</span><button class="btn sm" data-a="scSave" ${S.busy?'disabled':''}>${S.busy||'儲存進度表'}</button><button class="btn ghost sm" data-a="scDiscard">放棄修改</button></div>`;
-  h+=reqCardHTML(d);
   if(!d.weeks.length&&!d.tables.some(x=>x.weeks&&x.weeks.length))return h;
-  if(!d.tables.length)return h+`<p class="sub">這學期還沒有進度表。${d.canConfig?'請到上面「設定每學期要有哪些進度表」設定。':'請技士、科主任、管理者先設定這學期要有哪些進度表。'}</p>`;
+  if(!d.tables.length)return h+`<p class="sub">這學期還沒有進度表。${d.canConfig?'請到「送單狀況」分頁設定。':'請技士、科主任、管理者先設定這學期要有哪些進度表。'}</p>`;
   let t=schedTable(S.sc.tab)||d.tables[0];S.sc.tab=t.id;
   const dept=t.dept,list=d.tables.filter(x=>x.dept===dept);
   h+=`<div class="seg" role="group" aria-label="部別" style="margin-bottom:8px">${DEPTS.map(x=>`<button data-a="scDept" data-d="${x}" class="${dept===x?'on':''}">${x}</button>`).join('')}</div>
@@ -1805,17 +1821,19 @@ function ssHTML(){
     const bad=x.state==='no-table'||x.state==='empty'||x.state==='partial',done=x.state==='done';
     const status=bad?`<span class="tg" style="background:#FFE2BF;color:#7A3E00">${stText[x.state]}</span>`:done?'<span class="tg" style="background:#CDEBD6;color:#14532d">全部送出 ✓</span>':`<span class="tg" style="background:#FFE2BF;color:#7A3E00">已送 ${sent}／${lessons} 堂</span>`;
     const id=tids[0]||'';
-    return `<button class="ssrow ${bad||!done?'todo':'done'}" ${id?`data-a="ssOpenT" data-id="${esc(id)}" data-d="${esc(x.dept)}"`:'disabled'}>
+    const acts=d.canConfigAny===false?'':`<div class="ssact">${S.ssDel===x.id?`<span style="color:var(--err)">確定刪除「${esc(x.course)}」？</span> <button class="btn danger sm" data-a="ssDelYes" data-id="${esc(x.id)}" ${S.rqBusy?'disabled':''}>確定刪除</button> <button class="btn ghost sm" data-a="ssDelNo">取消</button>`:`<button class="btn sm ghost" data-a="rqEdit" data-id="${esc(x.id)}">修改課程、班級、授課老師</button><button class="btn sm ghost" data-a="rqSkip" data-id="${esc(x.id)}" data-v="1" ${S.rqBusy?'disabled':''}>${S.rqBusy===x.id?'處理中…':'這學期不開'}</button><button class="btn sm ghost" data-a="ssDelAsk" data-id="${esc(x.id)}">刪除</button>`}</div>`;
+    return `<div class="ssw"><button class="ssrow ${bad||!done?'todo':'done'}" ${id?`data-a="ssOpenT" data-id="${esc(id)}" data-d="${esc(x.dept)}"`:'disabled'}>
       <span class="ssl"><b>${esc(x.course)}</b>（${cl}）${status}</span>
       <span class="ssm">${ts||'<span class="mut">還沒指定授課老師</span>'}</span>
-      ${id?'<span class="ssgo">查看進度表 ›</span>':''}</button>`;
+      ${id?'<span class="ssgo">查看進度表 ›</span>':''}</button>${acts}</div>`;
   };
   const depts=['日間部','夜間部'].map(dp=>{const l=rq.filter(x=>x.dept===dp);return l.length?`<div class="ssd">${dp}</div>${l.map(row).join('')}`:'';}).join('')+(()=>{const o=rq.filter(x=>x.dept!=='日間部'&&x.dept!=='夜間部');return o.length?`<div class="ssd">其他</div>${o.map(row).join('')}`:'';})();
   const pendRq=rq.filter(x=>x.state!=='done').length;
-  return `<div class="card"><button class="ch" data-a="ssToggle"><span><b>教學進度表送單狀況</b><small>${rq.length} 門課要排進度表${pendRq?`・<span style="color:var(--err)">${pendRq} 門還沒完成</span>`:'・全部完成 ✓'}　｜　已排 ${all.length} 堂，已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}</small></span><span>${S.ssOpen?'▴':'▾'}</span></button>
-    ${S.ssOpen?`<div class="cb"><p class="mut" style="margin:0 0 6px">每一門要排進度表的課，授課老師有沒有送單。點一列可以看那張進度表。</p>${depts||'<p class="mut">還沒設定哪些課要排進度表。</p>'}
-      ${S.sub&&S.sub.rows.length?`<div class="ssd">只看某位老師的材料</div><div style="display:flex;gap:6px;flex-wrap:wrap">${S.sub.rows.map(r=>`<button class="btn sm ${S.tTeacher===r.email?'':'ghost'}" data-a="tfilter" data-e="${esc(r.email)}">${esc(r.name)}${r.total?' ✓':'<small class="mut">（還沒送）</small>'}</button>`).join('')}${S.tTeacher?'<button class="btn sm" data-a="tfilter" data-e="'+esc(S.tTeacher)+'">顯示全部老師</button>':''}</div>`:''}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}<label><input type="checkbox" data-k="ssRange" ${!S.ssAll?'checked':''}> 只看上面選的日期</label></div></div>`:''}</div>`;
+  const skipped=(d.required||[]).filter(x=>x.skip);
+  return `<div class="card"><div class="cb" style="padding-top:12px"><b style="font-size:17px">教學進度表送單狀況</b><small class="mut" style="display:block">${rq.length} 門課要排進度表${pendRq?`・<span style="color:var(--err)">${pendRq} 門還沒完成</span>`:'・全部完成 ✓'}　｜　已排 ${all.length} 堂，已送 ${nSent}${un.length?`・<span style="color:var(--err)">還沒送 ${un.length}</span>`:''}</small>
+    <p class="mut" style="margin:8px 0 6px">每一門要排進度表的課，授課老師有沒有送單。點一列可以看那張進度表；課程、班級、授課老師也在這裡設定，設定一次，以後每學期都照這份清單。</p>${depts||'<p class="mut">還沒設定哪些課要排進度表。</p>'}
+    ${skipped.length?`<div class="ssd">這學期不開</div>${skipped.map(x=>`<div class="ssact" style="justify-content:space-between"><span class="mut">${esc(x.dept)}・${esc(x.course)}</span><button class="btn sm ghost" data-a="rqSkip" data-id="${esc(x.id)}" data-v="0" ${S.rqBusy?'disabled':''}>${S.rqBusy===x.id?'處理中…':'恢復（這學期要開）'}</button></div>`).join('')}`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><button class="btn" data-a="rqNew">＋ 新增一門要排進度表的課</button>${un.length>1?`<button class="btn sm" data-a="remindOpen" data-c="">全部還沒送的，複製催單文字</button>`:''}${miss&&isAdmin()?`<button class="btn sm ghost" data-a="repairSched">把沒人開單的課補回給老師</button>`:''}</div></div></div>`;
 }
 function dlFilesModal(){
   return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">檔案做好了（${S.dlFiles.length} 個）</h2>
