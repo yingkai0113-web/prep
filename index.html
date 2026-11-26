@@ -29,6 +29,7 @@ button{cursor:pointer}
 .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0 0 14px}
 .steps button{border:0;border-radius:10px;background:#E2EBE8;color:var(--mut);padding:7px 1px;font-size:12.5px;font-weight:500;line-height:1.25}
 .steps button.on{background:var(--pri);color:#fff}
+.steps button.st-todo{background:#FBD9AE;color:#6B3A00}.steps button.st-done{background:#BFE5CB;color:#14532d}.steps button.on.st-todo{background:#E8820C;color:#fff}.steps button.on.st-done{background:#2E9E5B;color:#fff}
 .steps button.ok{background:#CFE5DD;color:#164F41}
 h2{font-size:20px;margin:0 0 4px}
 .sub{color:var(--mut);font-size:14px;margin:0 0 12px}
@@ -297,7 +298,7 @@ function groups(byClass){
   return gs;
 }
 const gLabel=g=>`${g.dept}・${g.course}${g.cls?`｜${g.cls}`:''}`;
-const gIsOpen=(st,g,n)=>{const v=S.gOpen[st+':'+g.key];return v===undefined?(st==='2'||n===0):v;};
+const gIsOpen=(st,g,n)=>{const v=S.gOpen[st+':'+g.key];return v===undefined?(st==='2'):v;};
 const gHead=(st,g,n,small,st2)=>{const o=gIsOpen(st,g,n);return `<button class="gh ${st2||''}" data-a="gtoggle" data-g="${esc(st+':'+g.key)}" data-o="${o?1:0}"><span><b>${esc(gLabel(g))}</b><small>${small}</small></span><span>${o?'▴':'▾'}</span></button>`;};
 const gAll=st=>`<div style="text-align:right;margin:-4px 0 8px"><button class="linkb" data-a="gall" data-st="${st}" data-o="1">全部展開</button>　<button class="linkb" data-a="gall" data-st="${st}" data-o="0">全部收合</button></div>`;
 function syncEntries(){}
@@ -354,7 +355,9 @@ function extraHTML(){
 /* 教學進度表 → 確認重量 → 準備器具 → 匯出：進度表排好之後，直接接著做下去 */
 function flowHTML(){
   const st=[[0,'進度表'],[3,'確認重量'],[4,'準備器具'],[5,'匯出']];
-  let h=`<div class="steps">${st.map(([n,l],i)=>`<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''}">${i+1} ${l}</button>`).join('')}</div>`;
+  const nn=sc().length,wDone=nn>0&&sc().every(e=>S.seen.has(eKey(e))),tDone=nn>0&&sc().every(e=>S.seen4.has(eKey(e)));
+  const stat=n=>n===0?(pendCount()?'todo':nn>0?'done':''):n===3?(nn?(wDone?'done':'todo'):''):n===4?(nn?(tDone?'done':'todo'):''):(nn&&wDone&&tDone?'done':'');   // 橘色＝還沒做完，綠色＝做完了
+  let h=`<div class="steps">${st.map(([n,l],i)=>{const k=stat(n);return `<button data-a="step" data-n="${n}" class="${S.step===n?'on':(n>0&&S.step>n)||(n===0&&S.step>0)?'ok':''} ${k?'st-'+k:''}">${i+1} ${l}${k==='done'?' ✓':''}</button>`;}).join('')}</div>`;
   if(S.step===0){
     const n=sc().length,dr=sc().filter(e=>e.draft).length;
     return h+schedHTML()+((n||pendCount())?bar(pendCount()?`有 ${pendCount()} 格還沒儲存`:dr?`進度表排給你 ${dr} 堂，等你確認`:`${n} 堂課`,`<button class="btn" data-a="step" data-n="3">${pendCount()?'儲存並下一步：確認重量':'下一步：確認重量'}</button>`):'');
@@ -517,7 +520,6 @@ function card3(i){
 }
 function step3(){
   const gs=groups(true);
-  if(!S.open.size&&gs.length)S.open.add(gs[0].idx[0]);
   return `<h2>確認材料重量</h2><p class="sub">數量可以直接改。想改每組做幾個，填「原本 → 改成」，材料會跟著換算。材料不夠按「新增材料」。同一班的單、雙數組放在一起。</p>${gs.length>1?gAll('3'):''}`
   +gs.map((g,n)=>{const seen=g.idx.filter(i=>S.seen.has(eKey(S.entries[i]))).length;return `<div class="gwrap">${gHead('3',g,n,`${g.idx.length} 堂課・已確認 ${seen}/${g.idx.length}・${fmt(g.idx.reduce((t,i)=>t+kgOf(S.entries[i]),0))} 公斤`,seen===g.idx.length?'done':'todo')}${gIsOpen('3',g,n)?`<div class="gbody">${seen<g.idx.length?`<div style="text-align:right;margin:0 0 6px"><button class="btn sm ghost" data-a="okGroup" data-g="${esc(g.key)}">這個班的全部都沒問題</button></div>`:''}${g.idx.map(card3).join('')}</div>`:''}</div>`;}).join('')
   +bar(`${sc().length} 堂課`,`<button class="btn" data-a="step" data-n="4">下一步：準備器具</button>`);
@@ -543,7 +545,6 @@ function card4(i){
 }
 function stepTools(){
   const gs=groups(true);
-  if(!S.open4.size&&gs.length)S.open4.add(gs[0].idx[0]);
   return `<h2>準備器具</h2><p class="sub">每堂課的器具，分給技士和小老師準備。先帶入模板的，可以改數量、換邊、加減，也能叫出以前的。</p>${gs.length>1?gAll('4'):''}`
   +gs.map((g,n)=>`<div class="gwrap">${gHead('4',g,n,`${g.idx.length} 堂課・已確認 ${g.idx.filter(i=>S.seen4.has(eKey(S.entries[i]))).length}/${g.idx.length}`,g.idx.every(i=>S.seen4.has(eKey(S.entries[i])))?'done':'todo')}${gIsOpen('4',g,n)?`<div class="gbody">${g.idx.map(card4).join('')}</div>`:''}</div>`).join('')
   +bar(`${sc().length} 堂課`,`<button class="btn" data-a="step" data-n="5">下一步：匯出</button>`);
