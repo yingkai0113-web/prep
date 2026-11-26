@@ -332,6 +332,7 @@ function render(){
   if(S.sc&&S.sc.dropAsk)h+=dropModal();
   if(S.termDlg)h+=termModal();
   if(S.exDlg)h+=exModal();
+  if(S.dlAsk)h+=dlAskModal();
   if(S.needCheck)h+=needCheckModal();
   if(S.dlFiles&&S.dlFiles.length)h+=dlFilesModal();
   if(S.rq)h+=rqModal();
@@ -572,7 +573,7 @@ function step5(){
   return `<h2>確認並送出</h2>${sb}${locked()?`<p class="sub">${lockMsg()}要下載之前已經送出的材料單，按下面的按鈕。</p>`:`<p class="sub"><b>匯出之後，技士才看得到。</b>按「確認並匯出」，先核對一次日期和產品，再選要不要下載檔案（只匯出／進度表／進度表加材料單），沒問題就送給技士。還沒匯出的都只是草稿（已自動存起來），技士看不到、也不算。</p>`}
   <div class="card"><div class="cb" style="padding-top:12px">${list}<p class="mut" style="margin:10px 0 0">${sc().length} 堂課，跨 ${weeks} 週。</p></div></div>
   ${locked()?fmtPick()+bar(S.busy||'',`<button class="btn" data-a="dlSent" ${S.busy?'disabled':''}>${S.busy?'處理中…':'下載已送出的材料單'}</button>`)
-    :(S.sentAt?fmtPick():'')+bar(S.busy||'',`${S.sentAt?`<button class="btn ghost" data-a="dlSent" ${S.busy?'disabled':''} title="不重新送出，只把已匯出的材料單下載成檔案">只下載檔案（不重新送出）</button> `:''}<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
+    :bar(S.busy||'',`${S.sentAt?`<button class="btn ghost" data-a="dlAsk" ${S.busy?'disabled':''} title="不重新送出，只把已匯出的材料單下載成檔案">只下載檔案（不重新送出）</button> `:''}<button class="btn" data-a="export" ${S.busy?'disabled':''}>${S.busy?'處理中…':'確認並匯出（送給技士）'}</button>`)}`;
 }
 
 /* ---------- 材料單編輯（自創、共用、預設模板都用這個） ---------- */
@@ -1450,6 +1451,9 @@ document.addEventListener('click',async ev=>{
   if(a==='needForce'){S.needCheck=null;S.confirmSend='export';return render();}
   if(a==='needGo'){const n=+b.dataset.n;S.needCheck=null;S.step=n;if(n===0)S.view='sched';window.scrollTo(0,0);return render();}
   if(a==='sendNo'){S.confirmSend='';return render();}
+  if(a==='dlAsk'){S.dlAsk=true;return render();}
+  if(a==='dlAskNo'){S.dlAsk=false;return render();}
+  if(a==='dlAskGo'){S.dlAsk=false;S.busy='製作中…';render();try{const f=await runFmt('apiExportRequisition',curScope(),'all',S.expOrder);S.info=`已下載「${f.name}」。`;}catch(e){S.err=e.message;}S.busy='';return render();}
   if(a==='dlSent'){S.busy='製作中…';render();try{const f=await runFmt('apiExportRequisition',curScope(),'all',S.expOrder);S.info=`已下載「${f.name}」。`;}catch(e){S.err=e.message;}S.busy='';return render();}
   if(a==='sendYes'){
     const what=expWhat();S.confirmSend='';S.busy=what==='none'?'正在送出…':'正在送出並製作檔案…';S.sent=null;render();
@@ -2018,6 +2022,13 @@ function needCheckModal(){
     ${n.w?`<div class="spill warn" style="margin:6px 0">重量：還有 <b>${n.w}</b> 堂沒打勾</div>`:`<div class="spill" style="margin:6px 0">重量：全部確認了 ✓</div>`}
     ${n.t?`<div class="spill warn" style="margin:6px 0">器具：還有 <b>${n.t}</b> 堂沒打勾</div>`:`<div class="spill" style="margin:6px 0">器具：全部確認了 ✓</div>`}
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px"><button class="btn ghost" data-a="needNo">關閉</button>${n.m?'<button class="btn" data-a="needGo" data-n="0">去排進度表</button>':''}${n.w?'<button class="btn" data-a="needGo" data-n="3">去確認重量</button>':''}${n.t?'<button class="btn" data-a="needGo" data-n="4">去確認器具</button>':''}${!hard?'<button class="btn ghost" data-a="needForce">仍然匯出</button>':''}</div></div></div>`;
+}
+function dlAskModal(){
+  const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
+  return `<div class="modal"><div class="mb"><h2 style="margin:0 0 6px">下載已匯出的檔案</h2><p class="mut" style="margin:0 0 8px">不會重新送給技士，只是把檔案下載下來。</p>
+    <b>材料單的順序</b>${rad('exporder','exporder',[['date','依日期排（同一天的再依產品）'],['course','依課程、再依日期排（每一門課輸出一個檔）'],['class','依課程、班級排（同一個班再依日期）']],S.expOrder||'date')}
+    ${fmtPick()}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn ghost" data-a="dlAskNo">取消</button><button class="btn" data-a="dlAskGo">下載</button></div></div></div>`;
 }
 function exModal(){
   const rad=(name,k,list,cur)=>list.map(([v,n])=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 0"><input type="radio" name="${name}" data-k="${k}" value="${v}" ${cur===v?'checked':''}> <span>${n}</span></label>`).join('');
