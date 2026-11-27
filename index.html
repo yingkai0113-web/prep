@@ -566,7 +566,7 @@ function card4(i){
 function stepTools(){
   const gs=groups(true);
   return `<h2>準備器具</h2><p class="sub">每堂課的器具，分給技士和小老師準備。先帶入模板的，可以改數量、換邊、加減，也能叫出以前的。</p>${gs.length>1?gAll('4'):''}`
-  +gs.map((g,n)=>`<div class="gwrap">${gHead('4',g,n,`${g.idx.length} 堂課・已確認 ${g.idx.filter(i=>S.seen4.has(eKey(S.entries[i]))).length}/${g.idx.length}`,g.idx.every(i=>S.seen4.has(eKey(S.entries[i])))?'done':'todo')}${gIsOpen('4',g,n)?`<div class="gbody">${g.idx.map(card4).join('')}</div>`:''}</div>`).join('')
+  +gs.map((g,n)=>`<div class="gwrap">${gHead('4',g,n,`${g.idx.length} 堂課・已確認 ${g.idx.filter(i=>S.seen4.has(eKey(S.entries[i]))).length}/${g.idx.length}`,g.idx.every(i=>S.seen4.has(eKey(S.entries[i])))?'done':'todo')}${gIsOpen('4',g,n)?`<div class="gbody">${g.idx.some(i=>!S.seen4.has(eKey(S.entries[i])))?`<div style="text-align:right;margin:0 0 6px"><button class="btn sm ghost" data-a="okGroup4" data-g="${esc(g.key)}">這個班的全部都沒問題</button></div>`:''}${g.idx.map(card4).join('')}</div>`:''}</div>`).join('')
   +bar(`${sc().length} 堂課`,`<button class="btn" data-a="step" data-n="5">下一步：匯出</button>`);
 }
 function step5(){
@@ -1390,6 +1390,7 @@ document.addEventListener('click',async ev=>{
     try{await run('apiSetTerm',to);S.step=1;S.sent=null;await boot();S.view='status';loadStatus();S.info=`已切換到 ${to}。老師重新整理頁面就是新學期。`;}
     catch(e){S.err=e.message;}
     S.busy='';return render();}
+  if(a==='okGroup4'){const g=groups(true).find(x=>x.key===b.dataset.g);if(g)g.idx.forEach(i=>S.seen4.add(eKey(S.entries[i])));return render();}
   if(a==='okTool'){const i=+b.dataset.i,k=eKey(S.entries[i]);if(S.seen4.has(k))S.seen4.delete(k);else{S.seen4.add(k);S.open4.delete(i);}return render();}
   if(a==='t4toggle'){const i=+b.dataset.i;S.open4.has(i)?S.open4.delete(i):S.open4.add(i);return render();}
   if(a==='tmove'){const e=S.entries[+b.dataset.i],t=ensureTools(e)[+b.dataset.ti];t.who=t.who==='技士'?'實習股長':'技士';return render();}
