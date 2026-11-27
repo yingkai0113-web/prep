@@ -1257,7 +1257,7 @@ document.addEventListener('click',async ev=>{
   if(a==='scExtraNo'){S.sc.extraEd=null;return render();}
   if(a==='scExtraSave'||a==='scExtraClear'){
     const e=S.sc.extraEd;
-    try{S.sc.data=await run('apiScheduleSetExtra',e.id,a==='scExtraClear'?'':e.from,a==='scExtraClear'?'':e.to);S.sc.extraEd=null;S.info=a==='scExtraClear'?'已拿掉寒暑假的週。':'已加上寒暑假的週，在進度表最後面（或最前面），用日期表示。';}
+    try{S.sc.data=await run('apiScheduleSetExtra',e.id,a==='scExtraClear'?'':e.from,a==='scExtraClear'?'':e.to);S.sc.extraEd=null;S.info=a==='scExtraClear'?'已拿掉寒暑假的週。':'已設好日期，進度表只會列出這一段的週。';}
     catch(er){S.err=er.message;}
     return render();}
   if(a==='scAddDay'){
@@ -1882,12 +1882,12 @@ function schedHTML(){
   ${t.canEdit&&d.tables.some(y=>!y.canEdit)?'<div style="margin:0 0 8px"><span class="tg">★ 這是我的進度表</span></div>':''}
   ${!t.canEdit&&!S.asT?'<div class="err" style="margin:0 0 8px">這張進度表你不是授課老師，只能看，不能編輯。（要編輯：到「每學期要有哪些進度表」把自己加成這門課的授課老師）</div>':''}
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><span class="mut" style="font-size:13px">${t.classes.map(c=>`${esc(c.cls)}：${daysText(clDays(c))}`).join('　')}${t.groups.length?`　分組：${esc(t.groups.join('、'))}`:''}</span>${d.canConfig?(S.sc.delAsk===t.id?`<span><button class="btn sm danger" data-a="scDelYes">確定刪除這張</button> <button class="btn sm ghost" data-a="scDelNo">取消</button></span>`:`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日、分組、授課老師</button> <button class="btn sm ghost" data-a="scDelAsk">刪除</button></span>`):(t.classes.length===1?`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日</button></span>`:'')}</div>
-  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${t.ext?`寒暑假加課：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}`:'寒暑假也要上課？'}</span><span><button class="btn sm ghost" data-a="hOpen">叫出以前的進度表</button> <button class="btn sm ghost" data-a="scExtra">${t.ext?'修改寒暑假的週':'＋ 加寒暑假的週'}</button></span></div>
+  <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${isAth(t)?(t.ext?`訓練日期：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}（不受學期影響）`:'訓練日期：還沒選，現在是照學期的週。選手的訓練日期可以自己訂，不受學期影響。'):(t.ext?`寒暑假加課：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}`:'寒暑假也要上課？')}</span><span><button class="btn sm ghost" data-a="hOpen">叫出以前的進度表</button> <button class="btn sm${isAth(t)&&!t.ext?'':' ghost'}" data-a="scExtra">${isAth(t)?'📅 選訓練日期範圍':t.ext?'修改寒暑假的週':'＋ 加寒暑假的週'}</button></span></div>
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${(t.teachers&&t.teachers.length)?`授課老師：${t.teachers.map(uName).map(esc).join('、')}`:(d.canConfig?'還沒指定授課老師：老師都看不到這張，請按「修改」指定授課老師，老師才能編輯。':'')}</span><span><button class="btn sm ghost" data-a="scRefresh">重新整理</button> <button class="btn sm" data-a="pOpen">匯出列印進度表</button></span></div>
   <p class="sub" style="margin:0 0 6px">點格子來排。<span class="tg" style="background:#FFF6D0">黃色或橘框</span>是你開單的，同一班有兩位以上老師時每位老師一種底色，灰色是放假、考前複習等不排實習的。</p>`;
-  const tw=tWeeks(t),hasVac=tw.some(w=>w.vac),wf=S.sc.wf||'all';
+  const tw=tWeeks(t),hasVac=tw.some(w=>w.vac)&&!isAth(t),wf=isAth(t)?'all':(S.sc.wf||'all');
   const filt=hasVac?`<div class="seg" role="group" aria-label="看哪些週" style="margin:0 0 8px">${[['all','全部'],['sem','只看學期'],['vac','只看寒暑假']].map(([v,n])=>`<button data-a="scWf" data-v="${v}" class="${wf===v?'on':''}">${n}</button>`).join('')}</div>`:'';
-  if(!tw.length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>這張進度表還沒有週</b><p class="mut" style="margin:6px 0 0">${d.weeks.length?'':'這學期的開學日和結業式還沒設定。'}只想開寒暑假的單，按上面的「＋ 加寒暑假的週」，選寒暑假要上課的那一段日期就可以了，不用設定學期日期。</p></div></div>`;
+  if(!tw.length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>這張進度表還沒有週</b><p class="mut" style="margin:6px 0 0">${isAth(t)?'技藝競賽選手的訓練日期不受學期影響，請按上面的「選訓練日期範圍」，選第一週到最後一週的日期就可以了。':''}${isAth(t)||d.weeks.length?'':'這學期的開學日和結業式還沒設定。'}只想開寒暑假的單，按上面的「＋ 加寒暑假的週」，選寒暑假要上課的那一段日期就可以了，不用設定學期日期。</p></div></div>`;
   const clip=S.sc.clip&&S.sc.clip.tid===t.id?S.sc.clip:null;
   const cb=clip?`<div class="spill warn" style="flex-wrap:wrap;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:min(92vw,720px);z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.28)"><span style="flex:1;min-width:10em">已複製「${esc(clip.desc)}」。${clip.kind==='week'?'點要貼上的那一週（左邊的週次，或那一週的任何一格），可以連續貼好幾週。':'點要貼上的格子，可以連續貼好幾格。'}</span><button class="btn ghost sm" data-a="scClipEnd">結束複製</button></div>`:`<p class="mut" style="margin:0 0 6px;font-size:12.5px">複製格子：點格子右上角的「⧉」再點要貼的格子；電腦上也可以直接把格子拖到別的格子。</p>`;
   return h+filt+cb+(isAth(t)?athGridHTML(t):gridHTML(t))+`<p class="mut" style="font-size:12.5px;margin:8px 0 0">排好之後可以先按「匯出列印進度表」拿去跟老師們討論，不用送給技士。</p>`;
@@ -2225,7 +2225,7 @@ function athEditRows(t,wn,fn){
   fn(st.w[wn],st);athRowsDirty(t);render();
 }
 function athGridHTML(t){
-  const wf=S.sc.wf||'all',canE=t.canEdit&&S.sc.data.canEditCells!==false,c=t.classes[0];
+  const wf='all',canE=t.canEdit&&S.sc.data.canEditCells!==false,c=t.classes[0];
   const ac=S.sc.aclip&&S.sc.aclip.tid===t.id?S.sc.aclip:null;
   let h=(ac?`<div class="spill warn" style="flex-wrap:wrap;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:min(92vw,720px);z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.28)"><span style="flex:1;min-width:10em">已複製「${esc(ac.desc)}」。點要貼上的格子（可以連續貼好幾格），貼完按「結束」。</span><button class="btn sm" data-a="athClipEnd">結束</button></div>`:'')+`<div class="spill" style="flex-wrap:wrap;margin:0 0 8px"><span style="flex:1;min-width:12em">上課日期由授課老師訂，不用照學期：${t.ext?`<b>${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}</b>`:'<b style="color:var(--err)">還沒設定</b>（現在先列出學期的週）'}</span>${canE?`<button class="btn sm ghost" data-a="scExtra">${t.ext?'修改日期':'設定上課日期'}</button> <button class="btn sm" data-a="athWeekAdd">＋ 再加一週</button>`:''}</div><div class="sgw">`;
   tWeeks(t).filter(w=>wf==='all'||(wf==='vac'?w.vac:!w.vac)).forEach(w=>{

@@ -1119,7 +1119,7 @@ function apiScheduleSetExtra(tableId, from, to) {
   var ext = null;
   if (from || to) {
     if (!L_parseDate(from) || !L_parseDate(to) || to < from) throw new Error('請選寒暑假要排課的起訖日期（結束日不能比開始日早）。');
-    if ((L_parseDate(L_weekStart(to)).t - L_parseDate(L_weekStart(from)).t) / 86400000 / 7 + 1 > 30) throw new Error('一次最多加 30 週。');
+    if ((L_parseDate(L_weekStart(to)).t - L_parseDate(L_weekStart(from)).t) / 86400000 / 7 + 1 > (L_isAthTable(t) ? 60 : 30)) throw new Error('一次最多加 ' + (L_isAthTable(t) ? 60 : 30) + ' 週。');
     ext = { from: from, to: to };
   }
   var oldW = tableWeeks_(t), keep = {}; L_weeksTable(t, d.start, d.end, ext).forEach(function (w) { keep[w.n] = 1; });
