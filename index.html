@@ -619,7 +619,8 @@ function editorHTML(){
   <div class="edact"><span style="display:flex;gap:8px;flex-wrap:wrap">${left.join('')}</span><button class="btn" data-a="edSave" ${S.busy?'disabled':''}>${S.busy?'儲存中…':'儲存'}</button></div>
   </div></div>`;
 }
-const refreshStd=()=>{S.stdNames=[...new Set(Object.values(S.cat.items).flat().map(x=>x.std))].sort();};
+const FUZZY_NAMES=['奶油','鮮奶油','轉化糖漿','紅豆餡','青蔥'];                 // 不精確的材料名稱（要寫成無鹽奶油、植物性鮮奶油…），不放進自創材料單的名稱建議，避免統計時分成兩個
+const refreshStd=()=>{S.stdNames=[...new Set(Object.values(S.cat.items).flat().map(x=>x.std))].filter(n=>!FUZZY_NAMES.includes(n)).sort();};
 function applyCustom(r){
   const p=r.product,i=S.cat.products.findIndex(x=>x.pid===p.pid);
   if(i>=0)S.cat.products[i]=p;else S.cat.products.push(p);
