@@ -92,7 +92,7 @@ h2{font-size:20px;margin:0 0 4px}
 .sgrid th,.sgrid td{border:1px solid var(--line);padding:4px 3px;text-align:center;vertical-align:middle;word-break:break-all}
 .sgrid th{background:#E1EFEA;font-weight:700}.sgrid th small,.sgrid td small{display:block;font-weight:700;color:var(--mut);font-size:12.5px}
 .sgrid th.wkc,.sgrid th.dtc{width:4.6em;background:#F3F7F5;font-size:15px}.sgrid th.wkc small{white-space:nowrap;font-size:12px}.sgrid th.wkc{position:sticky;left:0;z-index:2}.sgrid th.dtc{position:sticky;left:4.6em;z-index:2}.sgrid th.vac{background:#FFF1DA}.sgrid button.ad{display:block;margin:3px auto 0;border:1px dashed var(--pri);background:#fff;color:var(--pri);border-radius:6px;font-size:10px;padding:1px 3px;cursor:pointer;line-height:1.3}.sgrid th.g{font-weight:600;background:#EEF6F2}
-.sgrid td.sc{cursor:pointer;min-height:50px;height:54px}.sgrid td.me{background:#FFF6D0}.sgrid td.note{background:#EEF1F0;color:#5D716B}.sgrid td.empty{color:#9DB0A8}
+.sgrid td.sc{cursor:pointer;min-height:50px;height:54px}.sgrid td.me{background:#FFF6D0;box-shadow:inset 0 0 0 2px #E8A200}.sgrid td.note{background:#EEF1F0;color:#5D716B}.sgrid td.empty{color:#9DB0A8}
 .sgrid td.sc{position:relative}.sgrid button.cp{position:absolute;top:1px;right:1px;border:0;background:rgba(255,255,255,.75);color:var(--pri);font-size:13px;line-height:1;padding:2px 4px;border-radius:5px;cursor:pointer}.sgrid td.pd{box-shadow:inset 0 0 0 2px #E39B2B}.sgrid.pm td.sc{outline:1px dashed var(--pri);outline-offset:-2px}
 .sgrid button.sw{border:1px dashed var(--pri);background:#fff;color:var(--pri);border-radius:8px;font-size:11px;padding:3px 6px;cursor:pointer}
 .gwrap{margin:0 0 14px}
@@ -1833,6 +1833,9 @@ function gridHTML(t,H){
     if(!single)return [0];const c=t.classes[0],out=reg.slice();
     for(let x=1;x<=7;x++)if(!reg.includes(x)&&cellAt(w.n,c.cls,x))out.push(x);
     return out.sort((a,b)=>a-b);};
+  const TSH=['#DDEBFF','#FFE0E0','#DFF3D8','#F0DEFA','#FFE6CC','#D8F3F0'];                    // 同一班有兩位以上老師時，每位老師一種底色（和列印出來的分法一樣）
+  const clsTs={};(H?H.weeks:tWeeks(t)).forEach(w=>t.classes.forEach(c=>{for(let x=0;x<=7;x++){const cl=cellAt(w.n,c.cls,x);if(cl&&cl.kind!=='note'&&cl.groups)cl.groups.forEach(g=>{if(g.teacher&&g.pids&&g.pids.length){const l=clsTs[c.cls]=clsTs[c.cls]||[];if(!l.includes(g.teacher))l.push(g.teacher);}});}}));
+  const shade=(cl,tc)=>{const l=clsTs[cl]||[];if(l.length<2||!tc)return '';const i=l.indexOf(tc);return i<0?'':` style="background:${TSH[i%TSH.length]}"`;};
   const td=(w,c,x)=>{
     const day=single?dayKey(c,x):0,cell=cellAt(w.n,c.cls,day),cls='sc'+((!H&&pendMap()[pkey(t.id,w.n,c.cls,day)])?' pd':'');
     const pm=!H&&S.sc.clip&&S.sc.clip.tid===t.id,wkClip=pm&&S.sc.clip.kind==='week';
@@ -1846,8 +1849,8 @@ function gridHTML(t,H){
     }
     if(cell.kind==='note')return `<td class="${cls} note" colspan="${gN}" ${at}${dr}>${esc(cell.note)}${cp}</td>`;
     const one=g=>`${esc(cell.label||g.pids.map(pTitle).join('、'))}<small>${esc(uName(g.teacher))}</small>`;
-    if(cell.mode==='joint'||gN===1){const g=cell.groups[0];return `<td class="${cls}${g.teacher===me?' me':''}" colspan="${gN}" ${at}${dr}>${one(g)}${cp}</td>`;}
-    return cell.groups.map((g,gi)=>`<td class="${cls}${g.teacher===me?' me':''}" ${at}${dr}>${g.pids.length?one(g):''}${gi===0?cp:''}</td>`).join('');
+    if(cell.mode==='joint'||gN===1){const g=cell.groups[0];return `<td class="${cls}${g.teacher===me?' me':''}" colspan="${gN}" ${at}${dr}${shade(c.cls,g.teacher)}>${one(g)}${cp}</td>`;}
+    return cell.groups.map((g,gi)=>`<td class="${cls}${g.teacher===me?' me':''}" ${at}${dr}${g.pids.length?shade(c.cls,g.teacher):''}>${g.pids.length?one(g):''}${gi===0?cp:''}</td>`).join('');
   };
   const perDay=single;
   let rows='';
@@ -1881,7 +1884,7 @@ function schedHTML(){
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 8px"><span class="mut" style="font-size:13px">${t.classes.map(c=>`${esc(c.cls)}：${daysText(clDays(c))}`).join('　')}${t.groups.length?`　分組：${esc(t.groups.join('、'))}`:''}</span>${d.canConfig?(S.sc.delAsk===t.id?`<span><button class="btn sm danger" data-a="scDelYes">確定刪除這張</button> <button class="btn sm ghost" data-a="scDelNo">取消</button></span>`:`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日、分組、授課老師</button> <button class="btn sm ghost" data-a="scDelAsk">刪除</button></span>`):(t.classes.length===1?`<span><button class="btn sm ghost" data-a="scEditTable">修改上課日</button></span>`:'')}</div>
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${t.ext?`寒暑假加課：${fullDate(t.ext.from)} ～ ${fullDate(t.ext.to)}`:'寒暑假也要上課？'}</span><span><button class="btn sm ghost" data-a="hOpen">叫出以前的進度表</button> <button class="btn sm ghost" data-a="scExtra">${t.ext?'修改寒暑假的週':'＋ 加寒暑假的週'}</button></span></div>
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px"><span class="mut" style="font-size:13px">${(t.teachers&&t.teachers.length)?`授課老師：${t.teachers.map(uName).map(esc).join('、')}`:(d.canConfig?'還沒指定授課老師：老師都看不到這張，請按「修改」指定授課老師，老師才能編輯。':'')}</span><span><button class="btn sm ghost" data-a="scRefresh">重新整理</button> <button class="btn sm" data-a="pOpen">匯出列印進度表</button></span></div>
-  <p class="sub" style="margin:0 0 6px">點格子來排。<span class="tg" style="background:#FFF6D0">黃色</span>是你開單的，灰色是放假、考前複習等不排實習的。</p>`;
+  <p class="sub" style="margin:0 0 6px">點格子來排。<span class="tg" style="background:#FFF6D0">黃色或橘框</span>是你開單的，同一班有兩位以上老師時每位老師一種底色，灰色是放假、考前複習等不排實習的。</p>`;
   const tw=tWeeks(t),hasVac=tw.some(w=>w.vac),wf=S.sc.wf||'all';
   const filt=hasVac?`<div class="seg" role="group" aria-label="看哪些週" style="margin:0 0 8px">${[['all','全部'],['sem','只看學期'],['vac','只看寒暑假']].map(([v,n])=>`<button data-a="scWf" data-v="${v}" class="${wf===v?'on':''}">${n}</button>`).join('')}</div>`:'';
   if(!tw.length)return h+`<div class="card"><div class="cb" style="padding-top:12px"><b>這張進度表還沒有週</b><p class="mut" style="margin:6px 0 0">${d.weeks.length?'':'這學期的開學日和結業式還沒設定。'}只想開寒暑假的單，按上面的「＋ 加寒暑假的週」，選寒暑假要上課的那一段日期就可以了，不用設定學期日期。</p></div></div>`;
