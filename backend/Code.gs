@@ -514,7 +514,7 @@ function apiSavePlan(entries, mode) {
     entries.forEach(function (raw) {
       var old = raw && raw.id ? mineOld[raw.id] : null;
       if (old && old.sid) {                                       // 進度表排的課：產品、班級、組別跟著進度表，其他（日期、組數、材料…）老師可以改
-        var e = L_cleanEntry(Object.assign({}, raw, { pid: old.pid, cls: old.cls, course: old.course }), cat);
+        var e = L_cleanEntry(Object.assign({}, raw, { pid: old.pid, cls: old.cls, course: old.course, sid: old.sid, dept: old.dept || raw.dept }), cat);
         e.id = old.id; e.sid = old.sid; e.group = old.group; seen[old.id] = 1; clean.push(e);
       } else { var e2 = L_cleanEntry(Object.assign({}, raw, { id: old ? raw.id : '' }), cat, true); e2.sid = ''; e2.group = ''; clean.push(e2); }     // 額外材料單：課程名稱（活動名稱）自己填、班級可以不填
     });
@@ -1905,7 +1905,7 @@ function apiPaperImport(rec) {
       var plans = readPlans_(), pre = t.id + '|' + it._wk.n + '|' + it.cls + '|', now = nowStr_(), hit = null;
       plans.forEach(function (e) { if (!hit && e.term === term && e.sid && e.sid.indexOf(pre) === 0 && e.pid === pid && e.teacher === it._teacher) hit = e; });
       if (!hit) throw new Error('第 ' + (ix + 1) + ' 張：進度表格子填好了，但沒有產生對應的排課。');
-      var cl = L_cleanEntry({ id: hit.id, pid: pid, date: hit.date, cls: hit.cls, course: hit.course, sets: it.sets || hit.sets, ov: it.ov || {}, omit: it.omit || [], extra: it.extra || [], tools: Array.isArray(it.tools) ? it.tools : null, title: it.title || '', yFrom: it.yFrom, yTo: it.yTo, yUnit: it.yUnit }, cat);
+      var cl = L_cleanEntry({ id: hit.id, sid: hit.sid, dept: hit.dept, pid: pid, date: hit.date, cls: hit.cls, course: hit.course, sets: it.sets || hit.sets, ov: it.ov || {}, omit: it.omit || [], extra: it.extra || [], tools: Array.isArray(it.tools) ? it.tools : null, title: it.title || '', yFrom: it.yFrom, yTo: it.yTo, yUnit: it.yUnit }, cat);
       ['sets', 'scale', 'yFrom', 'yTo', 'yUnit', 'ov', 'omit', 'extra', 'tools', 'title', 'conv'].forEach(function (k) { hit[k] = cl[k]; });
       hit.draft = false; hit.pending = null; hit.updated = now;
       flushPlanRows_(ss_().getSheetByName('排課'), plans.map(function (e) { return planRow_(e, e.created, e.updated); }));
