@@ -1203,6 +1203,8 @@ function L_docSchedAth(table, weeks, cells, ctx) {
   var sig = function (s) { return s ? JSON.stringify([s.pids, s.q, s.txt, s.st]) : ''; };
   var a = ctx.from ? L_weekStart(ctx.from) : '', b = ctx.to ? L_weekStart(ctx.to) : '9999-12-31', per = Math.max(1, Math.min(4, Number(ctx.per) || 2));
   var ws = weeks.filter(function (w) { return (!a || w.mon >= a) && w.mon <= b; });
+  var filled = ws.filter(function (w) { for (var d = 1; d <= 7; d++) if (cellAt(w, d)) return true; return false; });   // 沒排到課的週不用印出來
+  if (filled.length) ws = filled;
   if (!ws.length) return [];
   var WDN = '日一二三四五六', docs = [], title = table.title || (table.course || '技藝競賽選手');
   var T = function (v, o) { return L_c(v, Object.assign({ ff: L_FONT, sz: 12, b: 1, al: 'c', va: 'center', bd: BD, wrap: 1 }, o)); };
