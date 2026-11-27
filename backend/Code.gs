@@ -200,6 +200,7 @@ function loadCatalogRaw_() {
     // 顯示、印在申請單、技士加總，全部用統一後的「材料名稱」（舊版試算表叫「標準材料」，也認得）
     var name = str_(r['材料名稱'] || r['標準材料'] || r['原寫法']), orig = str_(r['原表寫法'] || r['原寫法']), note = str_(r['備註']);
     if (orig.indexOf('飾：') === 0 && note.indexOf('裝飾用') < 0) note = '裝飾用' + (note ? '；' + note : '');
+    if (name === '奶油') name = '無鹽奶油';                                   // 統一名稱：只寫「奶油」的都當無鹽奶油
     return { id: str_(r['列ID']), pid: str_(r['產品編號']), raw: name, std: name,
              per: num_(r['每組數量']), unit: str_(r['單位']), sets: num_(r['預設組數']), total: num_(r['固定總量']),
              procure: str_(r['原表總量欄的採購寫法']), kind: str_(r['類型']), note: note };
