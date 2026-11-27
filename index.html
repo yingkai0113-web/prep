@@ -1122,7 +1122,7 @@ document.addEventListener('click',async ev=>{
     const p=S.sc.print,t=schedTable(S.sc.tab),ids=p.scope==='one'?[t.id]:[],ov={};
     Object.values(pendMap()).forEach(x=>{if(p.scope==='one'&&x.tid!==t.id)return;(ov[x.tid]=ov[x.tid]||[]).push({week:x.week,cls:x.cls,day:x.day,cell:x.cell});});
     S.sc.print=null;S.busy='製作中…';render();
-    try{if(isAth(t)&&p.scope==='one'&&!p.blank)await runFmt('apiExportScheduleTables',ids,ov,false,false,{from:p.from,to:p.to,per:p.per||3});else await runFmt('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);}catch(er){S.err=er.message;}
+    try{if(isAth(t)&&p.scope==='one'&&!p.blank)await runFmt('apiExportScheduleTables',ids,ov,false,false,{from:p.from,to:p.to,per:p.per||2});else await runFmt('apiExportScheduleTables',ids,p.blank?{}:ov,!p.blank&&!!p.mine,!!p.blank);}catch(er){S.err=er.message;}
     S.busy='';return render();}
   if(a==='scWf'){S.sc.wf=b.dataset.v;return render();}
   if(a==='ssOpenT'){S.view='sched';S.step=0;S.sent=null;S.sc.tab=b.dataset.id;S.sc.delAsk='';S.sc.clip=null;window.scrollTo(0,0);if(!S.sc.data)await loadSched();return render();}
@@ -2235,7 +2235,7 @@ function athLastFilled(t){
   return last||tWeeks(t)[0];
 }
 function athPrintOpts(p,t){
-  const ws=tWeeks(t);if(p.from===undefined){p.from=ws[0]?ws[0].mon:'';p.to=(athLastFilled(t)||{}).mon||'';p.per=3;}
+  const ws=tWeeks(t);if(p.from===undefined){p.from=ws[0]?ws[0].mon:'';p.to=(athLastFilled(t)||{}).mon||'';p.per=2;}
   return `<b style="display:block;margin-top:8px">要印哪幾週（排到哪就印到哪）</b><div class="rgrow"><label>從 <input class="in" type="date" data-ath="prFrom" value="${esc(p.from)}"></label><label>到 <input class="in" type="date" data-ath="prTo" value="${esc(p.to)}"></label><label>一頁放 <select class="in" data-ath="prPer" style="width:auto">${[1,2,3,4].map(n=>`<option value="${n}" ${(+p.per||3)===n?'selected':''}>${n} 週</option>`).join('')}</select></label></div><p class="mut" style="margin:4px 0 0">格式跟 Word 版一樣（A4 橫式，時間列、週一到週五）。</p>`;
 }
 function athPasteSlot(t,w,x,rid,src){

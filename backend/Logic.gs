@@ -695,11 +695,13 @@ function L_docsToHtml(docs) {
     var widths = doc.cw.map(function (w) { return w * 7 + 5; }), totalW = widths.reduce(function (a, b) { return a + b; }, 0);
     var hts = [], totalH = 0;
     for (var r0 = 0; r0 < nR; r0++) { var ht = ((doc.heights && doc.heights[r0]) || doc.defH || 15) * PX / 72; hts.push(ht); totalH += ht; }
+    var refT = Math.max(totalH, (doc.page && doc.page.refH ? doc.page.refH * PX / 72 : 0));                          // 選手進度表：照滿版（per 週）的高度算，不因為最後一頁比較少就放大
     var k = Math.min((doc.page && doc.page.grow) ? 1.3 : 1, W_IN * PX / totalW);
-    if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / totalH);
-    var kv = k;                                                                              // 列高的倍率：選手進度表頁面有空位時，格子往下拉高（只要不超過一頁）
-    if (doc.page && doc.page.stretch) kv = Math.max(k, Math.min(2.4, H_IN * PX / totalH * 0.97));
-    var ws = widths.map(function (w) { return Math.round(w * k * 10) / 10; });
+    if (!doc.page || doc.page.fit === 'page') k = Math.min(k, H_IN * PX / refT);
+    var kv = k;                                                                              // 列高的倍率：頁面有空位時，格子往下拉高（只要不超過一頁）
+    if (doc.page && doc.page.stretch) kv = Math.max(k, Math.min(2.4, H_IN * PX / refT * 0.97));
+    var kx = (doc.page && doc.page.stretch) ? W_IN * PX / totalW * 0.995 : k;                // 選手進度表：欄寬撐滿整個 A4 的寬度
+    var ws = widths.map(function (w) { return Math.round(w * kx * 10) / 10; });
     var tw = ws.reduce(function (a, b) { return a + b; }, 0);
     var h = '<div data-orient="' + (land ? 'landscape' : 'portrait') + '" style="position:relative;' + (di < docs.length - 1 ? 'page-break-after:always;' : '') + '"><table style="border-collapse:collapse;table-layout:fixed;width:' + tw + 'px;font-family:' + L_cssFont('') + '"><colgroup>' +
       ws.map(function (w) { return '<col width="' + w + '" style="width:' + w + 'px">'; }).join('') + '</colgroup>';
@@ -1129,7 +1131,7 @@ function L_docSchedAth(table, weeks, cells, ctx) {
     return out;
   };
   var sig = function (s) { return s ? JSON.stringify([s.pids, s.q, s.txt, s.st]) : ''; };
-  var a = ctx.from ? L_weekStart(ctx.from) : '', b = ctx.to ? L_weekStart(ctx.to) : '9999-12-31', per = Math.max(1, Math.min(4, Number(ctx.per) || 3));
+  var a = ctx.from ? L_weekStart(ctx.from) : '', b = ctx.to ? L_weekStart(ctx.to) : '9999-12-31', per = Math.max(1, Math.min(4, Number(ctx.per) || 2));
   var ws = weeks.filter(function (w) { return (!a || w.mon >= a) && w.mon <= b; });
   if (!ws.length) return [];
   var WDN = '日一二三四五六', docs = [], title = table.title || (table.course || '技藝競賽選手');
@@ -1162,7 +1164,11 @@ function L_docSchedAth(table, weeks, cells, ctx) {
     });
     docs.push({ name: '進度表' + (ws.length > per ? String(i / per + 1) : ''), group: (table.dept || '') + '・' + (table.course || ''), cw: cw, rows: rows, merges: merges, heights: heights, defH: 18,
                 page: Object.assign({}, L_PAGE, { fit: 'page', grow: true, stretch: true, orient: 'landscape', m: { l: 0.4, r: 0.4, t: 0.4, b: 0.4, h: 0.1, f: 0.1 } }) });
+    docs[docs.length - 1]._nw = chunk.length;
   }
+  var perW = 0;                                                                              // 一週大約多高；PDF 一頁固定照「per 週」的高度排版，最後一頁只有一週也不放大
+  docs.forEach(function (d) { var h = 0; Object.keys(d.heights).forEach(function (k2) { h += d.heights[k2]; }); perW = Math.max(perW, (h - 26) / (d._nw || 1)); });
+  docs.forEach(function (d) { d.page.refH = perW * per + 26; });
   return docs;
 }
 
