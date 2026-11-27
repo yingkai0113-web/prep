@@ -772,8 +772,9 @@ const QUOTE_UNITS=[
   ["中點轉化糖漿", "500ml/瓶", 500],
   ["西點轉化糖漿", "500ml/瓶", 500],
   ["白醋", "600ml/瓶", 600]];
+const QUOTE_ALIAS={'青蔥':'蔥'};                         // 名稱跟換算表不一樣、但其實是同一個東西
 function qConv(name,qty,unit,uses){
-  const nm=String(name||'').replace(/\s+/g,''),r=QUOTE_UNITS.find(x=>x[0]===nm)||(()=>{const c=nm.length>=2?QUOTE_UNITS.filter(x=>x[0].endsWith(nm)):[];return c.length===1?c[0]:null;})(),u=String(unit||'').trim().toLowerCase();
+  const nm0=String(name||'').replace(/\s+/g,''),nm=QUOTE_ALIAS[nm0]||nm0,r=QUOTE_UNITS.find(x=>x[0]===nm)||(()=>{const c=nm.length>=2?QUOTE_UNITS.filter(x=>x[0].endsWith(nm)):[];return c.length===1?c[0]:null;})(),u=String(unit||'').trim().toLowerCase();
   const b=['g','克','公克','ml','毫升','cc'].includes(u)?1:['kg','公斤','l','公升'].includes(u)?1000:0;
   if(!r||!b||!(Number(qty)>0))return {name,qty,unit,uses};
   const g=Number(qty)*b,spec=String(r[1]),sl=spec.indexOf('/'),nu=sl>=0?spec.slice(sl+1):spec,q=Math.round(g/r[2]*100)/100,f=q/Number(qty);
