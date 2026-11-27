@@ -205,6 +205,18 @@ function loadCatalogRaw_() {
              per: num_(r['每組數量']), unit: str_(r['單位']), sets: num_(r['預設組數']), total: num_(r['固定總量']),
              procure: str_(r['原表總量欄的採購寫法']), kind: str_(r['類型']), note: note };
   });
+  var ptitle = {}; P.forEach(function (x) { ptitle[x.pid] = x.title; });
+  var RENAME = [                                                                          // 統一成精確的材料名稱：[原名稱, 產品名稱要包含, 新名稱]（產品名稱 '' = 全部產品）
+    ['鮮奶油', '', '動物性鮮奶油'],
+    ['轉化糖漿', '黑糖米果', '中點轉化糖漿'], ['轉化糖漿', '指形小西餅', '西點轉化糖漿'],
+    ['紅豆餡', '紅豆餡甜麵包', '紅豆粒餡'], ['紅豆餡', '山形、紅豆', '紅豆粒餡'], ['紅豆餡', '銅鑼燒', '紅豆粒餡'], ['紅豆餡', '發糕', '含油紅豆餡']
+  ];
+  I.forEach(function (it) {
+    for (var q = 0; q < RENAME.length; q++) {
+      var rn = RENAME[q];
+      if (it.std === rn[0] && (!rn[1] || String(ptitle[it.pid] || '').indexOf(rn[1]) >= 0)) { it.raw = it.std = rn[2]; break; }
+    }
+  });
   var T = readTable_('器具').map(function (r) {
     return { pid: str_(r['產品編號']), who: str_(r['對象']), name: str_(r['器具']), qty: str_(r['數量（原文）']) };
   });
