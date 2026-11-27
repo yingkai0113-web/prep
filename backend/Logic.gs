@@ -209,6 +209,7 @@ function L_cleanEntry(e, cat, free) {
   } else {
     if (!cls) throw new Error('「' + prod.title + '」還沒選班級');
     dept = L_deptOf(cls, cat.classes);
+    if (!dept && e.sid && ['日間部', '夜間部'].indexOf(e.dept) >= 0) dept = e.dept;           // 進度表排的課（例如「技藝競賽選手」）班級不一定在班級清單裡，部別跟著進度表
     if (!dept) throw new Error('「' + prod.title + '」的班級「' + cls + '」不在班級清單裡');
   }
   // 課程：教學進度表排的課用進度表的課程；額外材料單的「課程名稱」（例如活動名稱）由老師自己填
