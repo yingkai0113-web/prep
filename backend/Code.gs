@@ -1542,7 +1542,6 @@ function apiExportQuote(rec, fmt) {
     return { name: L_safeText(x && x.name, 40), qty: Number(x && x.qty), unit: L_safeText(x && x.unit, 8), note: L_safeText(x && x.note, 30), uses: uses };
   }).filter(function (x) { return x.name && isFinite(x.qty) && x.qty > 0; });
   if (!items.length) throw new Error('請至少勾一項要請購的，數量要大於 0。');
-  items = L_quoteConvert(items);                                      // 換成廠商賣的單位（糯米粉 600g/包 → 包…），老師的材料單不受影響
   var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
   var doc = L_docQuote({ date: rec.date, today: today, purpose: L_safeText(rec.purpose, 30), items: items });
   var out = buildXlsx_('估價單_' + String(rec.date).replace(/-/g, ''), [doc], fmt);

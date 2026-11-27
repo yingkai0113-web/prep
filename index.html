@@ -735,10 +735,54 @@ function archPageHTML(){
   return h+techHTML();
 }
 /* 估價單：勾選要請購的材料、器具，數量預設帶上面的總量，可以改 */
+/* 估價單單位換算：材料換成廠商賣的單位（糯米粉 600g/包 → 包），照實際換算，不進位（例如 1040g 黑糖＝1.73 包），要買幾包讓技士自己調 */
+const QUOTE_UNITS=[
+  ["糯米粉", "600g/包", 600],
+  ["在來米粉", "600g/包", 600],
+  ["黑糖", "450g/包", 450],
+  ["油蔥酥", "300g/包", 300],
+  ["蔥", "兩", 37.5],
+  ["韭菜", "兩", 37.5],
+  ["蒜頭", "兩", 37.5],
+  ["薑", "斤", 600],
+  ["高麗菜", "3斤/顆", 1800],
+  ["大白菜", "3斤/顆", 1800],
+  ["洋蔥", "300g/顆", 300],
+  ["紅蘿蔔", "250g/條", 250],
+  ["白蘿蔔", "1斤/條", 600],
+  ["蘋果", "250g/顆", 250],
+  ["香吉士", "200g/顆", 200],
+  ["鳳梨", "1斤/支", 600],
+  ["豬油", "700g/盒", 700],
+  ["沙拉油", "3L/罐", 3000],
+  ["豬絞肉", "kg", 1000],
+  ["豬背脂", "kg", 1000],
+  ["豬後腿瘦肉", "kg", 1000],
+  ["保久乳", "1L/罐", 1000],
+  ["植物性鮮奶油", "1L/罐", 1000],
+  ["動物性鮮奶油", "1L/罐", 1000],
+  ["黃豆", "斤", 600],
+  ["紅豆", "斤", 600],
+  ["長糯米", "斤", 600],
+  ["蝦米", "兩", 37.5],
+  ["生花生", "kg", 1000],
+  ["紅豆粒餡", "3kg/包", 3000],
+  ["含油紅豆餡", "3kg/包", 3000],
+  ["無鹽奶油", "磅/塊", 454],
+  ["中點轉化糖漿", "500ml/瓶", 500],
+  ["西點轉化糖漿", "500ml/瓶", 500],
+  ["白醋", "600ml/瓶", 600]];
+function qConv(name,qty,unit,uses){
+  const nm=String(name||'').replace(/\s+/g,''),r=QUOTE_UNITS.find(x=>x[0]===nm)||(()=>{const c=nm.length>=2?QUOTE_UNITS.filter(x=>x[0].endsWith(nm)):[];return c.length===1?c[0]:null;})(),u=String(unit||'').trim().toLowerCase();
+  const b=['g','克','公克','ml','毫升','cc'].includes(u)?1:['kg','公斤','l','公升'].includes(u)?1000:0;
+  if(!r||!b||!(Number(qty)>0))return {name,qty,unit,uses};
+  const g=Number(qty)*b,spec=String(r[1]),sl=spec.indexOf('/'),nu=sl>=0?spec.slice(sl+1):spec,q=Math.round(g/r[2]*100)/100,f=q/Number(qty);
+  return {name:sl>=0?r[0]+'('+spec+')':r[0],qty:q,unit:nu,note0:(Math.round(g*10)/10)+'g',uses:uses.map(x=>Object.assign({},x,{qty:x.qty===null?null:Math.round(x.qty*f*1000)/1000}))};
+}
 function quoteList(){
   const t=S.tech;if(!t)return [];
   const addU=(arr,date,teacher,title,qty)=>{let u=arr.find(z=>z.date===date&&z.teacher===teacher);if(!u){u={date,teacher,titles:[],qty:0};arr.push(u);}if(title&&!u.titles.includes(title))u.titles.push(title);if(qty===null||u.qty===null)u.qty=null;else u.qty+=qty;};
-  const out=t.materials.map(m=>{const us=[];(m.uses||[]).forEach(u=>{const ts=(u.items||[]).map(i=>i.title).filter(Boolean);if(!ts.length&&u.course)ts.push(u.course);addU(us,u.date,u.teacher||'',ts[0]||'',typeof u.qty==='number'?u.qty:null);const x=us.find(z=>z.date===u.date&&z.teacher===(u.teacher||''));ts.forEach(q=>{if(!x.titles.includes(q))x.titles.push(q);});});return {key:'m|'+m.std+'|'+m.unit,kind:'材料',name:m.std,qty:m.total,unit:m.unit==='g'?'克':m.unit,uses:us};});
+  const out=t.materials.map(m=>{const us=[];(m.uses||[]).forEach(u=>{const ts=(u.items||[]).map(i=>i.title).filter(Boolean);if(!ts.length&&u.course)ts.push(u.course);addU(us,u.date,u.teacher||'',ts[0]||'',typeof u.qty==='number'?u.qty:null);const x=us.find(z=>z.date===u.date&&z.teacher===(u.teacher||''));ts.forEach(q=>{if(!x.titles.includes(q))x.titles.push(q);});});return {key:'m|'+m.std+'|'+m.unit,kind:'材料',...qConv(m.std,m.total,m.unit==='g'?'克':m.unit,us)};});
   const tm={};
   (t.tools||[]).forEach(d=>d.items.forEach(x=>{if(x.n===null)return;const k='t|'+x.name+'|'+x.unit;const o=tm[k]=tm[k]||{key:k,kind:'器具',name:x.name,qty:0,unit:x.unit,uses:[]};o.qty+=x.n;(x.uses||[]).forEach(u=>{const mm=String(u.qty||'').match(/[\d.]+/);addU(o.uses,d.date,u.teacher||'',u.title||u.course||'',mm?Number(mm[0]):null);});}));
   return out.concat(Object.values(tm));
@@ -767,7 +811,7 @@ function quoteModal(){
   const Q=S.qd,l=quoteList(),sel=l.filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).length;
   const sec=(kind)=>{const L=l.filter(x=>x.kind===kind);if(!L.length)return '';
     return `<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px"><b>${kind}</b><span><button class="btn sm ghost" data-a="qdAll" data-k="${kind}" data-v="1">全選</button> <button class="btn sm ghost" data-a="qdAll" data-k="${kind}" data-v="0">全不選</button></span></div>`+
-    L.map(x=>{const v=Q.sel[x.key]||{},on=!!v.on;return `<div class="qrow ${on?'on':''}"><label class="qn"><input type="checkbox" data-k="qdOn" data-key="${esc(x.key)}" ${on?'checked':''}> <input class="in qnm" data-k="qdName" data-key="${esc(x.key)}" maxlength="40" value="${esc(v.name!==undefined?v.name:x.name)}" aria-label="品名（可以改）"></label><input class="in qq" type="number" min="0" step="any" inputmode="decimal" data-k="qdQty" data-key="${esc(x.key)}" value="${v.qty!==undefined?esc(v.qty):esc(String(x.qty))}" ${on?'':'disabled'}><input class="in qun" data-k="qdUnit" data-key="${esc(x.key)}" maxlength="8" value="${esc(v.unit!==undefined?v.unit:x.unit)}" aria-label="單位（可以改）" ${on?'':'disabled'}><input class="in qno" data-k="qdNote" data-key="${esc(x.key)}" maxlength="30" placeholder="備註" value="${esc(v.note||'')}" ${on?'':'disabled'}><label class="qsp" title="取消勾選＝大家共用的材料，不放進分配表"><input type="checkbox" data-k="qdSp" data-key="${esc(x.key)}" ${qdSplit(x.key)?'checked':''} ${on?'':'disabled'}> 分配</label></div>`;}).join('');};
+    L.map(x=>{const v=Q.sel[x.key]||{},on=!!v.on;return `<div class="qrow ${on?'on':''}"><label class="qn"><input type="checkbox" data-k="qdOn" data-key="${esc(x.key)}" ${on?'checked':''}> <input class="in qnm" data-k="qdName" data-key="${esc(x.key)}" maxlength="40" value="${esc(v.name!==undefined?v.name:x.name)}" aria-label="品名（可以改）"></label><input class="in qq" type="number" min="0" step="any" inputmode="decimal" data-k="qdQty" data-key="${esc(x.key)}" value="${v.qty!==undefined?esc(v.qty):esc(String(x.qty))}" ${on?'':'disabled'}><input class="in qun" data-k="qdUnit" data-key="${esc(x.key)}" maxlength="8" value="${esc(v.unit!==undefined?v.unit:x.unit)}" aria-label="單位（可以改）" ${on?'':'disabled'}><input class="in qno" data-k="qdNote" data-key="${esc(x.key)}" maxlength="30" placeholder="備註" value="${esc(v.note!==undefined?v.note:(x.note0||''))}" ${on?'':'disabled'}><label class="qsp" title="取消勾選＝大家共用的材料，不放進分配表"><input type="checkbox" data-k="qdSp" data-key="${esc(x.key)}" ${qdSplit(x.key)?'checked':''} ${on?'':'disabled'}> 分配</label></div>`;}).join('');};
   return `<div class="modal"><div class="mb" style="max-width:min(96vw,720px)"><h2 style="margin:0 0 4px">匯出估價單</h2>
     <p class="mut" style="margin:0 0 6px">範圍：${rangeText()}。勾選要請購的，品名和數量都可以直接改（數量預設是上面統計的總量）。已勾 <b>${sel}</b> 項。右邊的「分配」打勾＝列進給廠商的分配單；大家共用的材料（例如糖、鹽）把「分配」取消，就不會放進分配表，改數量時也不會問你分給誰（系統會記住這個選擇）。</p>
     <div class="rgrow"><label>送貨日期 <input class="in" type="date" data-k="qdDate" value="${esc(Q.date)}"></label><label style="flex:1;min-width:12em">用途備註（可不填） <input class="in" style="width:100%" data-k="qdPurpose" maxlength="30" placeholder="例如：技藝競賽選手訓練用" value="${esc(Q.purpose)}"></label></div>
@@ -1067,7 +1111,7 @@ document.addEventListener('click',async ev=>{
     const Q=S.qd;Q.err='';
     if(!Q.date){Q.err='請選送貨日期。';return render();}
     const L=quoteList();
-    const items=L.filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).map(x=>{const v=Q.sel[x.key];return {src:x,sp:qdSplit(x.key),name:(v.name!==undefined&&v.name.trim()?v.name.trim():x.name),qty:v.qty!==undefined&&v.qty!==''?Number(v.qty):x.qty,unit:(v.unit!==undefined&&v.unit.trim()?v.unit.trim():x.unit),note:v.note||''};}).filter(x=>x.qty>0);
+    const items=L.filter(x=>Q.sel[x.key]&&Q.sel[x.key].on).map(x=>{const v=Q.sel[x.key];return {src:x,sp:qdSplit(x.key),name:(v.name!==undefined&&v.name.trim()?v.name.trim():x.name),qty:v.qty!==undefined&&v.qty!==''?Number(v.qty):x.qty,unit:(v.unit!==undefined&&v.unit.trim()?v.unit.trim():x.unit),note:v.note!==undefined?v.note:(x.note0||'')};}).filter(x=>x.qty>0);
     if(!items.length){Q.err='請至少勾一項，數量要大於 0。';return render();}
     const r3=n=>Math.round(n*1000)/1000;
     if(a==='qdGo'){
