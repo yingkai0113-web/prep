@@ -619,7 +619,7 @@ function editorHTML(){
   <div class="edact"><span style="display:flex;gap:8px;flex-wrap:wrap">${left.join('')}</span><button class="btn" data-a="edSave" ${S.busy?'disabled':''}>${S.busy?'儲存中…':'儲存'}</button></div>
   </div></div>`;
 }
-const FUZZY_NAMES=['奶油','鮮奶油','轉化糖漿','紅豆餡','青蔥'];                 // 不精確的材料名稱（要寫成無鹽奶油、植物性鮮奶油…），不放進自創材料單的名稱建議，避免統計時分成兩個
+const FUZZY_NAMES=['奶油','鮮奶油','轉化糖漿','紅豆餡','蔥'];                 // 不精確的材料名稱（要寫成無鹽奶油、植物性鮮奶油…），不放進自創材料單的名稱建議，避免統計時分成兩個
 const refreshStd=()=>{S.stdNames=[...new Set(Object.values(S.cat.items).flat().map(x=>x.std))].filter(n=>!FUZZY_NAMES.includes(n)).sort();};
 function applyCustom(r){
   const p=r.product,i=S.cat.products.findIndex(x=>x.pid===p.pid);
@@ -779,7 +779,7 @@ function qConv(name,qty,unit,uses){
   const b=['g','克','公克','ml','毫升','cc'].includes(u)?1:['kg','公斤','l','公升'].includes(u)?1000:0;
   if(!r||!b||!(Number(qty)>0))return {name,qty,unit,uses};
   const g=Number(qty)*b,spec=String(r[1]),sl=spec.indexOf('/'),nu=sl>=0?spec.slice(sl+1):spec,q=Math.round(g/r[2]*100)/100,f=q/Number(qty);
-  return {name:sl>=0?r[0]+'('+spec+')':r[0],qty:q,unit:nu,note0:(Math.round(g*10)/10)+'g',uses:uses.map(x=>Object.assign({},x,{qty:x.qty===null?null:Math.round(x.qty*f*1000)/1000}))};
+  return {name:sl>=0?r[0]+'('+spec+')':(QUOTE_ALIAS[nm0]?nm0:r[0]),qty:q,unit:nu,note0:(Math.round(g*10)/10)+'g',uses:uses.map(x=>Object.assign({},x,{qty:x.qty===null?null:Math.round(x.qty*f*1000)/1000}))};
 }
 function quoteList(){
   const t=S.tech;if(!t)return [];
